@@ -1,0 +1,258 @@
+/*
+|------------------------------------------------------------
+| All styles that are defined by default.
+|------------------------------------------------------------
+*/
+html {
+	font-size: 62.5%;
+	color: #242424;
+	font-family: "Roboto", "Arial", "Times New Roman", "sans-serif";
+}
+
+body {
+	font-size: 1.5rem;
+	background-color: #FFF;
+}
+
+a {
+	color: $color2;
+	font-weight: 500;
+	text-decoration: none;
+	transition: all .3s ease-in-out;
+
+	&:hover {
+		color: $color3;
+		font-weight: 500;
+	}
+}
+
+.no-scroll {
+	overflow: hidden;
+}
+
+.no-display {
+	display: none;
+}
+
+.clearfix:after {
+	display: table;
+	content: "";
+	clear: both;
+}
+
+.post-navigation {
+	text-align: center;
+	margin: 20px;
+}
+
+.inline-block {
+	display: inline-block;
+}
+
+.wp-video {
+	width: 100% !important;
+	max-width: 600px !important;
+	margin: 0 auto !important;
+	height: auto !important;
+}
+
+.no-scroll {
+	overflow: hidden;
+}
+
+.page-wrapper {
+	max-width: 1600px;
+	margin: 0 auto;
+}
+
+//#############################################################
+// Typography
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	color: $color1;
+	position: relative;
+	margin: 0;
+}
+
+h2 {
+	font-size: 1.8rem;
+}
+
+p {
+	line-height: 2.4rem;
+}
+
+.page-title {
+	text-align: center;
+	font-size: 2rem;
+	margin: 10px 0;
+	padding: 0 15px;
+}
+
+.title {
+	position: relative;
+	display: inline-block;
+	padding: 15px 40px 15px 0;
+
+	&:after {
+		content: "";
+		width: 30px;
+		height: 30px;
+		position: absolute;
+		right: 0px;
+		top: 10px;
+		background-image: url("/wp-content/themes/saarbakt/images/heart.png");
+		background-size: contain;
+		background-repeat: no-repeat;
+	}
+}
+
+@media screen and (min-width: 1024px) {
+	.page-title {
+		font-size: 4rem;
+
+		.title {
+			// &:before {
+			// 	height: 80px;
+			// 	width: 60px;
+			// }
+			
+			&:after{
+				top: 23px;
+			}
+		}
+	}
+
+	h2 {
+		font-size: 2.4rem;
+	}
+}
+
+.text-center {
+	text-align: center;
+}
+
+//#############################################################
+
+//#############################################################
+// Containers
+
+.main-content-wrapper {
+	padding: $containerSpacing;
+}
+
+@media screen and (min-width: 1024px) {
+	.blog,
+	.page-template-default,
+	.category {
+
+		.main-content-wrapper {
+			display: flex;
+			justify-content: space-around;
+
+			.blogpost {
+				flex: 0 1 45%;
+				margin-right: 5%;
+			}
+
+			.instagramfeed {
+				flex: 0 1 45%;
+			}
+		}
+	}
+}
+
+//#############################################################
+
+//#############################################################
+// Buttons
+
+.btn,
+.wpcf7-submit {
+	padding: 14px 45px;
+	border-radius: 4px;
+	max-width: 200px;
+	display: block;
+	cursor: pointer;
+
+	&.btn-pink,
+	&.wpcf7-form-control {
+		color: #FFF;
+		background-color: $color2;
+		border: 0;
+		outline: 0;
+		box-shadow: none;
+		transition: all .3s ease-in-out;
+
+		.fa {
+			transition: all .3s ease-in-out;
+			opacity: 0;
+			font-size: 1.3rem;
+		}
+
+		&:hover {
+			background-color: $color3;
+
+			.fa.fa-chevron-right {
+				transform: translateX(10px);
+				opacity: 1;
+			}
+
+			.fa.fa-chevron-left {
+				transform: translateX(-10px);
+				opacity: 1;
+			}
+		}
+
+		&.btn-right {
+			float: right;
+		}
+	}
+
+	&.btn-full-width {
+		width: 100%;
+		max-width: none;
+	}
+
+	@media (min-width: 1024px) {
+			&.btn-full-width {
+				width: auto;
+			}
+	}
+
+	&.btn-center {
+		margin: 15px auto;
+	}
+}
+
+.wpcf7-submit {
+	line-height: 0;
+}
+
+//#############################################################
+
+//#############################################################
+// Spacing
+
+.spacing-top {
+	margin-top: 15px;
+}
+
+.spacing-right {
+	margin-right: 15px;
+}
+
+.spacing-bottom {
+	margin-bottom: 15px;
+}
+
+.spacing-left {
+	margin-left: 15px;
+}
+
+//#############################################################

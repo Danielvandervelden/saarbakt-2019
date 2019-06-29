@@ -1,0 +1,141 @@
+/*
+|------------------------------------------------------------
+| All styles for the blog
+|------------------------------------------------------------
+*/
+
+/*
+/* Mobile Styles
+/*_______________________________________________________*/
+
+body:not(.single) {
+    .single-blog-post img {
+        width: 100%;
+        height: auto;
+        max-width: 300px;
+        margin: 0 auto;
+        display: block;
+    }
+}
+
+.single-blog-post,
+.receptenbox {
+    @include post-container();
+    margin: 10px auto 20px auto;
+
+    .post-thumbnail {
+        margin-bottom: 10px;
+
+        a {
+            display: block; // basically, make it as high as the image... some sort of clearfix if you will.
+            text-align: center;
+        }
+    }
+
+    .metabox {
+        font-size: 1rem;
+
+        p {
+            line-height: 16px;
+        }
+    }
+
+    .post-content {
+        position: relative;
+        padding-bottom: 45px;
+
+        a h2 {
+            text-align: left;
+            font-size: 2rem;
+        }
+
+        form {
+            position: absolute;
+            right: 0;
+            bottom: 0;
+        }
+    }
+}
+
+.ingredientenflex {
+
+    img {
+        width: 100%;
+        height: auto;
+        max-width: 300px;
+        margin: 0 auto;
+        display: block;
+    }
+}
+
+.receptenbox {
+
+    ul {
+        list-style: none;
+
+        li {
+            position: relative;
+            margin-bottom: 8px;
+
+            &:before {
+                content: '';
+                height: 20px;
+                width: 20px;
+                position: absolute;
+                left: -25px;
+                top: 0px;
+                background-image: url(/wp-content/themes/saarbakt/images/keukenmachine.png);
+                background-size: cover;
+            }
+        }
+    }
+}
+
+/*
+/* Desktop Styles (minimum 1024px)
+/*_______________________________________________________*/
+@media screen and (min-width: 1024px) {
+
+    .single-blog-post.tips-tricks,
+    .category .single-blog-post,
+    .blog .single-blog-post {
+        display: flex;
+    }
+
+    .single-blog-post {
+        display: block;
+        justify-content: space-around;
+
+        .post-thumbnail {
+            flex: 0 1 28%;
+        }
+
+        .post-thumbnail+.post-content {
+            flex: 0 1 68%;
+        }
+    }
+
+
+    .main-content-wrapper.nieuwtjes {
+        .single-blog-post {
+            flex-direction: column;
+        }
+    }
+
+    .singleblogpostflexbox {
+        display: flex;
+        justify-content: space-between;
+
+        .single-blog-post {
+            display: block;
+            flex: 0 1 70%;
+            margin-right: 5%;
+            margin: 15px 0 15px 0;
+        }
+
+        .receptenbox {
+            flex: 0 0 25%;
+            margin: 15px 0 15px;
+        }
+    }
+}

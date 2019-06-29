@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <meta charset="utf-8">
+      <title>SaarBakt</title>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Contact - SaarBakt</title>
+<script type="text/javascript">function heateorSssLoadEvent(e) {var t=window.onload;if (typeof window.onload!="function") {window.onload=e}else{window.onload=function() {t();e()}}};	var heateorSssSharingAjaxUrl = 'https://www.saarbakt.nl/wp-admin/admin-ajax.php', heateorSssCloseIconPath = 'https://www.saarbakt.nl/wp-content/plugins/sassy-social-share/public/../images/close.png', heateorSssPluginIconPath = 'https://www.saarbakt.nl/wp-content/plugins/sassy-social-share/public/../images/logo.png', heateorSssHorizontalSharingCountEnable = 0, heateorSssVerticalSharingCountEnable = 0, heateorSssSharingOffset = 10; var heateorSssMobileStickySharingEnabled = 1;var heateorSssCopyLinkMessage = "Link copied.";var heateorSssUrlCountFetched = [], heateorSssSharesText = 'Shares', heateorSssShareText = 'Share';function heateorSssPopup(e) {window.open(e,"popUpWindow","height=400,width=600,left=400,top=100,resizable,scrollbars,toolbar=0,personalbar=0,menubar=no,location=no,directories=no,status")}</script>			<style type="text/css">
+					.heateor_sss_horizontal_sharing .heateorSssSharing{
+							color: #fff;
+						border-width: 0px;
+			border-style: solid;
+			border-color: transparent;
+		}
+				.heateor_sss_horizontal_sharing .heateorSssTCBackground{
+			color:#666;
+		}
+				.heateor_sss_horizontal_sharing .heateorSssSharing:hover{
+							background-color: #7f345a;
+							color: #ffbfd3;
+						border-color: transparent;
+		}
+		.heateor_sss_vertical_sharing .heateorSssSharing{
+							color: #fff;
+						border-width: 0px;
+			border-style: solid;
+			border-color: transparent;
+		}
+				.heateor_sss_vertical_sharing .heateorSssTCBackground{
+			color:#666;
+		}
+				.heateor_sss_vertical_sharing .heateorSssSharing:hover{
+							background-color: #7f345a;
+							color: #ffbfd3;
+						border-color: transparent;
+		}
+		@media screen and (max-width:783px) {.heateor_sss_vertical_sharing{display:none!important}}div.heateor_sss_mobile_footer{display:none;}@media screen and (max-width:783px) {div.heateor_sss_bottom_sharing{width:100%!important;left:0!important;}div.heateor_sss_bottom_sharing li{width:20% !important;}div.heateor_sss_bottom_sharing .heateorSssSharing{width: 100% !important;}div.heateor_sss_bottom_sharing div.heateorSssTotalShareCount{font-size:1em!important;line-height:16.1px!important}div.heateor_sss_bottom_sharing div.heateorSssTotalShareText{font-size:.7em!important;line-height:0px!important}div.heateor_sss_mobile_footer{display:block;height:23px;}.heateor_sss_bottom_sharing{padding:0!important;display:block!important;width: auto!important;bottom:-2px!important;top: auto!important;}.heateor_sss_bottom_sharing .heateor_sss_square_count{line-height: inherit;}.heateor_sss_bottom_sharing .heateorSssSharingArrow{display:none;}.heateor_sss_bottom_sharing .heateorSssTCBackground{margin-right: 1.1em !important}}			</style>
+			
+<!-- This site is optimized with the Yoast SEO plugin v6.0 - https://yoast.com/wordpress/plugins/seo/ -->
+<link rel="canonical" href="https://www.saarbakt.nl/contact/" />
+<meta property="og:locale" content="nl_NL" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Contact - SaarBakt" />
+<meta property="og:url" content="https://www.saarbakt.nl/contact/" />
+<meta property="og:site_name" content="SaarBakt" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Contact - SaarBakt" />
+<script type='application/ld+json'>{"@context":"http:\/\/schema.org","@type":"WebSite","@id":"#website","url":"https:\/\/www.saarbakt.nl\/","name":"SaarBakt","potentialAction":{"@type":"SearchAction","target":"https:\/\/www.saarbakt.nl\/?s={search_term_string}","query-input":"required name=search_term_string"}}</script>
+<script type='application/ld+json'>{"@context":"http:\/\/schema.org","@type":"Organization","url":"https:\/\/www.saarbakt.nl\/contact\/","sameAs":["http:\/\/www.instagram.com\/saarbakt"],"@id":"#organization","name":"SaarBakt","logo":"https:\/\/www.saarbakt.nl\/wp-content\/uploads\/2017\/12\/Saarbaktlogoheader-1.png"}</script>
+<!-- / Yoast SEO plugin. -->
+
+<link rel='dns-prefetch' href='//fonts.googleapis.com' />
+<link rel='dns-prefetch' href='//s.w.org' />
+		<script type="text/javascript">
+			window._wpemojiSettings = {"baseUrl":"https:\/\/s.w.org\/images\/core\/emoji\/2.3\/72x72\/","ext":".png","svgUrl":"https:\/\/s.w.org\/images\/core\/emoji\/2.3\/svg\/","svgExt":".svg","source":{"concatemoji":"https:\/\/www.saarbakt.nl\/wp-includes\/js\/wp-emoji-release.min.js"}};
+			!function(a,b,c){function d(a,b){var c=String.fromCharCode;l.clearRect(0,0,k.width,k.height),l.fillText(c.apply(this,a),0,0);var d=k.toDataURL();l.clearRect(0,0,k.width,k.height),l.fillText(c.apply(this,b),0,0);var e=k.toDataURL();return d===e}function e(a){var b;if(!l||!l.fillText)return!1;switch(l.textBaseline="top",l.font="600 32px Arial",a){case"flag":return!(b=d([55356,56826,55356,56819],[55356,56826,8203,55356,56819]))&&(b=d([55356,57332,56128,56423,56128,56418,56128,56421,56128,56430,56128,56423,56128,56447],[55356,57332,8203,56128,56423,8203,56128,56418,8203,56128,56421,8203,56128,56430,8203,56128,56423,8203,56128,56447]),!b);case"emoji":return b=d([55358,56794,8205,9794,65039],[55358,56794,8203,9794,65039]),!b}return!1}function f(a){var c=b.createElement("script");c.src=a,c.defer=c.type="text/javascript",b.getElementsByTagName("head")[0].appendChild(c)}var g,h,i,j,k=b.createElement("canvas"),l=k.getContext&&k.getContext("2d");for(j=Array("flag","emoji"),c.supports={everything:!0,everythingExceptFlag:!0},i=0;i<j.length;i++)c.supports[j[i]]=e(j[i]),c.supports.everything=c.supports.everything&&c.supports[j[i]],"flag"!==j[i]&&(c.supports.everythingExceptFlag=c.supports.everythingExceptFlag&&c.supports[j[i]]);c.supports.everythingExceptFlag=c.supports.everythingExceptFlag&&!c.supports.flag,c.DOMReady=!1,c.readyCallback=function(){c.DOMReady=!0},c.supports.everything||(h=function(){c.readyCallback()},b.addEventListener?(b.addEventListener("DOMContentLoaded",h,!1),a.addEventListener("load",h,!1)):(a.attachEvent("onload",h),b.attachEvent("onreadystatechange",function(){"complete"===b.readyState&&c.readyCallback()})),g=c.source||{},g.concatemoji?f(g.concatemoji):g.wpemoji&&g.twemoji&&(f(g.twemoji),f(g.wpemoji)))}(window,document,window._wpemojiSettings);
+		</script>
+		<style type="text/css">
+img.wp-smiley,
+img.emoji {
+	display: inline !important;
+	border: none !important;
+	box-shadow: none !important;
+	height: 1em !important;
+	width: 1em !important;
+	margin: 0 .07em !important;
+	vertical-align: -0.1em !important;
+	background: none !important;
+	padding: 0 !important;
+}
+</style>
+<link rel='stylesheet' id='contact-form-7-css'  href='https://www.saarbakt.nl/wp-content/plugins/contact-form-7/includes/css/styles.css' type='text/css' media='all' />
+<link rel='stylesheet' id='custom-google-fonts-css'  href='https://fonts.googleapis.com/css?family=Source+Sans+Pro' type='text/css' media='all' />
+<link rel='stylesheet' id='style.css-css'  href='https://www.saarbakt.nl/wp-content/themes/saarbakt/style.css?amp;version=1.0' type='text/css' media='all' />
+<link rel='stylesheet' id='heateor_sss_frontend_css-css'  href='https://www.saarbakt.nl/wp-content/plugins/sassy-social-share/public/css/sassy-social-share-public.css' type='text/css' media='all' />
+<link rel='stylesheet' id='heateor_sss_sharing_svg_hover-css'  href='https://www.saarbakt.nl/wp-content/plugins/sassy-social-share/public/../admin/css/sassy-social-share-hover-svg-horizontal.css' type='text/css' media='all' />
+<link rel='stylesheet' id='heateor_sss_vertical_sharing_svg_hover-css'  href='https://www.saarbakt.nl/wp-content/plugins/sassy-social-share/public/../admin/css/sassy-social-share-hover-svg-vertical.css' type='text/css' media='all' />
+<link rel='stylesheet' id='heateor_sss_sharing_default_svg-css'  href='https://www.saarbakt.nl/wp-content/plugins/sassy-social-share/public/../admin/css/sassy-social-share-svg.css' type='text/css' media='all' />
+<script type='text/javascript' src='https://www.saarbakt.nl/wp-includes/js/jquery/jquery.js'></script>
+<script type='text/javascript' src='https://www.saarbakt.nl/wp-includes/js/jquery/jquery-migrate.min.js'></script>
+<link rel='https://api.w.org/' href='https://www.saarbakt.nl/wp-json/' />
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://www.saarbakt.nl/xmlrpc.php?rsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="https://www.saarbakt.nl/wp-includes/wlwmanifest.xml" /> 
+<meta name="generator" content="WordPress 4.9.1" />
+<link rel='shortlink' href='https://www.saarbakt.nl/?p=11' />
+<link rel="apple-touch-icon" sizes="180x180" href="/wp-content/uploads/fbrfg/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/wp-content/uploads/fbrfg/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/wp-content/uploads/fbrfg/favicon-16x16.png">
+<link rel="manifest" href="/wp-content/uploads/fbrfg/manifest.json">
+<link rel="mask-icon" href="/wp-content/uploads/fbrfg/safari-pinned-tab.svg" color="#5bbad5">
+<link rel="shortcut icon" href="/wp-content/uploads/fbrfg/favicon.ico">
+<meta name="msapplication-config" content="/wp-content/uploads/fbrfg/browserconfig.xml">
+<meta name="theme-color" content="#ffffff"><!-- BEGIN GADWP v5.1.2.5 Universal Analytics - https://deconf.com/google-analytics-dashboard-wordpress/ -->
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  ga('create', 'UA-111468206-1', 'auto');
+  ga('send', 'pageview');
+</script>
+<!-- END GADWP Universal Analytics -->
+      <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro" rel="stylesheet">
+      <link href="https://fonts.googleapis.com/css?family=Lobster" rel="stylesheet"> 
+      <link href="https://fonts.googleapis.com/css?family=Muli" rel="stylesheet"> 
+
+      <!-- DYNAMIC BACKGROUND IMAGE 
+      <style type="text/css">
+      .header-container--pagina {
+      background-image: url("");
+}
+</style>
+
+-->
+  
+      <script src="https://use.fontawesome.com/170a980d8c.js"></script>
+      <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+   </head>
+
+   <body>
+
+      <div class="container--pagina">
+         <div class="parallax3">
+         <div class="header-container--pagina">
+          <!-- <div class="search-icon"><img class="search-icon" src="https://www.saarbakt.nl/wp-content/themes/saarbakt/images/searchicon.png" alt="search icon"></div> -->
+          <span class="search-icon-fa"><i class="fa fa-search" aria-hidden="true"></i></span>
+               <nav role="navigation">
+  <div id="menuToggle">
+    <!--
+    A fake / hidden checkbox is used as click reciever,
+    so you can use the :checked selector on it.
+    -->
+    <input type="checkbox" />
+
+    <span></span>
+    <span></span>
+    <span></span>
+    
+    <!--
+    Too bad the menu has to be inside of the button
+    but hey, it's pure CSS magic.
+    -->
+    <ul id="menu">
+      <div class="main-nav"><ul id="menu-headermenu" class="menu"><li id="menu-item-16" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-16"><a href="https://www.saarbakt.nl/">Home</a></li>
+<li id="menu-item-98" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-98"><a href="https://www.saarbakt.nl/nieuwtjes/">Nieuwtjes</a></li>
+<li id="menu-item-180" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-180"><a href="#">Recepten</a>
+<ul class="sub-menu">
+	<li id="menu-item-181" class="menu-item menu-item-type-custom menu-item-object-custom menu-item-181"><a href="http://www.saarbakt.nl/recepten">Alle Baksels</a></li>
+	<li id="menu-item-117" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-117"><a href="https://www.saarbakt.nl/taarten/">Taarten</a></li>
+	<li id="menu-item-115" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-115"><a href="https://www.saarbakt.nl/cakes/">Cakes</a></li>
+	<li id="menu-item-126" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-126"><a href="https://www.saarbakt.nl/koekjes/">Koekjes</a></li>
+	<li id="menu-item-174" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-174"><a href="https://www.saarbakt.nl/brownies-repen/">Brownies &#038; repen</a></li>
+	<li id="menu-item-175" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-175"><a href="https://www.saarbakt.nl/cupcakes-muffins/">Cupcakes &#038; muffins</a></li>
+	<li id="menu-item-177" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-177"><a href="https://www.saarbakt.nl/vullingen-toppings/">Vullingen &#038; toppings</a></li>
+	<li id="menu-item-176" class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-176"><a href="https://www.saarbakt.nl/overige-baksels/">Overige baksels</a></li>
+</ul>
+</li>
+<li id="menu-item-103" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-103"><a href="https://www.saarbakt.nl/tips-tricks/">Tips &#038; Tricks</a></li>
+<li id="menu-item-13" class="menu-item menu-item-type-post_type menu-item-object-page current-menu-item page_item page-item-11 current_page_item menu-item-13"><a href="https://www.saarbakt.nl/contact/">Contact</a></li>
+</ul></div>    </ul>
+  </div>
+  <div class="navigationdesktop">
+              <ul>
+                
+                  <div class="main-nav"><ul id="menu-headermenu-1" class="menu"><li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-16"><a href="https://www.saarbakt.nl/">Home</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-98"><a href="https://www.saarbakt.nl/nieuwtjes/">Nieuwtjes</a></li>
+<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-has-children menu-item-180"><a href="#">Recepten</a>
+<ul class="sub-menu">
+	<li class="menu-item menu-item-type-custom menu-item-object-custom menu-item-181"><a href="http://www.saarbakt.nl/recepten">Alle Baksels</a></li>
+	<li class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-117"><a href="https://www.saarbakt.nl/taarten/">Taarten</a></li>
+	<li class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-115"><a href="https://www.saarbakt.nl/cakes/">Cakes</a></li>
+	<li class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-126"><a href="https://www.saarbakt.nl/koekjes/">Koekjes</a></li>
+	<li class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-174"><a href="https://www.saarbakt.nl/brownies-repen/">Brownies &#038; repen</a></li>
+	<li class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-175"><a href="https://www.saarbakt.nl/cupcakes-muffins/">Cupcakes &#038; muffins</a></li>
+	<li class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-177"><a href="https://www.saarbakt.nl/vullingen-toppings/">Vullingen &#038; toppings</a></li>
+	<li class="menu-item menu-item-type-taxonomy menu-item-object-category menu-item-176"><a href="https://www.saarbakt.nl/overige-baksels/">Overige baksels</a></li>
+</ul>
+</li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page menu-item-103"><a href="https://www.saarbakt.nl/tips-tricks/">Tips &#038; Tricks</a></li>
+<li class="menu-item menu-item-type-post_type menu-item-object-page current-menu-item page_item page-item-11 current_page_item menu-item-13"><a href="https://www.saarbakt.nl/contact/">Contact</a></li>
+</ul></div>                
+              </ul>
+            </div>
+</nav>      
+
+            
+               <div class="saarbaktlogopagina">
+                  <a href="https://www.saarbakt.nl/Home"><img src="https://www.saarbakt.nl/wp-content/themes/saarbakt/images/Saarbaktlogoheader.png"></a>
+               </div>
+
+               <div class="headertext">
+                  <h1 class="textheaderpaginasingle">Contact</h1>
+               </div>
+         </div>
+</div>
+                
+               </div>
+               <div class="headertextmobile">
+                  <h1 class="textheadermobilepaginasingle">Contact</h1>
+               </div>
+                <div class="pagetext">
+                  <p style="text-align: left;"><div role="form" class="wpcf7" id="wpcf7-f39-p11-o1" lang="nl-NL" dir="ltr">
+<div class="screen-reader-response"></div>
+<form action="/contact/#wpcf7-f39-p11-o1" method="post" class="wpcf7-form" novalidate="novalidate">
+<div style="display: none;">
+<input type="hidden" name="_wpcf7" value="39" />
+<input type="hidden" name="_wpcf7_version" value="4.9.2" />
+<input type="hidden" name="_wpcf7_locale" value="nl_NL" />
+<input type="hidden" name="_wpcf7_unit_tag" value="wpcf7-f39-p11-o1" />
+<input type="hidden" name="_wpcf7_container_post" value="11" />
+</div>
+<p><label> Naam:<br />
+    <span class="wpcf7-form-control-wrap your-name"><input type="text" name="your-name" value="" size="40" class="wpcf7-form-control wpcf7-text wpcf7-validates-as-required" aria-required="true" aria-invalid="false" /></span> </label></p>
+<p><label> E-Mail:<br />
+    <span class="wpcf7-form-control-wrap your-email"><input type="email" name="your-email" value="" size="40" class="wpcf7-form-control wpcf7-text wpcf7-email wpcf7-validates-as-required wpcf7-validates-as-email" aria-required="true" aria-invalid="false" /></span> </label></p>
+<p><label> Onderwerp:<br />
+    <span class="wpcf7-form-control-wrap your-subject"><input type="text" name="your-subject" value="" size="40" class="wpcf7-form-control wpcf7-text" aria-invalid="false" /></span> </label></p>
+<p><label> Je bericht:<br />
+    <span class="wpcf7-form-control-wrap your-message"><textarea name="your-message" cols="40" rows="10" class="wpcf7-form-control wpcf7-textarea" aria-invalid="false"></textarea></span> </label></p>
+<div class="wpcf7-form-control-wrap"><div data-sitekey="6LePBzsUAAAAABRIGOuSefUb-viILM4nBrFpn3Dk" data-size="compact" class="wpcf7-form-control g-recaptcha wpcf7-recaptcha captcha"></div>
+<noscript>
+	<div style="width: 302px; height: 422px;">
+		<div style="width: 302px; height: 422px; position: relative;">
+			<div style="width: 302px; height: 422px; position: absolute;">
+				<iframe src="https://www.google.com/recaptcha/api/fallback?k=6LePBzsUAAAAABRIGOuSefUb-viILM4nBrFpn3Dk" frameborder="0" scrolling="no" style="width: 302px; height:422px; border-style: none;">
+				</iframe>
+			</div>
+			<div style="width: 300px; height: 60px; border-style: none; bottom: 12px; left: 25px; margin: 0px; padding: 0px; right: 25px; background: #f9f9f9; border: 1px solid #c1c1c1; border-radius: 3px;">
+				<textarea id="g-recaptcha-response" name="g-recaptcha-response" class="g-recaptcha-response" style="width: 250px; height: 40px; border: 1px solid #c1c1c1; margin: 10px 25px; padding: 0px; resize: none;">
+				</textarea>
+			</div>
+		</div>
+	</div>
+</noscript>
+</div>
+<p><input type="submit" value="Verzenden" class="wpcf7-form-control wpcf7-submit" /></p>
+<div class="wpcf7-response-output wpcf7-display-none"></div></form></div></p>
+<div class='heateorSssClear'></div><div  class='heateor_sss_sharing_container heateor_sss_horizontal_sharing' heateor-sss-data-href='https://www.saarbakt.nl/contact/'><div class='heateor_sss_sharing_title' style="font-weight:bold" ></div><ul  class="heateor_sss_sharing_ul"><li class="heateorSssSharingRound"><i style="width:23px;height:23px;border-radius:999px;" alt="Facebook" Title="Facebook" class="heateorSssSharing heateorSssFacebookBackground" onclick='heateorSssPopup("https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwww.saarbakt.nl%2Fcontact%2F")'><ss style="display:block;border-radius:999px;" class="heateorSssSharingSvg heateorSssFacebookSvg"></ss></i></li><li class="heateorSssSharingRound"><i style="width:23px;height:23px;border-radius:999px;" alt="Twitter" Title="Twitter" class="heateorSssSharing heateorSssTwitterBackground" onclick='heateorSssPopup("http://twitter.com/intent/tweet?text=Contact&url=https%3A%2F%2Fwww.saarbakt.nl%2Fcontact%2F")'><ss style="display:block;border-radius:999px;" class="heateorSssSharingSvg heateorSssTwitterSvg"></ss></i></li><li class="heateorSssSharingRound"><i style="width:23px;height:23px;border-radius:999px;" alt="Pinterest" Title="Pinterest" class="heateorSssSharing heateorSssPinterestBackground" onclick="javascript:void( (function() {var e=document.createElement('script' );e.setAttribute('type','text/javascript' );e.setAttribute('charset','UTF-8' );e.setAttribute('src','//assets.pinterest.com/js/pinmarklet.js?r='+Math.random()*99999999);document.body.appendChild(e)})());"><ss style="display:block;border-radius:999px;" class="heateorSssSharingSvg heateorSssPinterestSvg"></ss></i></li><li class="heateorSssSharingRound"><i style="width:23px;height:23px;border-radius:999px;" alt="Instagram" Title="Instagram" class="heateorSssSharing heateorSssInstagramBackground"><a href="https://www.instagram.com/saarbakt" target="_blank"><ss style="display:block;border-radius:999px;" class="heateorSssSharingSvg heateorSssInstagramSvg"></ss></a></i></li><li class="heateorSssSharingRound"><i style="width:23px;height:23px;border-radius:999px;" title="More" alt="More" class="heateorSssSharing heateorSssMoreBackground" onclick="heateorSssMoreSharingPopup(this, 'https://www.saarbakt.nl/contact/', 'Contact', '' )" ><ss style="display:block" class="heateorSssSharingSvg heateorSssMoreSvg"></ss></i></li></ul><div class="heateorSssClear"></div></div><div class='heateorSssClear'></div>               </div>
+               <!--
+                  <div class="contactform">
+                  <table class="contacttable">
+                           
+                  <form method="post" action="page-contact.php">
+                     <tr>
+                        <td>Naam:</td>
+                        <td><input type="text" name="naam"></td>
+                     </tr>
+                     <tr>
+                        <td>Onderwerp:</td>
+                        <td><input type="text" name="onderwerp"></td>
+                     </tr>
+                     <tr>
+                        <td>E-Mail Adres:</td>
+                        <td><input type="email" name="E-Mail"></td>
+                     </tr>
+                     <tr>
+                        <td>Bericht:</td>
+                        <td><textarea name="comments" class="textarea"></textarea></td>
+                     </tr>
+                     <tr>
+                        <td>&nbsp;</td>
+                        <td><input type="submit" name="verzenden" label="Verzenden">
+                            <input type="reset" name="opnieuw" label="Opnieuw">
+                        </td>
+                     </tr>
+                  </form>
+                  </table>
+               </div>
+
+-->
+
+      <footer>
+   <hr class="footerlijn">
+               <div class="footerpagina">
+                     <div class="contactgegevens">
+                        <h2>Sara van der Velden</h2>
+                        <ul>
+                           <li><a href="https://www.saarbakt.nl/contact">info@saarbakt.nl</li></a>
+                        </ul>
+                     </div>
+
+                     <div class="footerlinks">
+                        <ul>
+                           <h2>Links</h2>
+                           <li><div class="main-nav"><ul id="menu-footermenu" class="menu"><li id="menu-item-169" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-home menu-item-169"><a href="https://www.saarbakt.nl/">Home</a></li>
+<li id="menu-item-166" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-166"><a href="https://www.saarbakt.nl/nieuwtjes/">Nieuwtjes</a></li>
+<li id="menu-item-168" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-168"><a href="https://www.saarbakt.nl/recepten/">Recepten</a></li>
+<li id="menu-item-165" class="menu-item menu-item-type-post_type menu-item-object-page menu-item-165"><a href="https://www.saarbakt.nl/tips-tricks/">Tips &#038; Tricks</a></li>
+<li id="menu-item-167" class="menu-item menu-item-type-post_type menu-item-object-page current-menu-item page_item page-item-11 current_page_item menu-item-167"><a href="https://www.saarbakt.nl/contact/">Contact</a></li>
+</ul></div></li>
+                        </ul>
+                     </div>
+
+                     <div class="socialmediafooter">
+                        <h2>Social Media</h2>
+                        <div class="iconflexbox">
+                        <div class="facebookicon"><a href="#"><img src="https://www.saarbakt.nl/wp-content/themes/saarbakt/images/facebook.png"></a></div>
+                        <div class="instagramicon"><a href="http://www.instagram.com/saarbakt" target="_blank"><img src="https://www.saarbakt.nl/wp-content/themes/saarbakt/images/instagram.png"></a></div>
+                     </div>
+                     </div>
+                  </div>
+               </footer>
+               </div>
+            </div>
+
+   <div class="search-overlay">
+    <div class="search-overlay__top">
+      <div class="search-container-balk">
+        <i class="fa fa-search search-overlay__icon" aria-hidden="true"></i>
+        <input class="search-term" placeholder="What are you looking for?" id="search-term" name="searchfield" type="text">
+      <i class="fa fa-window-close search-overlay__close" aria-hidden="true"></i></div>
+        <!-- <div class="close-button"><img src="https://www.saarbakt.nl/wp-content/themes/saarbakt/images/closebutton.png"></div> --></div>
+          <div class="search-container">
+            <div id="search-overlay__results"></div>
+          </div>
+
+      </div>
+
+         <script type="text/javascript">
+var recaptchaWidgets = [];
+var recaptchaCallback = function() {
+	var forms = document.getElementsByTagName( 'form' );
+	var pattern = /(^|\s)g-recaptcha(\s|$)/;
+
+	for ( var i = 0; i < forms.length; i++ ) {
+		var divs = forms[ i ].getElementsByTagName( 'div' );
+
+		for ( var j = 0; j < divs.length; j++ ) {
+			var sitekey = divs[ j ].getAttribute( 'data-sitekey' );
+
+			if ( divs[ j ].className && divs[ j ].className.match( pattern ) && sitekey ) {
+				var params = {
+					'sitekey': sitekey,
+					'type': divs[ j ].getAttribute( 'data-type' ),
+					'size': divs[ j ].getAttribute( 'data-size' ),
+					'theme': divs[ j ].getAttribute( 'data-theme' ),
+					'badge': divs[ j ].getAttribute( 'data-badge' ),
+					'tabindex': divs[ j ].getAttribute( 'data-tabindex' )
+				};
+
+				var callback = divs[ j ].getAttribute( 'data-callback' );
+
+				if ( callback && 'function' == typeof window[ callback ] ) {
+					params[ 'callback' ] = window[ callback ];
+				}
+
+				var expired_callback = divs[ j ].getAttribute( 'data-expired-callback' );
+
+				if ( expired_callback && 'function' == typeof window[ expired_callback ] ) {
+					params[ 'expired-callback' ] = window[ expired_callback ];
+				}
+
+				var widget_id = grecaptcha.render( divs[ j ], params );
+				recaptchaWidgets.push( widget_id );
+				break;
+			}
+		}
+	}
+};
+
+document.addEventListener( 'wpcf7submit', function( event ) {
+	switch ( event.detail.status ) {
+		case 'spam':
+		case 'mail_sent':
+		case 'mail_failed':
+			for ( var i = 0; i < recaptchaWidgets.length; i++ ) {
+				grecaptcha.reset( recaptchaWidgets[ i ] );
+			}
+	}
+}, false );
+</script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var wpcf7 = {"apiSettings":{"root":"https:\/\/www.saarbakt.nl\/wp-json\/contact-form-7\/v1","namespace":"contact-form-7\/v1"},"recaptcha":{"messages":{"empty":"Graag verifi\u00ebren dat je geen robot bent."}},"cached":"1"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='https://www.saarbakt.nl/wp-content/plugins/contact-form-7/includes/js/scripts.js'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var saarbaktData = {"root_url":"https:\/\/www.saarbakt.nl"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='https://www.saarbakt.nl/wp-content/themes/saarbakt/js/script.js'></script>
+<script type='text/javascript' src='https://www.saarbakt.nl/wp-content/plugins/sassy-social-share/public/js/sassy-social-share-public.js'></script>
+<script type='text/javascript' src='https://www.google.com/recaptcha/api.js?onload=recaptchaCallback&#038;render=explicit'></script>
+         </body>
+      </html>
+<!--
+Performance optimized by W3 Total Cache. Learn more: https://www.w3-edge.com/products/
+
+Page Caching using disk: enhanced 
+
+Served from: www.saarbakt.nl @ 2017-12-29 13:30:26 by W3 Total Cache
+-->

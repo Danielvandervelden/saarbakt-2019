@@ -1,0 +1,243 @@
+/*
+|------------------------------------------------------------
+| All styling for the navigation.
+|------------------------------------------------------------
+*/
+
+/*
+/* Mobile Styles
+/*_______________________________________________________*/
+.navigationdesktop {
+	display: none;
+}
+
+#backdrop {
+	width: 0;
+	height: 100vh;
+	background-color: rgba(0, 0, 0, 0.6);
+	transition: all .5s ease-in-out;
+	opacity: 0;
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 80;
+
+	&.active {
+		opacity: 1;
+		width: 100vw;
+		height: 100vh;
+	}
+}
+
+#mobile-menu {
+	background-color: #FFF;
+	height: 100vh;
+	width: 80%;
+	position: fixed;
+	top: 0;
+	left: 0;
+	z-index: 100;
+	transform: translateX(-1000px);
+	transition: all .5s ease-in-out;
+	padding: $containerSpacing;
+	font-size: 1.8rem;
+
+	&.active {
+		transform: translateX(0);
+	}
+
+	.exit {
+		position: absolute;
+		right: 20px;
+		top: 20px;
+		z-index: 10;
+	}
+
+	ul {
+		list-style: none;
+		padding: 0;
+	}
+
+	li {
+		padding: 0;
+		margin: 0;
+		line-height: 30px;
+
+		a {
+			font-weight: 400;
+		}
+	}
+
+	.menu-item-has-children {
+		position: relative;
+		padding-right: 30px;
+
+		&:after {
+			@include fa-icon('\f078');
+			font-size: 1.8rem;
+			position: absolute;
+			right: 10px;
+			top: 0;
+			transition: all 0.3s ease-in-out;
+		}
+
+		&.active:after {
+			transform: rotate(180deg);
+		}
+	}
+
+	.sub-menu {
+		display: none;
+
+		li {
+			padding-left: 10px;
+			font-size: 1.6rem;
+
+			a {
+				font-weight: 300;
+			}
+		}
+	}
+}
+
+/* Desktop Styles (minimum 1024px)
+  /*_______________________________________________________*/
+@media screen and (min-width: 1024px) {
+	#mobile-menu,
+	.mobile-menu-icon {
+		display: none;
+	}
+
+	body .header-container #nav-bar {
+		height: 40px;
+		padding: 0;
+
+		.search-icon {
+			display: flex;
+			align-items: center;
+			height: 100%;
+			cursor: pointer;
+			transition: all .3s ease-in-out;
+
+			&:hover {
+				color: $color1;
+			}
+		}
+	}
+
+	.navigationdesktop {
+		display: block;
+		height: inherit;
+		box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.6);
+
+		.menu-item-has-children 
+		
+			{
+			> a {
+				position: relative;
+
+				&:after {
+					@include fa-icon('\f078');
+					position: absolute;
+					right: -20px;
+					top: 0;
+					font-size: 1.5rem;
+					transition: all .3s ease-in-out;
+				}
+			}
+
+			&:hover a:after {
+				transform: rotate(180deg);
+			}
+		}
+		
+		.current-menu-item a {
+			position: relative;
+
+			&:after {
+				content: '';
+				position: absolute;
+				bottom: -3px;
+				left: 0;
+				width: 100%;
+				height: 1px;
+				background-color: $color2;
+			}
+		}
+
+		.main-nav {
+			height: inherit;
+		}
+
+		ul#menu-headermenu { // the actual navigation list
+			list-style: none;
+			padding: 0;
+			margin: 0;
+			display: flex;
+			justify-content: space-around;
+			text-align: center;
+			height: inherit;
+
+			li {
+				flex: 0 1 20%;
+				position: relative;
+				height: inherit;
+				display: flex;
+				align-items: center;
+				justify-content: space-around;
+
+				> a {
+					transition: all .3s ease-in-out;
+				}
+
+				.sub-menu {
+					opacity: 0;
+					visibility: hidden;
+					z-index: -999;
+					position: absolute;
+					top: 40px;
+					left: 0;
+					width: 100%;
+					transition: all .3s ease-in-out;
+					padding: 0;
+					list-style: none;
+					box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.6);
+					max-width: 100%;
+					max-height: 700px;
+					overflow-y: auto;
+
+					li {
+						width: 100%;
+						padding: 10px 5px;
+						display: flex;
+						align-items: center;
+						justify-content: center;
+						background-color: rgba(255, 255, 255, .85);
+						height: 40px;
+						box-sizing: border-box;
+					}
+				}
+
+				&:hover {
+					.sub-menu {
+						z-index: 10;
+						opacity: 1;
+						visibility: visible;
+						height: auto;
+						overflow-y: scroll;
+
+						li {
+							display: block;
+							width: 100%;
+							display: flex;
+							align-items: center;
+							justify-content: center;
+							z-index: 10;
+							box-sizing: border-box;
+						}
+					}
+				}
+			}
+		}
+	}	
+}

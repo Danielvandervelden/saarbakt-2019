@@ -1,0 +1,12 @@
+{
+    "name": "themes/saarbakt",
+    "description": "Awesome bakery goodies!",
+    "type": "theme",
+    "authors": [
+        {
+            "name": "Daniel van der Velden",
+            "email": "daanf@live.nl"
+        }
+    ],
+    "require": {}
+}
