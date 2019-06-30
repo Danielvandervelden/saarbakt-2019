@@ -1,17 +1,17 @@
 <?php
-/**
- * Plugin Name: BakingBags
- * Author: Daniel van der Velden
- * Version: 1.0.0
- */
-  
+/*
+Plugin Name: Baking Bags
+*/
 function saarbakt_bakingbags() {
-  wp_enqueue_script(
-    'saarbakt_bakingbags',
-    plugin_dir_url(__FILE__) . 'bakingbags.js',
-    array('wp-blocks','wp-editor'),
-    true
-  );
+    wp_register_script(
+        'bakingbags',
+        plugins_url( 'bakingbags.js', __FILE__ ),
+        array( 'wp-blocks', 'wp-element' )
+    );
+ 
+    register_block_type( 'saarbakt/bakingbags', array(
+        'editor_script' => 'bakingbags',
+    ) );
+ 
 }
-   
-add_action('enqueue_block_editor_assets', 'saarbakt_bakingbags');
+add_action( 'init', 'saarbakt_bakingbags' );
