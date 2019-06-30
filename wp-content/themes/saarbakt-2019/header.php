@@ -1,3 +1,17 @@
+<?php
+	$headerBackgroundImage;
+	$headerLogo;
+
+	if(wp_is_mobile()) {
+		$headerBackgroundImage = get_the_post_thumbnail_url(null, 'header_mobile');
+		$headerLogo = get_stylesheet_directory_uri() . '/assets/images/saarbaktlogo_header.png';
+
+	} else {
+		$headerBackgroundImage = get_the_post_thumbnail_url(null, 'header_full');
+		$headerLogo = get_stylesheet_directory_uri() . '/assets/images/saarbaktlogo.png';
+	}
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,10 +21,8 @@
 	<?php wp_head(); ?>
 	<title><?php echo get_the_title() ?></title>
 </head>
-<body class="<?php body_class() ?>">
-	<header class="sb-header">
-		<div class="sb-header__wrapper">
-			<a href="<?= get_home_url() ?>"><img src="" alt="SaarBakt Logo"></a>
-			<?= get_template_part('components/sb_navigation') ?>
-		</div>
+<body <?= body_class() ?>>
+	<header class="sb-header" style="background-image: url(<?= $headerBackgroundImage ?>)">
+		<?= get_template_part('components/sb_navigation') ?>
+		<a href="<?= get_home_url() ?>"><h1><img src="<?= $headerLogo ?>" alt="SaarBakt door Sara van der Velden"></h1></a>
 	</header>

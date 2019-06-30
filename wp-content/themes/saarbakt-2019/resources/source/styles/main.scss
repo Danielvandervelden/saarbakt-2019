@@ -1,3 +1,17 @@
+/*
+/* Here you will find all imports of the .scss files
+ * that are used.
+/*_______________________________________________________*/
+
+
+// Base imports
 @import './src/lib/_variables';
 @import './src/lib/_base';
 @import './src/lib/_mixins';
+
+// Component imports
+@import './src/components/header/header';
+@import './src/components/header/_navigation';
+
+// Pages imports
+@import './src/pages/_home';
