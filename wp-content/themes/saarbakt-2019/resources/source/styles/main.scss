@@ -1,5 +1,3 @@
-body {
-	background-color: blue;
-	display: flex;
-	align-items: center;
-}
+@import './src/lib/_variables';
+@import './src/lib/_base';
+@import './src/lib/_mixins';
