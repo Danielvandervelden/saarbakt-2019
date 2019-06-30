@@ -2,13 +2,34 @@
 /* All the base definitions for the Saarbakt-2019 theme.
 /*_______________________________________________________*/
 
+/**
+ * Standard definitions for the entire website
+**/
 html {
 	font-size: 62.5%;
+	color: #242424;
 }
 
 body {
 	margin: 0;
 	padding: 0;
 	font-size: 1.6rem;
-	background-color: pink;
+	font-family: $main_font_family;
+	color: $color2;
+	background-color: $color5;
+	line-height: 1.8rem;
 }
+
+a,
+a:visited {
+	color: $color1;
+	text-decoration: underline;
+}
+
+a:active,
+a:focus,
+a:hover {
+	color: $color3;
+}
+
+

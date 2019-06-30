@@ -2,5 +2,3 @@
 import '../styles/main.scss';
 
 /* Import Javascript modules */
-
-alert('FUCK');

@@ -1,0 +1,17 @@
+/*
+/* All mixins for the SaarBakt website
+/*_______________________________________________________*/
+
+@mixin fa-icon($icon) {
+    content: $icon;
+    font-family: $fontAwesome;
+    font-weight: 900;
+}
+
+@mixin container($width) {
+	max-width: $width + 30px;
+	width: 100%;
+	margin: 0 auto;
+	padding-left: 15px;
+	padding-right: 15px
+}

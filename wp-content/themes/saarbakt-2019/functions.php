@@ -7,3 +7,10 @@ function saarbakt_theme_files() {
 }
 
 add_action('wp_enqueue_scripts', 'saarbakt_theme_files');
+
+function enqueue_fonts() {
+	wp_enqueue_style('montserrat-fonts', 'https://fonts.googleapis.com/css?family=Montserrat:300,400,700&display=swap', false);
+	wp_enqueue_style('roboto-fonts', 'https://fonts.googleapis.com/css?family=Roboto:300,400,700&display=swap', false);
+}
+
+add_action('wp_enqueue_scripts', 'enqueue_fonts');
