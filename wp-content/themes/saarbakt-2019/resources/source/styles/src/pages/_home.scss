@@ -4,4 +4,31 @@
 
 .sb-frontpage-content {
 	@include container(1200px);
+
+	&__latest {
+		display: flex;
+		justify-content: space-between;
+		position: relative;
+
+		&--news {
+			@include flex(48%);
+		}
+
+		&--recipe {
+			@include flex(48%);
+		}
+
+		&:after {
+			content: '';
+			height: 80%;
+			width: 1px;
+			display: block;
+			position: absolute;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+			pointer-events: none;
+			background-color: lighten($color1, 10%);
+		}
+	}
 }

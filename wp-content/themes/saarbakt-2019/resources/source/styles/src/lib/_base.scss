@@ -24,6 +24,7 @@ a,
 a:visited {
 	color: $color1;
 	text-decoration: underline;
+	transition: all .3s ease-in-out;
 }
 
 a:active,
@@ -44,8 +45,8 @@ h1 {
 	line-height: 7rem;
 
 	@media screen and (max-width: $break_tablet) {
-		font-size: 5rem;
-		line-height: 5rem;
+		font-size: 6rem;
+		line-height: 6rem;
 	}
 }
 
@@ -54,8 +55,8 @@ h2 {
 	line-height: 6rem;
 
 	@media screen and (max-width: $break_tablet) {
-		font-size: 4rem;
-		line-height: 4rem;
+		font-size: 5rem;
+		line-height: 5rem;
 	}
 
 	&.sb-page-title {
@@ -75,8 +76,8 @@ h3 {
 	line-height: 5rem;
 
 	@media screen and (max-width: $break_tablet) {
-		font-size: 3rem;
-		line-height: 3rem;
+		font-size: 4rem;
+		line-height: 4rem;
 	}
 }
 
@@ -85,7 +86,34 @@ h4 {
 	line-height: 4rem;
 
 	@media screen and (max-width: $break_tablet) {
+		font-size: 3rem;
+		line-height: 3rem;
+	}
+}
+
+h5 {
+	font-size: 3rem;
+	line-height: 3rem;
+
+	@media screen and (max-width: $break_tablet) {
 		font-size: 2rem;
 		line-height: 2rem;
 	}
+}
+
+h6 {
+	font-size: 2rem;
+	line-height: 2rem;
+
+	@media screen and (max-width: $break_tablet) {
+		font-size: 1.6rem;
+		line-height: 1.6rem;
+	}
+}
+
+/**
+ * Sections
+ */
+section {
+	margin: 3rem 0;
 }

@@ -1,0 +1,34 @@
+/*
+/* Desktop Styles
+/*_______________________________________________________*/
+.sb-recipe-post {
+	padding-bottom: 2.3rem;
+	position: relative;
+
+	img {
+		height: 200px;
+		width: 100%;
+		margin: 0 auto;
+		display: block;
+	}
+
+	.btn {
+		position: absolute;
+		bottom: 0;
+		right: 0;
+	}
+}
+
+/*
+/* Tablet Styles (up to 768px)
+/*_______________________________________________________*/
+@media screen and (max-width: 768px) {
+
+}
+
+/*
+/* Mobile Styles (maximum of 320px)
+/*_______________________________________________________*/
+@media screen and (max-width: 320px) {
+
+}

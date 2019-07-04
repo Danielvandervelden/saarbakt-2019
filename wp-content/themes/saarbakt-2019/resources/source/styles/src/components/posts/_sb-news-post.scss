@@ -1,0 +1,27 @@
+/*
+/* Desktop Styles
+/*_______________________________________________________*/
+.sb-news-post {
+	padding-bottom: 2.3rem;
+	position: relative;
+
+	.btn {
+		position: absolute;
+		bottom: 0;
+		right: 0;
+	}
+}
+
+/*
+/* Tablet Styles (up to 768px)
+/*_______________________________________________________*/
+@media screen and (max-width: 768px) {
+
+}
+
+/*
+/* Mobile Styles (maximum of 320px)
+/*_______________________________________________________*/
+@media screen and (max-width: 320px) {
+
+}

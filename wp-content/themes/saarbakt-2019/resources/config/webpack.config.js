@@ -4,11 +4,13 @@ const plugins = require('./plugins');
 
 module.exports = {
 	mode: "production",
-	entry: path.resolve(__dirname, "../source/scripts/main.js"),
+	entry: {
+		main: path.resolve(__dirname, "../source/scripts/main.js"),
+		home: path.resolve(__dirname, "../source/scripts/home.js")
+	},
 	module: {
 		rules: [
 			loaders.JSLoader,
-			loaders.ESLintLoader,
 			loaders.CSSLoader
 		]
 	},
