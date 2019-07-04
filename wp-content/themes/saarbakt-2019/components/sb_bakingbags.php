@@ -12,16 +12,16 @@ $bakingbags = new WP_Query(array(
 		"type": "slider",
 		"bound": "true",
 		"equalHeights": "true",
+		"peek": {
+			"before": 0,
+			"after": 75
+		},
 		"breakpoints": {
 			"768": {
 				"perView": 2
 			},
 			"480": {
-				"perView": 1,
-				"peek": {
-					"before": 0,
-					"after": 75
-				}
+				"perView": 1
 			}
 		}
 	}'>
