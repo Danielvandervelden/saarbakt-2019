@@ -1,26 +1,32 @@
 /*
 /* Desktop Styles
 /*_______________________________________________________*/
-.sb-bakingbags {
-	@include container(1200px);
-	
-	.baking-bag {
+footer {
+	@include container();
+
+	.sb-footer {
+		@include container(1200px);
+		display: flex;
+		justify-content: space-between;
 		text-align: center;
-		padding-bottom: 4rem;
-		position: relative;
 
-		img {
-			max-width: 100%;
-			height: 200px;
-			display: block;
-			margin: 0 auto;
-		}
+		&__col {
+			@include flex(30%);
+			padding-bottom: 2rem;
 
-		.btn {
-			position: absolute;
-			bottom: 0;
-			left: 50%;
-			transform: translateX(-50%);
+			h3 {
+				margin-bottom: 1rem;
+			}
+
+			ul {
+				padding:0;
+				margin: 0;
+				list-style: none;
+			}
+
+			.fa-instagram {
+				font-size: 3rem;
+			}
 		}
 	}
 }

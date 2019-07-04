@@ -3,12 +3,11 @@
 /*_______________________________________________________*/
 
 .sb-frontpage-content {
-	@include container(1200px);
-
 	&__latest {
 		display: flex;
 		justify-content: space-between;
 		position: relative;
+		@include container(1200px);
 
 		&--news {
 			@include flex(48%);

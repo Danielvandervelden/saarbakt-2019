@@ -6,8 +6,8 @@
 
 // Base imports
 @import './src/lib/_variables';
-@import './src/lib/_base';
 @import './src/lib/_mixins';
+@import './src/lib/_base';
 @import './src/lib/_buttons';
 
 // Component imports
@@ -16,6 +16,7 @@
 @import './src/components/bakingbags/_bakingbags';
 @import './src/components/posts/_sb-news-post';
 @import './src/components/posts/_sb-recipe-post';
+@import './src/components/footer/_footer';
 
 // Pages imports
 @import './src/pages/_home';
