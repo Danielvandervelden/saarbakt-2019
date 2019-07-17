@@ -1,47 +1,102 @@
 /*
 /* All styling for the navigation
 /*_______________________________________________________*/
+.admin-bar .sb-nav-toggle {
+	top: 50px;
+}
 
-.sb-nav {
-	text-align: right;
-	@include container(1200px);
-	position: relative;
-	margin-bottom: 3rem;
+.sb-nav-toggle {
+	position: fixed;
+	z-index: 100;
+	top: 30px;
+	right: 30px;
+	transform: translate(100px, -100px);	
+	background-color: $color1;
+	color: #FFF;
+	width: 5rem;
+	height: 5rem;
+	border-radius: 50%;
+	text-align: center;
+	animation: bounceIn .5s ease-in-out forwards;
+	animation-delay: 1s;
+	font-size: 2.5rem;
+	cursor: pointer;
 
-	ul {
-		display: flex;
-		justify-content: flex-end;
-		list-style: none;
-		margin: 0;
-		padding: 1.5rem 0;
+	.line {
+		width: 25px;
+		height: 2px;
+		background-color: #FFF;
+		display: block;
+		margin: 0 auto;
+		position: relative;
+		top: 22px;
+		transition: all .3s ease-in-out;
 
-		li {
-			margin-right: 5rem;
+		&:nth-child(1) {
+			transform: translate(0, -5px);
+		}
 
-			a {
-				text-decoration: none;
-				color: $color4;
-				transition: all .3s ease-in-out;
-
-				&:hover {
-					color: darken($color4, 15%);
-				}
-			}
-
-			&:last-child {
-				margin-right: 0;
-			}
-
-			&.menu-item-has-children { 
-				a:after {
-					@include fa-icon('\f078', 1.3rem, inherit);
-					margin-left: .4rem;
-				} 
-			}
+		&:nth-child(3) {
+			transform: translate(0, 5px);
 		}
 	}
+}
+
+.menu-open .sb-nav-toggle {
+
+	.line {
+		&:nth-child(1) {
+			transform: translate(-1px, 1px) rotate(45deg);
+		}
+
+		&:nth-child(2) {
+			opacity: 0;
+		}
+
+		&:nth-child(3) {
+			transform: translate(0, -2px) rotate(-45deg);
+		}
+	}
+}
+
+.sb-nav {
+	position: fixed;
+	z-index: 99;
+	border-radius: 0 0 0 50%;
+	top: -150%;
+	right: -150%;
+	width: 150vw;
+	height: 150vh;
+	background-color: $color1;
+	transition: all .5s ease-in-out;
 
 	.sub-menu {
 		display: none;
 	}
 }
+
+.menu-open {
+	.sb-nav {
+		top: 0;
+		right: 0;
+	}
+}
+
+@keyframes bounceIn{
+	0%{
+	  opacity: 0;
+	  transform: scale(0.3) translate3d(0,0,0);
+	}
+	50%{
+	  opacity: 0.9;
+	  transform: scale(1.1);
+	}
+	80%{
+	  opacity: 1;
+	  transform: scale(0.89);
+	}
+	100%{
+	  opacity: 1;
+	  transform: scale(1) translate3d(0,0,0);
+	}
+  }
