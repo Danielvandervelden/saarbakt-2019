@@ -6,10 +6,14 @@
 	position: relative;
 
 	img {
-		height: 200px;
+		height: auto;
 		width: 100%;
 		margin: 0 auto;
 		display: block;
+	}
+
+	.content {
+		padding-bottom: 3rem;
 	}
 
 	.btn {
@@ -29,10 +33,19 @@
 
 	.photo {
 		@include flex(30%);
+		margin-right: 3%;
+		display: flex;
+
+		img {
+
+			&:hover {
+				opacity: .7rem;
+			}
+		}
 	}
 
 	.content {
-		@include flex(70%);
+		@include flex(67%);
 	}
 }
 

@@ -1,0 +1,67 @@
+/*
+/* Desktop Styles
+/*_______________________________________________________*/
+.single-post {
+	h2 {
+		&:after {
+			content: '';
+			margin-left: 1.5rem;
+			display: inline-block;
+			height: 4rem;
+			min-width: 4rem;
+			background-image: url('/wp-content/themes/saarbakt-2019/assets/images/heart.svg');
+			background-size: cover;
+		}
+	}
+
+	.sb-post-content {
+		padding: 1.5rem;
+		border: 1px solid lighten($color1, 40%);
+		border-radius: 1rem;
+	}
+
+	.sb-ingredients {
+		padding: 1.5rem;
+		border: 1px solid lighten($color1, 40%);
+		border-radius: 1rem;
+
+		ul {
+			list-style: none;
+			padding: 0;
+
+			li {
+				position: relative;
+
+				&:before {
+					content: '';
+					height: 20px;
+					width: 20px;
+					display: inline-block;
+					margin-right: 1rem;
+					vertical-align: top;
+					background-image: url('/wp-content/themes/saarbakt-2019/assets/images/kitchenmachine.png');
+					background-size: cover;
+					background-position: 0 3px;
+				}
+			}
+		}
+	}
+
+	.sb-breadcrumbs {
+		margin-top: 2.5rem;
+	}
+}
+
+/*
+/* Tablet Styles (up to 768px)
+/*_______________________________________________________*/
+@media screen and (max-width: 768px) {
+
+}
+
+/*
+/* Mobile Styles (maximum of 320px)
+/*_______________________________________________________*/
+@media screen and (max-width: 320px) {
+
+}

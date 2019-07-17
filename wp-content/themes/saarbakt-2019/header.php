@@ -3,12 +3,51 @@
 	$headerLogo;
 
 	if(wp_is_mobile()) {
-		$headerBackgroundImage = get_the_post_thumbnail_url(null, 'header_mobile');
 		$headerLogo = get_stylesheet_directory_uri() . '/assets/images/saarbaktlogo_header.png';
-
 	} else {
-		$headerBackgroundImage = get_the_post_thumbnail_url(null, 'header_full');
 		$headerLogo = get_stylesheet_directory_uri() . '/assets/images/saarbaktlogo.png';
+	}
+
+	$blog_home = get_option('page_for_posts');
+
+	if (is_front_page()) {
+		if(wp_is_mobile()) {
+			$headerBackgroundImage = get_the_post_thumbnail_url($homepage, 'header_mobile');
+		} else {
+			$headerBackgroundImage = get_the_post_thumbnail_url($homepage, 'header_full');
+		}
+	} elseif (is_home()) {
+		if (wp_is_mobile()) {
+			$headerBackgroundImage = get_the_post_thumbnail_url($blog_home, 'header_mobile');
+		} else {
+			$headerBackgroundImage = get_the_post_thumbnail_url($blog_home, 'header_full');
+		}
+	} elseif (strpos($url, 'nieuwtjes') !== false) {
+		if (wp_is_mobile()) {
+			$headerBackgroundImage = get_the_post_thumbnail_url(96, 'header_mobile');
+		} else {
+			$headerBackgroundImage = get_the_post_thumbnail_url(96, 'header_full');
+		}
+	} 
+	elseif (strpos($url, 'tips-tricks') !== false) {
+		if (wp_is_mobile()) {
+			$headerBackgroundImage = get_the_post_thumbnail_url(101, 'header_mobile');
+		} else {
+			$headerBackgroundImage = get_the_post_thumbnail_url(101, 'header_full');
+		}
+	} elseif (strpos($url, 'contact') !== false) {
+		if (wp_is_mobile()) {
+			$headerBackgroundImage = get_the_post_thumbnail_url(101, 'header_mobile');
+		} else {
+			$headerBackgroundImage = get_the_post_thumbnail_url(101, 'header_full');
+		}
+	}
+	else if ($headerBackgroundImage === NULL) {
+		if (wp_is_mobile()) {
+			$headerBackgroundImage = get_the_post_thumbnail_url($blog_home, 'header_mobile');
+		} else {
+			$headerBackgroundImage = get_the_post_thumbnail_url($blog_home, 'header_full');
+		}
 	}
 ?>
 
