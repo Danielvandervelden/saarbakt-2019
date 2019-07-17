@@ -8,10 +8,6 @@
 	<i class="fas fa-arrow-left"></i>
 </div>
 
-<div id="sb-mobile-menu" class="sb-nav">
+<div id="sb-menu" class="sb-nav">
 	<?php wp_nav_menu( array( 'container_class' => 'main-nav', 'theme_location' => 'headerMenuLocation', 'depth' => 2 ) ); ?>
 </div>
-
-<nav id="sb-desktop-menu" class="sb-nav">
-	<?php wp_nav_menu( array( 'container_class' => 'main-nav', 'theme_location' => 'headerMenuLocation', 'depth' => 2 ) ); ?>
-</nav>

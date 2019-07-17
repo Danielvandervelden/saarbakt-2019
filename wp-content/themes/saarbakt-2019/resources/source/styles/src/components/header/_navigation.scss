@@ -1,7 +1,6 @@
 /*
 /* All styling for the navigation
 /*_______________________________________________________*/
-#sb-mobile-menu,
 .sb-nav-toggle,
 #sb-back-toggle {
 	display: none;
@@ -11,8 +10,9 @@
 /* Tablet Styles (up to 768px)
 /*_______________________________________________________*/
 @media screen and (max-width: 768px) {
-	#sb-desktop-menu {
-		display: none;
+	.sb-nav-toggle,
+	#sb-back-toggle {
+		display: block;
 	}
 
 	.admin-bar .sb-nav-toggle {
@@ -54,12 +54,6 @@
 				transform: translate(0, 5px);
 			}
 		}
-	}
-
-	#sb-mobile-menu,
-	.sb-nav-toggle,
-	#sb-back-toggle {
-		display: block;
 	}
 	
 	#sb-back-toggle {

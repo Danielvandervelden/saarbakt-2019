@@ -3,7 +3,7 @@ import _ from './helper/HelperFunctions';
 class SbNav {
 	constructor() {
 		this.navToggle = document.getElementById('sb-nav-toggle');
-		this.recipeToggle = document.querySelector('#sb-mobile-menu .menu-item-has-children');
+		this.recipeToggle = document.querySelector('#sb-menu .menu-item-has-children');
 		this.backToggle = document.getElementById('sb-back-toggle');
 		this.body = document.body;
 
