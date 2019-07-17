@@ -1,102 +1,243 @@
 /*
 /* All styling for the navigation
 /*_______________________________________________________*/
-.admin-bar .sb-nav-toggle {
-	top: 50px;
+#sb-mobile-menu,
+.sb-nav-toggle,
+#sb-back-toggle {
+	display: none;
 }
 
-.sb-nav-toggle {
-	position: fixed;
-	z-index: 100;
-	top: 30px;
-	right: 30px;
-	transform: translate(100px, -100px);	
-	background-color: $color1;
-	color: #FFF;
-	width: 5rem;
-	height: 5rem;
-	border-radius: 50%;
-	text-align: center;
-	animation: bounceIn .5s ease-in-out forwards;
-	animation-delay: 1s;
-	font-size: 2.5rem;
-	cursor: pointer;
-
-	.line {
-		width: 25px;
-		height: 2px;
-		background-color: #FFF;
-		display: block;
-		margin: 0 auto;
-		position: relative;
-		top: 22px;
-		transition: all .3s ease-in-out;
-
-		&:nth-child(1) {
-			transform: translate(0, -5px);
-		}
-
-		&:nth-child(3) {
-			transform: translate(0, 5px);
-		}
-	}
-}
-
-.menu-open .sb-nav-toggle {
-
-	.line {
-		&:nth-child(1) {
-			transform: translate(-1px, 1px) rotate(45deg);
-		}
-
-		&:nth-child(2) {
-			opacity: 0;
-		}
-
-		&:nth-child(3) {
-			transform: translate(0, -2px) rotate(-45deg);
-		}
-	}
-}
-
-.sb-nav {
-	position: fixed;
-	z-index: 99;
-	border-radius: 0 0 0 50%;
-	top: -150%;
-	right: -150%;
-	width: 150vw;
-	height: 150vh;
-	background-color: $color1;
-	transition: all .5s ease-in-out;
-
-	.sub-menu {
+/*
+/* Tablet Styles (up to 768px)
+/*_______________________________________________________*/
+@media screen and (max-width: 768px) {
+	#sb-desktop-menu {
 		display: none;
 	}
-}
 
-.menu-open {
+	.admin-bar .sb-nav-toggle {
+		top: 50px;
+	}
+	
+	.sb-nav-toggle {
+		position: fixed;
+		z-index: 100;
+		top: 30px;
+		right: 30px;
+		transform: translate(100px, -100px);	
+		background-color: $color1;
+		color: #FFF;
+		width: 5rem;
+		height: 5rem;
+		border-radius: 50%;
+		text-align: center;
+		animation: bounceIn .5s ease-in-out forwards;
+		animation-delay: 1s;
+		font-size: 2.5rem;
+		cursor: pointer;
+	
+		.line {
+			width: 25px;
+			height: 2px;
+			background-color: #FFF;
+			display: block;
+			margin: 0 auto;
+			position: relative;
+			top: 22px;
+			transition: all .3s ease-in-out;
+	
+			&:nth-child(1) {
+				transform: translate(0, -5px);
+			}
+	
+			&:nth-child(3) {
+				transform: translate(0, 5px);
+			}
+		}
+	}
+
+	#sb-mobile-menu,
+	.sb-nav-toggle,
+	#sb-back-toggle {
+		display: block;
+	}
+	
+	#sb-back-toggle {
+		position: fixed;
+		z-index: 100;
+		top: 30px;
+		left: 30px;
+		opacity: 0;
+		pointer-events: none;
+		background-color: $color1;
+		color: #FFF;
+		width: 5rem;
+		height: 5rem;
+		border-radius: 50%;
+		text-align: center;
+		transition: all .3s ease-in-out;
+		font-size: 2.5rem;
+		cursor: pointer;
+	}
+	
+	.menu-open .sb-nav-toggle {
+	
+		.line {
+			&:nth-child(1) {
+				transform: translate(0px, 2px) rotate(45deg);
+			}
+	
+			&:nth-child(2) {
+				opacity: 0;
+			}
+	
+			&:nth-child(3) {
+				transform: translate(1px, -2px) rotate(-45deg);
+				width: 26px;
+			}
+		}
+	}
+	
 	.sb-nav {
-		top: 0;
-		right: 0;
+		position: fixed;
+		z-index: 99;
+		border-radius: 0 0 0 50%;
+		top: -150%;
+		right: -150%;
+		width: 100vw;
+		height: 100vh;
+		background-color: $color1;
+		transition: all .5s ease-in-out;
+	
+		.main-nav {
+			position: absolute;
+			width: 100%;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			
+			ul:not(.sub-menu) {
+				padding: 0;
+				text-align: left;
+				list-style: none;
+				transition: all .3s ease-in-out;
+				max-width: 150px;
+				margin: 0 auto;
+				position: relative;
+				
+				li {
+					padding: 0;
+					margin: 2rem 0;
+					
+					a {
+						font-size: 2.5rem;
+						text-decoration: none;
+						text-align: left;
+						transition: all .3s ease-in-out;
+						margin: 0;
+					}
+	
+					&.menu-item-has-children > a {
+						&:after {
+							@include fa-icon('\f054', 1.6rem, #FFF);
+							transition: all .3s ease-in-out;
+							position: relative;
+							top: 1px;
+							display: inline-block;
+							vertical-align: top;
+							margin-left: .5rem;
+						}
+					}
+	
+					&:hover {
+	
+						a {
+							color: $color3;
+	
+							&:after{
+								transform: translateX(5px);
+								color: $color3;
+							}
+						}
+					}
+				}
+			}
+	
+			a {
+				color: #FFF;
+			}
+		}
+	
+		.sub-menu {
+			opacity: 0;
+			pointer-events: none;
+			position: absolute;
+			right: -1000px;
+			top: 0;
+			margin: 0;
+			padding: 0;
+			list-style: none;
+	
+			li:first-of-type {
+				margin-top: 0 !important;
+			}
+	
+			li {
+				a {
+					margin: 0;
+				}
+			}
+		}
 	}
+	
+	.menu-open {
+		.sb-nav {
+			top: 0;
+			right: 50%;
+			transform: translateX(50%);
+			border-radius: 0;
+		}
+	}
+	
+	.submenu-active {
+		ul:not(.sub-menu) {
+			transform: translateX(-900px);
+		}
+	
+		.sub-menu {
+			opacity: 1;
+			pointer-events: auto;
+		}
+	
+		#sb-back-toggle {
+			opacity: 1;
+			pointer-events: auto;
+		}
+	}
+	
+	@keyframes bounceIn{
+		0%{
+		  opacity: 0;
+		  transform: scale(0.3) translate3d(0,0,0);
+		}
+		50%{
+		  opacity: 0.9;
+		  transform: scale(1.1);
+		}
+		80%{
+		  opacity: 1;
+		  transform: scale(0.89);
+		}
+		100%{
+		  opacity: 1;
+		  transform: scale(1) translate3d(0,0,0);
+		}
+	  }
 }
 
-@keyframes bounceIn{
-	0%{
-	  opacity: 0;
-	  transform: scale(0.3) translate3d(0,0,0);
-	}
-	50%{
-	  opacity: 0.9;
-	  transform: scale(1.1);
-	}
-	80%{
-	  opacity: 1;
-	  transform: scale(0.89);
-	}
-	100%{
-	  opacity: 1;
-	  transform: scale(1) translate3d(0,0,0);
-	}
-  }
+/*
+/* Mobile Styles (maximum of 320px)
+/*_______________________________________________________*/
+@media screen and (max-width: 320px) {
+
+}
