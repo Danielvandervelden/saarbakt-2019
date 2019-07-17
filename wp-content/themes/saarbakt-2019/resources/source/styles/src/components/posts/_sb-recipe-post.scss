@@ -19,6 +19,23 @@
 	}
 }
 
+.list .sb-recipe-post {
+	display: flex;
+	flex-wrap: wrap;
+
+	h5 {
+		@include flex(100%);
+	}
+
+	.photo {
+		@include flex(30%);
+	}
+
+	.content {
+		@include flex(70%);
+	}
+}
+
 /*
 /* Tablet Styles (up to 768px)
 /*_______________________________________________________*/

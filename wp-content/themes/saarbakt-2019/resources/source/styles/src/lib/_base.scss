@@ -20,8 +20,8 @@ body {
 	line-height: 2.4rem;
 }
 
-a,
-a:visited {
+a:not(.btn),
+a:not(.btn):visited {
 	color: $color1;
 	text-decoration: underline;
 	transition: all .3s ease-in-out;
@@ -112,8 +112,32 @@ h6 {
 }
 
 /**
- * Sections
+ * Sections and containers
  */
 section {
 	margin: 3rem 0;
+}
+
+.sb-container {
+	@include container(1200px);
+}
+
+.sb-two-col {
+	display: flex;
+	> div:first-of-type {
+		@include flex(68%);
+		margin-right: 2%;
+	}
+
+	>div:last-of-type {
+		@include flex(40%);
+	}
+
+	@media screen and (max-width: $break_tablet) {
+		display: block;
+
+		> div {
+			width: 100%;
+		}
+	}
 }

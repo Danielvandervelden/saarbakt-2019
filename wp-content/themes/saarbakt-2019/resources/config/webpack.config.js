@@ -3,10 +3,10 @@ const loaders = require('./loaders');
 const plugins = require('./plugins');
 
 module.exports = {
-	mode: "production",
 	entry: {
 		main: path.resolve(__dirname, "../source/scripts/main.js"),
-		home: path.resolve(__dirname, "../source/scripts/home.js")
+		home: path.resolve(__dirname, "../source/scripts/home.js"),
+		instagram_posts: path.resolve(__dirname, "../source/scripts/instagram_posts.js")
 	},
 	module: {
 		rules: [

@@ -31,7 +31,7 @@ get_header();
 				<?= get_template_part('components/sb_news-post') ?>
 			<?php endwhile; endif; ?>
 		</div>
-		<div class="sb-frontpage-content__latest--recipe">
+		<div class="sb-frontpage-content__latest--recipe list">
 		<h2 class="sb-page-title">Nieuwste recept</h2>
 		<?php if($recipeQuery->have_posts()): while($recipeQuery->have_posts()): $recipeQuery->the_post() ?>
 				<?= get_template_part('components/sb_recipe-post') ?>
