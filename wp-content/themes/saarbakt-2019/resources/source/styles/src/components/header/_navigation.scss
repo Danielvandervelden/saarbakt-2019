@@ -1,15 +1,17 @@
 /*
 /* All styling for the navigation
 /*_______________________________________________________*/
-.sb-nav-toggle,
-#sb-back-toggle {
-	display: none;
+@media screen and (min-width: 1025px) {
+	.sb-nav-toggle,
+	#sb-back-toggle {
+		display: none;
+	}
 }
 
 /*
-/* Tablet Styles (up to 768px)
+/* Tablet Styles (up to 1024px)
 /*_______________________________________________________*/
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 1024px) {
 	.sb-nav-toggle,
 	#sb-back-toggle {
 		display: block;
@@ -227,11 +229,4 @@
 		  transform: scale(1) translate3d(0,0,0);
 		}
 	  }
-}
-
-/*
-/* Mobile Styles (maximum of 320px)
-/*_______________________________________________________*/
-@media screen and (max-width: 320px) {
-
 }

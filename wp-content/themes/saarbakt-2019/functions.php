@@ -27,7 +27,7 @@ function saarbakt_features() {
 	add_theme_support( 'post-thumbnails');
 	add_image_size('thumbnailimage', 150, auto, false);
 	add_image_size('header_mobile', 768, auto, false);
-	add_image_size('header_full', 2500, auto, false);
+	add_image_size('header_full', 1500, auto, false);
 	add_image_size('image_mobile', 500, auto, true);
 	add_post_type_support( 'page', 'excerpt' );
 }

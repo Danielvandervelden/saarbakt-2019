@@ -7,10 +7,14 @@ class SbNav {
 		this.backToggle = document.getElementById('sb-back-toggle');
 		this.body = document.body;
 
-		this.setListeners();
+		if(window.innerWidth <= 1024) {
+			this.initMobileNav();
+		} else {
+			this.initDesktopNav();
+		}
 	}
 
-	setListeners() {
+	initMobileNav() {
 		this.navToggle.addEventListener(_.clickEvent(), function() {
 			this.body.classList.toggle('menu-open');
 		}.bind(this))
@@ -24,6 +28,10 @@ class SbNav {
 			e.preventDefault();
 			this.body.classList.remove('submenu-active');
 		}.bind(this));
+	}
+
+	initDesktopNav() {
+		
 	}
 }
 
