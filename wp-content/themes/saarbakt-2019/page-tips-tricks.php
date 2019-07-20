@@ -3,7 +3,7 @@ get_header();
 
 $tipstricksQuery = new WP_Query(array(
 	'post_type' => 'tipstricks',
-	'posts_per_page' => '5'
+	'posts_per_page' => '4'
 ));
 
 ?>
