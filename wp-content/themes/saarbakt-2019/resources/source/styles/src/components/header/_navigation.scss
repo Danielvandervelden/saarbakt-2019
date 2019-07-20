@@ -2,9 +2,111 @@
 /* All styling for the navigation
 /*_______________________________________________________*/
 @media screen and (min-width: 1025px) {
+
 	.sb-nav-toggle,
 	#sb-back-toggle {
 		display: none;
+	}
+
+	#sb-menu {
+		@include container(1200px);
+		position: relative;
+		z-index: 10;
+		text-align: right;
+		
+		// The UL
+		.menu {
+			margin: 0;
+			padding: 1.5rem;
+			display: inline-flex;
+			list-style: none;
+		}
+
+		// The first list items
+		.menu > li {
+			&:not(:last-of-type) {
+				margin-right: 4rem;
+			}
+
+			// The links
+			&.menu-item a {
+				color: $color4;
+				text-decoration: none;
+				transition: all .3s ease-in-out;
+
+				&:hover {
+					color: $color2;
+					&:after{color:$color2}
+				}
+			}
+
+			// The menu items with a submenu
+			&.menu-item-has-children > a {
+				&:after {
+					@include fa-icon('\f078', 1.4rem, $color4);
+					display: inline-block;
+					margin-left: .5rem;
+					transition: all .3s ease-in-out;
+				}
+			}
+		}
+
+		li > .sub-menu {
+			position: absolute;
+			z-index: -1;
+			top: -500px;
+			left: 50%;
+			width: 100vw;
+			transform: translateX(-50%);
+			border-radius: 0 0 1rem 1rem;
+			background-color: $color4;
+			list-style: none;
+			margin: 0;
+			padding: 8rem 0 2rem 0;
+			display: flex;
+			flex-wrap: wrap;
+			transition: all .3s ease-in-out;
+
+			li.menu-item {
+				@include flex(20%);
+				padding: 1.5rem 0;
+
+				a {
+					color: $color2;
+
+					&:hover {
+						color: $color3;
+					}
+				}
+			}
+		}
+
+		li.submenu-active > .sub-menu {
+			top: 0;
+
+			&:before {
+				content: '';
+				position: absolute;
+				top: 5.5rem;
+				left: 50%;
+				transform: translateX(-50%);
+				width: 100%;
+				height: 1px;
+				background-color: $color2;
+				opacity: .6;
+			}
+		}
+
+		&.mega-menu-active {
+			.menu > li > a {
+				color: $color1;
+
+				&:after{
+					color: $color1;
+					transform: rotate(180deg);
+				}
+			}
+		}
 	}
 }
 
@@ -12,6 +114,7 @@
 /* Tablet Styles (up to 1024px)
 /*_______________________________________________________*/
 @media screen and (max-width: 1024px) {
+
 	.sb-nav-toggle,
 	#sb-back-toggle {
 		display: block;
@@ -20,13 +123,13 @@
 	.admin-bar .sb-nav-toggle {
 		top: 50px;
 	}
-	
+
 	.sb-nav-toggle {
 		position: fixed;
 		z-index: 100;
 		top: 30px;
 		right: 30px;
-		transform: translate(100px, -100px);	
+		transform: translate(100px, -100px);
 		background-color: $color1;
 		color: #FFF;
 		width: 5rem;
@@ -37,7 +140,7 @@
 		animation-delay: 1s;
 		font-size: 2.5rem;
 		cursor: pointer;
-	
+
 		.line {
 			width: 25px;
 			height: 2px;
@@ -47,17 +150,17 @@
 			position: relative;
 			top: 22px;
 			transition: all .3s ease-in-out;
-	
+
 			&:nth-child(1) {
 				transform: translate(0, -5px);
 			}
-	
+
 			&:nth-child(3) {
 				transform: translate(0, 5px);
 			}
 		}
 	}
-	
+
 	#sb-back-toggle {
 		position: fixed;
 		z-index: 100;
@@ -75,25 +178,25 @@
 		font-size: 2.5rem;
 		cursor: pointer;
 	}
-	
+
 	.menu-open .sb-nav-toggle {
-	
+
 		.line {
 			&:nth-child(1) {
 				transform: translate(0px, 2px) rotate(45deg);
 			}
-	
+
 			&:nth-child(2) {
 				opacity: 0;
 			}
-	
+
 			&:nth-child(3) {
 				transform: translate(1px, -2px) rotate(-45deg);
 				width: 26px;
 			}
 		}
 	}
-	
+
 	.sb-nav {
 		position: fixed;
 		z-index: 99;
@@ -104,14 +207,14 @@
 		height: 100vh;
 		background-color: $color1;
 		transition: all .5s ease-in-out;
-	
+
 		.main-nav {
 			position: absolute;
 			width: 100%;
 			top: 50%;
 			left: 50%;
 			transform: translate(-50%, -50%);
-			
+
 			ul:not(.sub-menu) {
 				padding: 0;
 				text-align: left;
@@ -120,11 +223,11 @@
 				max-width: 150px;
 				margin: 0 auto;
 				position: relative;
-				
+
 				li {
 					padding: 0;
 					margin: 2rem 0;
-					
+
 					a {
 						font-size: 2.5rem;
 						text-decoration: none;
@@ -132,8 +235,8 @@
 						transition: all .3s ease-in-out;
 						margin: 0;
 					}
-	
-					&.menu-item-has-children > a {
+
+					&.menu-item-has-children>a {
 						&:after {
 							@include fa-icon('\f054', 1.6rem, #FFF);
 							transition: all .3s ease-in-out;
@@ -144,26 +247,14 @@
 							margin-left: .5rem;
 						}
 					}
-	
-					&:hover {
-	
-						a {
-							color: $color3;
-	
-							&:after{
-								transform: translateX(5px);
-								color: $color3;
-							}
-						}
-					}
 				}
 			}
-	
+
 			a {
 				color: #FFF;
 			}
 		}
-	
+
 		.sub-menu {
 			opacity: 0;
 			pointer-events: none;
@@ -173,11 +264,11 @@
 			margin: 0;
 			padding: 0;
 			list-style: none;
-	
+
 			li:first-of-type {
 				margin-top: 0 !important;
 			}
-	
+
 			li {
 				a {
 					margin: 0;
@@ -185,7 +276,7 @@
 			}
 		}
 	}
-	
+
 	.menu-open {
 		.sb-nav {
 			top: 0;
@@ -194,39 +285,42 @@
 			border-radius: 0;
 		}
 	}
-	
+
 	.submenu-active {
 		ul:not(.sub-menu) {
 			transform: translateX(-900px);
 		}
-	
+
 		.sub-menu {
 			opacity: 1;
 			pointer-events: auto;
 		}
-	
+
 		#sb-back-toggle {
 			opacity: 1;
 			pointer-events: auto;
 		}
 	}
-	
-	@keyframes bounceIn{
-		0%{
-		  opacity: 0;
-		  transform: scale(0.3) translate3d(0,0,0);
+
+	@keyframes bounceIn {
+		0% {
+			opacity: 0;
+			transform: scale(0.3) translate3d(0, 0, 0);
 		}
-		50%{
-		  opacity: 0.9;
-		  transform: scale(1.1);
+
+		50% {
+			opacity: 0.9;
+			transform: scale(1.1);
 		}
-		80%{
-		  opacity: 1;
-		  transform: scale(0.89);
+
+		80% {
+			opacity: 1;
+			transform: scale(0.89);
 		}
-		100%{
-		  opacity: 1;
-		  transform: scale(1) translate3d(0,0,0);
+
+		100% {
+			opacity: 1;
+			transform: scale(1) translate3d(0, 0, 0);
 		}
-	  }
+	}
 }

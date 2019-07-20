@@ -19,6 +19,28 @@ body {
 	color: $color2;
 	background-color: $color5;
 	line-height: 2.4rem;
+
+	&:after {
+		content: '';
+		opacity: 0;
+		pointer-events: none;
+		width: 100vw;
+		height: 100vh;
+		background-color: rgba(0, 0, 0, .7);
+		position: fixed;
+		top: 0;
+		left: 0;
+		transition: all .3s ease-in-out;
+	}
+
+	&.backdrop {
+		overflow: hidden;
+
+		&:after {
+			opacity: 1;
+			pointer-events: auto;
+		}
+	}
 }
 
 a:not(.btn),
