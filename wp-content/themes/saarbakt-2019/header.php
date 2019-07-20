@@ -62,7 +62,7 @@
 </head>
 <body <?= body_class() ?>>
 	<div class="search__container sb-container">
-		<i class="fas fa-times"></i>
+		<i class="fas fa-times search__close"></i>
 		<div class="search__controls">
 			<h5>Waar ben je naar op zoek?</h5>
 			<input id="search-input" type="text">

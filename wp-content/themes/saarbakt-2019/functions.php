@@ -1,5 +1,7 @@
 <?php 
 
+require get_theme_file_path('/inc/search-route.php');
+
 function saarbakt_theme_files() {
 	wp_enqueue_style('saarbakt_styles', get_stylesheet_directory_uri() . '/assets/styles/main.css', false);
 	wp_enqueue_script( 'saarbakt_scripts', get_template_directory_uri() . '/assets/scripts/main.js', array(), NULL, true );
