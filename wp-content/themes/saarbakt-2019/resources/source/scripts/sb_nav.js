@@ -3,9 +3,11 @@ class SbNav {
 	constructor() {
 		this.body = document.body;
 
+		// Desktop Menu
 		this.megaMenuToggle = document.querySelectorAll('#sb-menu .menu-item-has-children');
 		this.menu = document.getElementById('sb-menu');
 
+		// Mobile Menu
 		this.navToggleMobile = document.getElementById('sb-nav-toggle');
 		this.recipeToggleMobile = document.querySelector('#sb-menu .menu-item-has-children');
 		this.backToggleMobile = document.getElementById('sb-back-toggle');

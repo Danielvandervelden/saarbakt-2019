@@ -61,6 +61,17 @@
 	<title><?php echo get_the_title() ?></title>
 </head>
 <body <?= body_class() ?>>
+	<div class="search__container sb-container">
+		<i class="fas fa-times"></i>
+		<div class="search__controls">
+			<h5>Waar ben je naar op zoek?</h5>
+			<input id="search-input" type="text">
+		</div>
+
+		<div class="search_results">
+
+		</div>
+	</div>
 	<header class="sb-header" style="background-image: url(<?= $headerBackgroundImage ?>)">
 		<?= get_template_part('components/sb_navigation') ?>
 		<a href="<?= get_home_url() ?>"><h1><img src="<?= $headerLogo ?>" alt="SaarBakt door Sara van der Velden"></h1></a>

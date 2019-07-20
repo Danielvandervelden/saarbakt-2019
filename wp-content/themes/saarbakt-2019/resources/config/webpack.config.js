@@ -7,7 +7,8 @@ module.exports = {
 		main: path.resolve(__dirname, "../source/scripts/main.js"),
 		home: path.resolve(__dirname, "../source/scripts/home.js"),
 		instagram_posts: path.resolve(__dirname, "../source/scripts/instagram_posts.js"),
-		sb_nav: path.resolve(__dirname, '../source/scripts/sb_nav.js')
+		sb_nav: path.resolve(__dirname, '../source/scripts/sb_nav.js'),
+		sb_search: path.resolve(__dirname, '../source/scripts/sb_search.js')
 	},
 	module: {
 		rules: [

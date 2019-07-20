@@ -4,6 +4,7 @@ function saarbakt_theme_files() {
 	wp_enqueue_style('saarbakt_styles', get_stylesheet_directory_uri() . '/assets/styles/main.css', false);
 	wp_enqueue_script( 'saarbakt_scripts', get_template_directory_uri() . '/assets/scripts/main.js', array(), NULL, true );
 	wp_enqueue_script( 'saarbakt_nav', get_template_directory_uri() . '/assets/scripts/sb_nav.js', array(), NULL, true );
+	wp_enqueue_script( 'saarbakt_search', get_template_directory_uri() . '/assets/scripts/sb_search.js', array(), NULL, true );
 
 	if(is_front_page()) {
 		wp_enqueue_script( 'saarbakt_home_scripts', get_template_directory_uri() . '/assets/scripts/home.js', array(), NULL, true );

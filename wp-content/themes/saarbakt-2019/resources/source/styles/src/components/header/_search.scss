@@ -1,0 +1,43 @@
+/*
+/* Desktop Styles
+/*_______________________________________________________*/
+.search {
+
+	&__container {
+		position: fixed;
+		z-index: 100;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: 100vh;
+		background-color: rgba(255, 255, 255, .7);
+		opacity: 0;
+		pointer-events: none;
+		transition: all .3s ease-in-out;
+	}
+
+	&__controls {
+		padding-top: 5rem;
+		margin-bottom: 3rem;
+		text-align: center;
+
+		input {
+			max-width: 500px;
+			width: 100%;
+		}
+	}
+
+	&__results {
+		width: 100%;
+	}
+}
+
+.search-active .search__container {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+/*
+/* Tablet Styles (up to 768px)
+/*_______________________________________________________*/
+@media screen and (max-width: 768px) {}
