@@ -2,7 +2,7 @@
 /* Desktop Styles
 /*_______________________________________________________*/
 .sb-recipe-post {
-	padding-bottom: 2.3rem;
+	padding-bottom: 4.6rem;
 	position: relative;
 
 	img {
@@ -12,14 +12,14 @@
 		display: block;
 	}
 
-	.content {
-		padding-bottom: 3rem;
-	}
-
 	.btn {
 		position: absolute;
 		bottom: 0;
 		right: 0;
+	}
+
+	+.sb-recipe-post {
+		padding-top: 2.3rem;
 	}
 }
 

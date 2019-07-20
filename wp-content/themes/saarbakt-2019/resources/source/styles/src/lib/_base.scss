@@ -116,11 +116,11 @@ h4 {
 
 h5 {
 	font-size: 3rem;
-	line-height: 3rem;
+	line-height: 4rem;
 
 	@media screen and (max-width: $break_tablet) {
 		font-size: 2rem;
-		line-height: 2rem;
+		line-height: 3rem;
 	}
 }
 
@@ -138,7 +138,11 @@ h6 {
  * Sections and containers
  */
 section {
-	margin: 3rem 0;
+	margin: 6rem 0;
+
+	&:first-of-type {
+		margin-top: 3rem;
+	}
 }
 
 .sb-container {
