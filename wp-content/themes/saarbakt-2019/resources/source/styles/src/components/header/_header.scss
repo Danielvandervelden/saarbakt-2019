@@ -8,6 +8,7 @@ header {
     background-repeat: no-repeat;
 	background-position: top center;
 	position: relative;
+	overflow: hidden;
 	
 	&:before {
 		content: '';

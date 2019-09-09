@@ -22,11 +22,15 @@ class SbNav {
 	initMobileNav() {
 		this.navToggleMobile.addEventListener(_.clickEvent(), function() {
 			this.body.classList.toggle('menu-open');
+			document.documentElement.classList.toggle('no-scroll');
+			this.body.classList.remove('submenu-active');
 		}.bind(this))
 
 		this.recipeToggleMobile.addEventListener(_.clickEvent(), function(e) {
-			e.preventDefault();
-			this.body.classList.add('submenu-active');
+			if(e.target.href.indexOf('#') !== -1) {
+				e.preventDefault();
+				this.body.classList.add('submenu-active');
+			}
 		}.bind(this));
 
 		this.backToggleMobile.addEventListener(_.clickEvent(), function(e) {
@@ -64,12 +68,15 @@ class SbNav {
 		this.body.classList.add('backdrop');
 		this.menu.classList.add('mega-menu-active');
 		megaMenuItem.classList.add('submenu-active');
+		document.documentElement.classList.add('no-scroll');
 	}
 
 	closeMenu(megaMenuItem) {
 		this.body.classList.remove('backdrop');
+		this.body.classList.remove('submenu-active');
 		this.menu.classList.remove('mega-menu-active');
 		megaMenuItem.classList.remove('submenu-active');
+		document.documentElement.classList.remove('no-scroll');
 	}
 }
 

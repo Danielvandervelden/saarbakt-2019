@@ -11,6 +11,7 @@ $bakingbags = new WP_Query(array(
 		"perView": 3,
 		"type": "slider",
 		"bound": "true",
+		"gap": 15,
 		"equalHeights": "true",
 		"peek": {
 			"before": 0,

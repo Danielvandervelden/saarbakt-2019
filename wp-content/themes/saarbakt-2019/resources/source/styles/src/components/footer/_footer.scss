@@ -1,17 +1,13 @@
 /*
-/* Desktop Styles
+/* Mobile Styles
 /*_______________________________________________________*/
 footer {
 	@include container();
 
 	.sb-footer {
-		@include container(1200px);
-		display: flex;
-		justify-content: space-between;
 		text-align: center;
 
 		&__col {
-			@include flex(30%);
 			padding-bottom: 2rem;
 
 			h4 {
@@ -33,15 +29,25 @@ footer {
 }
 
 /*
-/* Tablet Styles (up to 768px)
+/* Tablet Styles (minimum of 768px)
 /*_______________________________________________________*/
-@media screen and (max-width: 768px) {
+@media screen and (min-width: 768px) {
+	footer {
 
+		.sb-footer {
+			display: flex;
+			justify-content: space-between;
+
+			&__col {
+				@include flex(30%);
+			}
+		}
+	}
 }
 
 /*
-/* Mobile Styles (maximum of 320px)
+/* Desktop Styles (minimum 1024px)
 /*_______________________________________________________*/
-@media screen and (max-width: 320px) {
+@media screen and (min-width: 1024px) {
 
 }

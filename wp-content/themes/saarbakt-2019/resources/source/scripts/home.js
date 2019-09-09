@@ -3,17 +3,20 @@
 /*_______________________________________________________*/
 
 /**
- * Make the news and recipe container equal height
+ * Make the news and recipe container equal height ONLY on > tablet
  */
-let articles = document.querySelectorAll('.sb-frontpage-content__latest article');
-let highest = 0;
 
-for(let i=0;i<articles.length;i++) {
-	if(articles[i].offsetHeight > highest) {
-		highest = articles[i].offsetHeight;
+ if(window.innerWidth >= 768) {
+	let articles = document.querySelectorAll('.sb-frontpage-content__latest article');
+	let highest = 0;
+
+	for(let i=0;i<articles.length;i++) {
+		if(articles[i].offsetHeight > highest) {
+			highest = articles[i].offsetHeight;
+		}
 	}
-}
 
-for(let i=0;i<articles.length;i++) {
-	articles[i].style.height = highest + 'px';
+	for(let i=0;i<articles.length;i++) {
+		articles[i].style.height = highest + 'px';
+	}
 }

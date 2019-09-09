@@ -1,22 +1,19 @@
 /*
-/* Desktop Styles
+/* Mobile Styles
 /*_______________________________________________________*/
 .sb-bakingbags {
 	@include container(1200px);
+	overflow: hidden;
 	
 	.baking-bag {
 		text-align: center;
 		padding-bottom: 4rem;
 		position: relative;
-		display: flex;
-		flex-direction: column;
-		justify-content: space-evenly;
 
 		img {
-			max-width: 100%;
-			height: 200px;
+			max-height: 150px;
 			display: block;
-			margin: 0 auto;
+			margin: 0 auto 1rem;
 		}
 
 		.btn {
@@ -24,20 +21,21 @@
 			bottom: 0;
 			left: 50%;
 			transform: translateX(-50%);
+			width: 100%;
 		}
 	}
 }
 
 /*
-/* Tablet Styles (up to 768px)
+/* Tablet Styles (minimum of 768px)
 /*_______________________________________________________*/
-@media screen and (max-width: 768px) {
+@media screen and (min-width: 768px) {
 
 }
 
 /*
-/* Mobile Styles (maximum of 320px)
+/* Desktop Styles (minimum 1024px)
 /*_______________________________________________________*/
-@media screen and (max-width: 320px) {
+@media screen and (min-width: 1024px) {
 
 }

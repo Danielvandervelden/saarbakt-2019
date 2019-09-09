@@ -24,42 +24,48 @@
 }
 
 .list .sb-recipe-post {
-	display: flex;
-	align-items: flex-start;
-	flex-wrap: wrap;
+	
+}
 
-	h5 {
-		@include flex(100%);
-	}
+/*
+/* Mobile Styles
+/*_______________________________________________________*/
 
-	.photo {
-		@include flex(30%);
-		margin-right: 3%;
+
+/*
+/* Tablet Styles (minimum of 768px)
+/*_______________________________________________________*/
+@media screen and (min-width: 768px) {
+
+}
+
+/*
+/* Desktop Styles (minimum 1024px)
+/*_______________________________________________________*/
+@media screen and (min-width: 1024px) {
+	.list .sb-recipe-post {
 		display: flex;
+		align-items: flex-start;
+		flex-wrap: wrap;
 
-		img {
-
-			&:hover {
-				opacity: .7rem;
+		.photo {
+			@include flex(30%);
+			margin-right: 3%;
+			display: flex;
+	
+			img {
+				&:hover {
+					opacity: .7rem;
+				}
 			}
 		}
+
+		h5 {
+			@include flex(100%);
+		}
+
+		.content {
+			@include flex(67%);
+		}
 	}
-
-	.content {
-		@include flex(67%);
-	}
-}
-
-/*
-/* Tablet Styles (up to 768px)
-/*_______________________________________________________*/
-@media screen and (max-width: 768px) {
-
-}
-
-/*
-/* Mobile Styles (maximum of 320px)
-/*_______________________________________________________*/
-@media screen and (max-width: 320px) {
-
 }
