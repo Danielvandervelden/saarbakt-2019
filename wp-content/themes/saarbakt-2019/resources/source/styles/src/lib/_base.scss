@@ -9,6 +9,11 @@ html {
 	font-size: 62.5%;
 	color: #242424;
 	overflow-x: hidden;
+	box-sizing: border-box;
+}
+
+*, *:before, *:after {
+	box-sizing: inherit;
 }
 
 body {
