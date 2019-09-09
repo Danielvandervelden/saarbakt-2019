@@ -55,7 +55,7 @@ function bakingbags() {
 			'singular_name' => 'Baking Bag',
 		),
 		'menu_icon' => 'dashicons-products',
-		'supports' => array('thumbnail', 'title'),
+		'supports' => array('thumbnail', 'title', 'editor'),
 	));
 }
 

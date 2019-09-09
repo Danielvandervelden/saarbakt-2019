@@ -8,6 +8,9 @@
 		text-align: center;
 		padding-bottom: 4rem;
 		position: relative;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-evenly;
 
 		img {
 			max-width: 100%;

@@ -32,7 +32,7 @@ $bakingbags = new WP_Query(array(
 							<li class="glide__slide baking-bag">
 								<img src="<?= get_the_post_thumbnail_url() ?>" alt="<?= get_the_title() ?>">
 								<h4><?= get_the_title() ?></h4>
-								<a class="btn" href="<?= get_the_permalink() ?>"><span>Meer informatie</span></a>
+								<a class="btn" href="<?= get_the_permalink() ?>"><span>Koop nu</span></a>
 							</li>
 					<?php endwhile; ?>
 				<?php else: ?>

@@ -14,8 +14,9 @@ footer {
 			@include flex(30%);
 			padding-bottom: 2rem;
 
-			h3 {
+			h4 {
 				margin-bottom: 1rem;
+				font-family: $alt_font_family;
 			}
 
 			ul {
