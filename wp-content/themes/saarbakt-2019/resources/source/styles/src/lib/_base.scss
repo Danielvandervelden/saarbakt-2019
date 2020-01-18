@@ -1,5 +1,5 @@
 /*
-/* All the base definitions for the Saarbakt-2019 theme.
+/* Global Styles mobile first
 /*_______________________________________________________*/
 
 /**
@@ -220,4 +220,22 @@ input {
 	box-sizing: border-box;
 	font-size: 1.6rem; 
 	outline-color: $color3;
+}
+
+/*
+/* Tablet Styles (minimum of 768px)
+/*_______________________________________________________*/
+@media screen and (min-width: 768px) {
+	section {
+		&:first-of-type {
+			margin-top: 5rem;
+		}
+	}
+}
+
+/*
+/* Desktop Styles (minimum 1024px)
+/*_______________________________________________________*/
+@media screen and (min-width: 1024px) {
+
 }

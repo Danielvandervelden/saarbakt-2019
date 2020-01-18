@@ -22,9 +22,18 @@ $recipeQuery = new WP_Query(array(
 
 get_header();
 ?>
-	<?= get_template_part('components/sb_bakingbags') ?>
+
+	<section class="sb-frontpage-content__intro sb-container">
+		<div class="sb-frontpage-content__intro--left">
+			<?= get_the_content(); ?>
+		</div>
+
+		<div class="sb-frontpage-content__intro--right">
+			<img src="<?= get_field('voorpagina_foto') ?>" alt="Sara van der Velden">
+		</div>
+	</section>
 	
-	<section class="sb-frontpage-content__latest">
+	<section class="sb-frontpage-content__latest sb-container">
 		<div class="sb-frontpage-content__latest--news">
 			<h2 class="sb-page-title">Laatste nieuws</h2>
 			<?php if($newsQuery->have_posts()): while($newsQuery->have_posts()): $newsQuery->the_post() ?>

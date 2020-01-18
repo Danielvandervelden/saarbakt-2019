@@ -6,11 +6,30 @@
 /* Mobile Styles
 /*_______________________________________________________*/
 .sb-frontpage-content {
-	&__latest {
-		@include container(1200px);
+	&__intro {
+		display: flex;
+		align-items: center;
+		flex-wrap: wrap;
 
+		&--left {
+			@include flex(100%);
+		}
+
+		&--right {
+			margin-top: 2rem;
+			@include flex(100%);
+			display: flex;
+			justify-content: center;
+
+			img {
+				max-height:400px;
+			}
+		}
+	}
+
+	&__latest {
 		&--news {
-			margin-bottom: 2rem;
+			margin-bottom: 4rem;
 		}
 	}
 }
@@ -18,7 +37,19 @@
 /*
 /* Tablet Styles (minimum of 768px)
 /*_______________________________________________________*/
-@media screen and (min-width: $break_tablet) {}
+@media screen and (min-width: $break_tablet) {
+	.sb-frontpage-content {
+		&__intro {
+			&--left {
+				@include flex(50%);
+			}
+
+			&--right {
+				@include flex(50%);
+			}
+		}
+	}
+}
 
 /*
 /* Desktop Styles (minimum 1024px)
