@@ -29,6 +29,8 @@
 	}
 
 	&__latest {
+		position: relative;	
+
 		&--news {
 			margin-bottom: 4rem;
 		}
@@ -60,7 +62,6 @@
 		&__latest {
 			display: flex;
 			justify-content: space-between;
-			position: relative;
 
 			&--news {
 				@include flex(48%);
@@ -72,15 +73,14 @@
 
 			&:after {
 				content: '';
+				width: 2px;
 				height: 80%;
-				width: 1px;
 				display: block;
+				background-color: $color3;
 				position: absolute;
 				left: 50%;
 				top: 50%;
 				transform: translate(-50%, -50%);
-				pointer-events: none;
-				background-color: lighten($color1, 10%);
 			}
 		}
 	}
