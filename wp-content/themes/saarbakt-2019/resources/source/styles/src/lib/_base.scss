@@ -222,6 +222,10 @@ textarea {
 	outline-color: $color3 !important;
 }
 
+div.wpforms-container-full .wpforms-form button[type=submit] {
+	@include button();
+}
+
 /*
 /* Tablet Styles (minimum of 768px)
 /*_______________________________________________________*/
