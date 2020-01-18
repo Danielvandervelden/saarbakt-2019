@@ -216,9 +216,9 @@
 
 			a {
 				color: #FFF;
-				font-size: 3rem;
+				font-size: 2rem;
 				text-align: left;
-				line-height: 3.5rem;
+				line-height: 2.5rem;
 				text-decoration: none;
 				margin-bottom: 1rem;
 			}
@@ -228,7 +228,7 @@
 
 				> li.menu-item-has-children {
 					> a:after {
-						@include fa-icon('\f054', 3rem, #FFF);
+						@include fa-icon('\f054', 1.6rem, #FFF);
 						margin-left: 2rem;
 					}
 				}
@@ -241,7 +241,7 @@
 				left: 100%;
 				list-style: none;
 				width: calc(100% - 30px);
-				height: calc(100vh - 130px);
+				height: calc(100vh - 120px);
 				overflow: auto;
 
 				a {
