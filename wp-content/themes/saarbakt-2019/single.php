@@ -9,7 +9,7 @@ get_header();
 		<?php the_content(); ?>
 	</div>
 
-	<div class="sb-ingredients">
+	<div id="ingredients_container" class="sb-ingredients">
 		<h4 class="sb-ingredient-title">Ingredienten</h4>
 		<?php echo get_field('ingredienten') ?>
 	</div>

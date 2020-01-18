@@ -2,6 +2,10 @@
 /* Desktop Styles
 /*_______________________________________________________*/
 .single-post {
+	#to_ingredients {
+		display: none;
+	}
+
 	h2 {
 		&:after {
 			content: '';
@@ -85,6 +89,18 @@
 /*_______________________________________________________*/
 @media screen and (max-width: 768px) {
 	.single-post {
+		#to_ingredients {
+			display: block;
+			position: fixed;
+			bottom: 1.1rem;
+			right: 1rem;
+			z-index:98;
+
+			a:visited {
+				color: #FFF;
+			}
+		}
+
 		.sb-post-content {
 			@include flex(100%);
 			border-bottom: 1px solid $color3;
