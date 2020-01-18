@@ -29,7 +29,7 @@ get_header();
 		</div>
 
 		<div class="sb-frontpage-content__intro--right">
-			<img src="<?= get_field('voorpagina_foto') ?>" alt="Sara van der Velden">
+			<?= $frontpageImage ?>
 		</div>
 	</section>
 	
