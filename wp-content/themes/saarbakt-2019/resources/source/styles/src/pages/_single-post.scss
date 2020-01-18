@@ -18,6 +18,16 @@
 		padding: 1.5rem;
 		border: 1px solid lighten($color1, 40%);
 		border-radius: 1rem;
+
+		p {
+			font-size: 1.6rem;
+		}
+
+		img {
+			width: 32%;
+			margin-left: 1%;
+			margin-right: -8px;
+		}
 	}
 
 	.sb-ingredients {

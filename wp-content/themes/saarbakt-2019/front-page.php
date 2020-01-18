@@ -25,7 +25,7 @@ get_header();
 
 	<section class="sb-frontpage-content__intro sb-container">
 		<div class="sb-frontpage-content__intro--left">
-			<?= get_the_content(); ?>
+			<?= the_content(); ?>
 		</div>
 
 		<div class="sb-frontpage-content__intro--right">
