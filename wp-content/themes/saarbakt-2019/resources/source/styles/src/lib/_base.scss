@@ -83,6 +83,7 @@ h1, h2, h3, h4, h5, h6 {
 		&:after {
 			content: '';
 			display: inline-block;
+			margin-left: 1rem;
 			height: 2rem;
 			min-width: 2rem;
 			background-image: url('/wp-content/themes/saarbakt-2019/assets/images/heart.svg');
