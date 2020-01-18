@@ -16,7 +16,7 @@ function saarbakt_theme_files() {
 add_action('wp_enqueue_scripts', 'saarbakt_theme_files');
 
 function enqueue_fonts() {
-	wp_enqueue_style('indie-flower', 'https://fonts.googleapis.com/css?family=Indie+Flower&display=swap', false);
+	wp_enqueue_style('gayathri', 'https://fonts.googleapis.com/css?family=Gayathri&display=swap', false);
 	wp_enqueue_style('roboto-fonts', 'https://fonts.googleapis.com/css?family=Roboto:300,400,700&display=swap', false);
 	wp_enqueue_script('font_awesome', 'https://kit.fontawesome.com/07f21c43b6.js', array(), NULL, false);
 }
