@@ -64,11 +64,10 @@ if (document.body.classList.contains('single')) {
 	}, 50))
 
 	function checkActionButton() {
-		console.log(ingredientsContainer.getBoundingClientRect().top);
-		if (ingredientsContainer.getBoundingClientRect().top < 100) {
+		if (ingredientsContainer.getBoundingClientRect().bottom < 1050) {
 			toTopButton.style.right = '1rem';
 			toIngredientsButton.style.right = '-100%';
-		} else {
+		} else if(ingredientsContainer.getBoundingClientRect().bottom > 1050){
 			toIngredientsButton.style.right = '1rem';
 			toTopButton.style.right = '-100%';
 		}
