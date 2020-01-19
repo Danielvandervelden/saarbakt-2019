@@ -28,7 +28,7 @@ class Search {
 		this.closeButton.addEventListener(_.clickEvent(), this.closeSearch.bind(this));
 		this.searchField.addEventListener("keyup", this.typingLogic.bind(this));
 
-		document.body.addEventListener('touchdown', () => {
+		document.body.addEventListener('touchstart', () => {
 			this.dragging = false;
 		});
 
