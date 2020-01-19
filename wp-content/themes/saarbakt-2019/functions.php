@@ -35,3 +35,16 @@ function saarbakt_features() {
 	add_post_type_support( 'page', 'excerpt' );
 }
 add_action('after_setup_theme', 'saarbakt_features');
+
+function wpb_move_comment_field_to_bottom( $fields ) {
+	$comment_field = $fields['comment'];
+	unset( $fields['comment'] );
+	$fields['comment'] = $comment_field;
+
+	$cookie_field = $fields['cookies'];
+	unset( $fields['cookies'] );
+	$fields['cookies'] = $cookie_field;
+	return $fields;
+}
+	
+add_filter( 'comment_form_fields', 'wpb_move_comment_field_to_bottom' );

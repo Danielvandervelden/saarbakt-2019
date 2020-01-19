@@ -15,6 +15,10 @@ get_header();
 	</div>
 </section>
 
+<section class="sb-comments sb-container">
+	<?php comments_template() ?>
+</section>
+
 <?php 
 get_footer();
 ?>

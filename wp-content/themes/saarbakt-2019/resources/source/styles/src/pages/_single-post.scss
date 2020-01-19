@@ -7,18 +7,6 @@
 		display: none;
 	}
 
-	h2 {
-		&:after {
-			content: '';
-			margin-left: 1.5rem;
-			display: inline-block;
-			height: 4rem;
-			min-width: 4rem;
-			background-image: url('/wp-content/themes/saarbakt-2019/assets/images/heart.svg');
-			background-size: cover;
-		}
-	}
-
 	.sb-breadcrumbs {
 		border-bottom: 1px solid $color3;
 		padding-bottom:2rem;
@@ -26,6 +14,18 @@
 
 	.sb-container.sb-two-col {
 		margin-top: 3rem;
+
+		h2 {
+			&:after {
+				content: '';
+				margin-left: 1.5rem;
+				display: inline-block;
+				height: 4rem;
+				min-width: 4rem;
+				background-image: url('/wp-content/themes/saarbakt-2019/assets/images/heart.svg');
+				background-size: cover;
+			}
+		}
 	}
 
 	.sb-post-content {
@@ -82,6 +82,51 @@
 
 	.sb-breadcrumbs {
 		margin-top: 2.5rem;
+	}
+
+	.sb-comments {
+		ol {
+			list-style: none;
+			padding: 0;
+
+			> li {
+				padding-bottom: 2rem;
+				border-bottom: 1px solid $color2;
+				margin-bottom: 2rem;
+
+				.children {
+					list-style: none;
+					margin-top: 2rem;
+				}
+			}
+		}
+
+		.comment-form {
+			label + input,
+			label + textarea {
+				display: block;
+			}
+
+			input,
+			textarea {
+				padding: 0 1rem;
+			}
+
+			textarea {
+				padding-top: 1rem;
+				max-width: 100%;
+			}
+
+			.comment-form-cookies-consent {
+				display: flex;
+				align-items: center;
+			}
+
+			.submit {
+				@include button();
+				cursor: pointer;
+			}
+		}
 	}
 }
 
