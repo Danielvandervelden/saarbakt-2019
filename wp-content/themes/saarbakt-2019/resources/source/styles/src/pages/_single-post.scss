@@ -98,6 +98,10 @@
 			right: 1rem;
 			z-index:98;
 
+			span {
+				pointer-events: none;
+			}
+
 			a:visited {
 				color: #FFF;
 			}
