@@ -7,6 +7,7 @@ class Search {
 	constructor() {
 		this.resultsDiv = document.querySelector(".search__results");
 		this.openButton = document.getElementById("search__trigger");
+		this.openButtonMobile = document.getElementById("sb-search-toggle__mobile");
 		this.closeButton = document.querySelector(".search__close");
 		this.searchOverlay = document.querySelector(".search-overlay");
 		this.searchField = document.getElementById("search-input");
@@ -22,6 +23,7 @@ class Search {
 	//2. events
 	events() {
 		this.openButton.addEventListener(_.clickEvent(), this.openSearch.bind(this));
+		this.openButtonMobile.addEventListener(_.clickEvent(), this.openSearch.bind(this));
 		this.closeButton.addEventListener(_.clickEvent(), this.closeSearch.bind(this));
 		this.searchField.addEventListener("keyup", this.typingLogic.bind(this));
 	}

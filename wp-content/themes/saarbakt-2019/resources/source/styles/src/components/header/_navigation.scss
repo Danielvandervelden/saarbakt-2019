@@ -4,7 +4,8 @@
 @media screen and (min-width: 1025px) {
 
 	.sb-nav-toggle,
-	#sb-back-toggle {
+	#sb-back-toggle,
+	#sb-search-toggle__mobile {
 		display: none;
 	}
 
@@ -119,12 +120,34 @@
 @media screen and (max-width: 1024px) {
 
 	.sb-nav-toggle,
-	#sb-back-toggle {
+	#sb-back-toggle,
+	#sb-search-toggle__mobile {
 		display: block;
 	}
 
 	.admin-bar .sb-nav-toggle {
 		top: 50px;
+	}
+
+	#sb-search-toggle__mobile {
+		position: fixed;
+		z-index: 98;
+		top: 15px;
+		left: 15px;
+		transform: translate(100px, -100px);
+		color: #FFF;
+		width: 5rem;
+		height: 5rem;
+		background-color: $color1;
+		border-radius: 50%;
+		text-align: center;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		animation: bounceIn .5s ease-in-out forwards;
+		animation-delay: 1s;
+		font-size: 2.5rem;
+		cursor: pointer;
 	}
 
 	.sb-nav-toggle {

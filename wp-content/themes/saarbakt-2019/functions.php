@@ -18,7 +18,7 @@ add_action('wp_enqueue_scripts', 'saarbakt_theme_files');
 function enqueue_fonts() {
 	wp_enqueue_style('quicksand', 'https://fonts.googleapis.com/css?family=Quicksand&display=swap', false);
 	wp_enqueue_style('roboto-fonts', 'https://fonts.googleapis.com/css?family=Roboto:300,400,700&display=swap', false);
-	wp_enqueue_script('font_awesome', 'https://kit.fontawesome.com/07f21c43b6.js', array(), NULL, false);
+	wp_enqueue_style('font_awesome', 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/all.min.css', array(), NULL, false);
 }
 
 add_action('wp_enqueue_scripts', 'enqueue_fonts');

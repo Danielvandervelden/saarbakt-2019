@@ -4,6 +4,10 @@
 	<span class="line"></span>
 </div>
 
+<div id="sb-search-toggle__mobile">
+	<i class="fas fa-search"></i>
+</div>
+
 <div id="sb-back-toggle">
 	<i class="fas fa-arrow-left"></i>
 </div>
