@@ -72,6 +72,8 @@
 
 	&__results {
 		width: 100%;
+		position: relative;
+		height: calc(100% - 130px);
 
 		.tab-container {
 			position: absolute;
@@ -167,78 +169,32 @@
 	}
 }
 
-.heart-loader {
-	background-color: $color2;
-	width: 75px;
-	height: 75px;
-	position: relative;
-	transform: rotate(45deg);
+.chef-loader {
 	animation: pulsate 1s infinite;
-}
-
-.heart-loader::before,
-.heart-loader::after {
-	display: inline-block;
-	content: "";
-	width: 75px;
-	height: 75px;
-	background-color: $color2;
+	height: 300px;
+	width: 200px;
 	position: absolute;
-	border-radius: 50%;
-}
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
 
-.heart-loader::before {
-	top: 0px;
-	left: -25px;
-}
-
-.heart-loader::after {
-	top: -25px;
-	left: -0px;
-}
-
-
-@-webkit-keyframes pulsate {
-
-	0%,
-	10%,
-	50%,
-	100% {
-		-webkit-transform: rotate(45deg) scale(0.8);
-		transform: rotate(45deg) scale(0.8);
-		transform: rotate(45deg) scale(0.8);
-	}
-
-	5% {
-		-webkit-transform: rotate(45deg) scale(0.9);
-		transform: rotate(45deg) scale(0.9);
-	}
-
-	15% {
-		-webkit-transform: rotate(45deg) scale(1);
-		transform: rotate(45deg) scale(1);
+	img {
+		max-width: 100%;
+		max-height: 100%;
 	}
 }
 
 @keyframes pulsate {
+	0% {
+		transform: translate(-50%, -50%) scale(0.8);
+	}
 
-	0%,
-	10%,
-	50%,
+	50% {
+		transform: translate(-50%, -50%) scale(1);
+	}
+
 	100% {
-		-webkit-transform: rotate(45deg) scale(0.8);
-		transform: rotate(45deg) scale(0.8);
-		transform: rotate(45deg) scale(0.8);
-	}
-
-	5% {
-		-webkit-transform: rotate(45deg) scale(0.9);
-		transform: rotate(45deg) scale(0.9);
-	}
-
-	15% {
-		-webkit-transform: rotate(45deg) scale(1);
-		transform: rotate(45deg) scale(1);
+		transform: translate(-50%, -50%) scale(0.8);
 	}
 }
 

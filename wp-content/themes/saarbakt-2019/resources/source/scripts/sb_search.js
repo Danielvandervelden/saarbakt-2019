@@ -17,7 +17,7 @@ class Search {
 		this.isSpinnerVisible = false;
 		this.previousValue;
 		this.typingTimer;
-		this.spinner = `<div class="heart-loader"></div>`;
+		this.spinner = `<div class="chef-loader"><img src="/wp-content/themes/saarbakt-2019/assets/images/chefhat.svg" /></div>`;
 		this.dragging = false;
 	}
 
@@ -106,13 +106,13 @@ class Search {
 			
 						<div data-tab="1" class="tab-container">
 							${results.allenieuwtjes.length ? '<ul class="search-results__list">' : '<p>Geen zoekresultaten gevonden..</p>'}
-							${results.allenieuwtjes.map(item => `<li>${item.thumbnail ? `<div class="thumbnail"><img src="${item.thumbnail}" alt="${item.title}"/></div>` : ''}<a href="${item.permalink}">${item.title}</a><div>${item.excerpt}</div></li>`).join('')}
+							${results.allenieuwtjes.map(item => `<li>${item.thumbnail ? `<div class="thumbnail"><img src="${item.thumbnail}" alt="${item.title}"/></div>` : ''}<div class="content"><a href="${item.permalink}">${item.title}</a><div>${item.excerpt}</div></div></li>`).join('')}
 							${results.allenieuwtjes.length ? '</ul>' : ''}
 						</div>
 			
 						<div data-tab="2" class="tab-container">
 							${results.alletipstricks.length ? '<ul class="search-results__list">' : '<p>Geen zoekresultaten gevonden..</p>'}
-							${results.alletipstricks.map(item => `<li>${item.thumbnail ? `<div class="thumbnail"><img src="${item.thumbnail}" alt="${item.title}"/></div>` : ''}<a href="${item.permalink}">${item.title}</a><div>${item.excerpt}</div></li>`).join('')}
+							${results.alletipstricks.map(item => `<li>${item.thumbnail ? `<div class="thumbnail"><img src="${item.thumbnail}" alt="${item.title}"/></div>` : ''}<div class="content"><a href="${item.permalink}">${item.title}</a><div>${item.excerpt}</div></div></li>`).join('')}
 							${results.alletipstricks.length ? '</ul>' : ''}
 						</div>
 					</div>
