@@ -49,7 +49,7 @@
 		max-width: none;
 		width: 100vw;
 		height: 100vh;
-		background-color: rgba(255, 255, 255, .7);
+		background-color: rgba(255, 255, 255, .9);
 		opacity: 0;
 		pointer-events: none;
 		transition: all .3s ease-in-out;
@@ -123,6 +123,28 @@
 	&-results__list {
 		height: calc(100vh - 300px);
 		overflow: auto;
+		list-style: none;
+
+		li {
+			display: flex;
+			border-bottom: 1px solid #C0C0C0;
+			padding-bottom: 2rem;
+			margin-bottom: 2rem;
+			
+			.thumbnail {
+				margin-right: 1rem;
+				@include flex(150px);
+
+				img {
+					width: 100%;
+					display: block;
+				}
+			}
+
+			.content {
+				@include flex(50%, 1, 1);
+			}
+		}
 	}
 }
 

@@ -76,6 +76,7 @@ class Search {
 		axios.get('/wp-json/saarbakt/search?term=' + this.searchField.value)
 		.then(results => {
 			results = results.data;
+			console.log(results);
 			this.resultsDiv.innerHTML = `
 				<div class="search-overlay__results">
 					<div class="search__tab-headings">
@@ -85,20 +86,20 @@ class Search {
 					</div>
 					<div class="tab-container__wrapper">
 						<div data-tab="0" class="tab-container active">
-							${results.generalInfo.length ? '<ul class="search-results__list"' : '<p>Geen zoekresultaten gevonden..</p>'}
-							${results.generalInfo.map(item => `<li><a href="${item.permalink}">${item.title}</a></li> <div>${item.excerpt}</div> <hr class="footerlijn">`).join('')}
+							${results.generalInfo.length ? '<ul class="search-results__list">' : '<p>Geen zoekresultaten gevonden..</p>'}
+							${results.generalInfo.map(item => `<li>${item.thumbnail ? `<div class="thumbnail"><img src="${item.thumbnail}" alt="${item.title}"/></div>` : ''}<div class="content"><a href="${item.permalink}">${item.title}</a><div>${item.excerpt}</div></div></li>`).join('')}
 							${results.generalInfo.length ? '</ul>' : ''}
 						</div>
 			
 						<div data-tab="1" class="tab-container">
-							${results.allenieuwtjes.length ? '<ul class="search-results__list"' : '<p>Geen zoekresultaten gevonden..</p>'}
-							${results.allenieuwtjes.map(item => `<li><a href="${item.permalink}">${item.title}</a></li> <div>${item.excerpt}</div> <hr class="footerlijn">`).join('')}
+							${results.allenieuwtjes.length ? '<ul class="search-results__list">' : '<p>Geen zoekresultaten gevonden..</p>'}
+							${results.allenieuwtjes.map(item => `<li>${item.thumbnail ? `<div class="thumbnail"><img src="${item.thumbnail}" alt="${item.title}"/></div>` : ''}<a href="${item.permalink}">${item.title}</a><div>${item.excerpt}</div></li>`).join('')}
 							${results.allenieuwtjes.length ? '</ul>' : ''}
 						</div>
 			
 						<div data-tab="2" class="tab-container">
-							${results.alletipstricks.length ? '<ul class="search-results__list"' : '<p>Geen zoekresultaten gevonden..</p>'}
-							${results.alletipstricks.map(item => `<li><a href="${item.permalink}">${item.title}</a></li> <div>${item.excerpt}</div> <hr class="footerlijn">`).join('')}
+							${results.alletipstricks.length ? '<ul class="search-results__list">' : '<p>Geen zoekresultaten gevonden..</p>'}
+							${results.alletipstricks.map(item => `<li>${item.thumbnail ? `<div class="thumbnail"><img src="${item.thumbnail}" alt="${item.title}"/></div>` : ''}<a href="${item.permalink}">${item.title}</a><div>${item.excerpt}</div></li>`).join('')}
 							${results.alletipstricks.length ? '</ul>' : ''}
 						</div>
 					</div>

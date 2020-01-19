@@ -23,6 +23,7 @@
 				if (get_post_type() == 'post' OR get_post_type() == 'page') {
 				array_push($results['generalInfo'], array(
 					'title' => get_the_title(),
+					'thumbnail' => get_the_post_thumbnail_url(null, 'thumbnailimage'),
 					'excerpt' => wp_trim_words(get_the_content(), 20),
 					'permalink' => get_the_permalink(),
 					'postType' => get_post_type(),
@@ -33,6 +34,7 @@
 				array_push($results['allenieuwtjes'], array(
 					'title' => get_the_title(),
 					'excerpt' => wp_trim_words(get_the_content(), 20),
+					'thumbnail' => get_the_post_thumbnail_url(null, 'thumbnailimage'),
 					'permalink' => get_the_permalink(),
 					'postType' => get_post_type(),
 					'authorName' => get_the_author(),
@@ -42,6 +44,7 @@
 				array_push($results['alletipstricks'], array(
 					'title' => get_the_title(),
 					'excerpt' => wp_trim_words(get_the_content(), 20),
+					'thumbnail' => get_the_post_thumbnail_url(null, 'thumbnailimage'),
 					'permalink' => get_the_permalink(),
 					'postType' => get_post_type(),
 					'authorName' => get_the_author(),
