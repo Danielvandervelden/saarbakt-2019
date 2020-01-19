@@ -1,51 +1,117 @@
 import _ from './helper/HelperFunctions';
+import axios from 'axios';
 
-class SbSearch {
+class Search {
+
+	//1. Describe and create the object.
 	constructor() {
-		this.menuContainer = document.querySelector('#sb-menu .main-nav');
-		this.searchInput = document.getElementById('search-input');
-		this.searchClose = document.querySelector('.search__close');
-		this.body = document.body;
-
-		if(window.innerWidth <= 1024) {
-			this.initMobileSearch();
-		} else {
-			this.initDesktopSearch();
-		}
+		this.resultsDiv = document.querySelector(".search__results");
+		this.openButton = document.getElementById("search__trigger");
+		this.closeButton = document.querySelector(".search__close");
+		this.searchOverlay = document.querySelector(".search-overlay");
+		this.searchField = document.getElementById("search-input");
+		this.tabTitles;
+		this.events();
+		this.isOverlayOpen = false;
+		this.isSpinnerVisible = false;
+		this.previousValue;
+		this.typingTimer;
+		this.spinner = `<div class="heart-loader"></div>`
 	}
 
-	initDesktopSearch() {
-		const searchIcon = document.createElement('i');
-		searchIcon.classList.add('fas', 'fa-search');
-
-		this.menuContainer.appendChild(searchIcon);
-
-		this.setSearchListeners(searchIcon);
+	//2. events
+	events() {
+		this.openButton.addEventListener(_.clickEvent(), this.openSearch.bind(this));
+		this.closeButton.addEventListener(_.clickEvent(), this.closeSearch.bind(this));
+		this.searchField.addEventListener("keyup", this.typingLogic.bind(this));
 	}
 
-	initMobileSearch() {
 
-	}
 
-	setSearchListeners(target) {
-		target.addEventListener(_.clickEvent(), function() {
-			this.openSearch();
-		}.bind(this));
-
-		this.searchClose.addEventListener(_.clickEvent(), function() {
-			this.closeSearch();
-		}.bind(this))
-	}
-
+	//3. methods (function, action..)
 	openSearch() {
-		this.body.classList.add('search-active');
-		document.querySelector('html').style.overflow = 'hidden';
+		document.body.classList.add('search-active');
+		document.documentElement.style.overflow = 'hidden';
 	}
 
 	closeSearch() {
-		this.body.classList.remove('search-active');
-		document.querySelector('html').style.overflow = 'auto';
+		document.body.classList.remove('search-active');
+		document.documentElement.style.overflow = 'initial';
+	}
+
+	changeTab(tabNumber) {
+		let resultDivs = this.resultsDiv.querySelectorAll('div[data-tab]')
+		let tabTitles = this.resultsDiv.querySelectorAll('.search__tab-headings h2');
+
+		for(let i=0;i<resultDivs.length;i++) {
+			if(resultDivs[i].getAttribute('data-tab') !== tabNumber) {
+				resultDivs[i].classList.remove('active');
+				tabTitles[i].classList.remove('active');
+			} else {
+				resultDivs[i].classList.add('active');
+				tabTitles[i].classList.add('active');
+			}
+		}
+	}
+
+	typingLogic() {
+		if (this.searchField.value != this.previousValue) {
+			clearTimeout(this.typingTimer);
+
+			if (this.searchField.value) {
+				if (!this.isSpinnerVisible) {
+					this.resultsDiv.innerHTML = this.spinner;
+					this.isSpinnerVisible = true;
+				}
+				this.typingTimer = setTimeout(this.getResults.bind(this), 1000);
+			} else {
+				this.resultsDiv.innerHTML = '';
+				this.isSpinnerVisible = false;
+			}
+		}
+		this.previousValue = this.searchField.value;
+	}
+
+	getResults() {
+		axios.get('/wp-json/saarbakt/search?term=' + this.searchField.value)
+		.then(results => {
+			results = results.data;
+			this.resultsDiv.innerHTML = `
+				<div class="search-overlay__results">
+					<div class="search__tab-headings">
+						<h2 data-tab="0" class="active">Posts & Paginas</h2>
+						<h2 data-tab="1">Nieuwtjes</h2>
+						<h2 data-tab="2">Tips & Tricks</h2>
+					</div>
+					<div class="tab-container__wrapper">
+						<div data-tab="0" class="tab-container active">
+							${results.generalInfo.length ? '<ul class="search-results__list"' : '<p>Geen zoekresultaten gevonden..</p>'}
+							${results.generalInfo.map(item => `<li><a href="${item.permalink}">${item.title}</a></li> <div>${item.excerpt}</div> <hr class="footerlijn">`).join('')}
+							${results.generalInfo.length ? '</ul>' : ''}
+						</div>
+			
+						<div data-tab="1" class="tab-container">
+							${results.allenieuwtjes.length ? '<ul class="search-results__list"' : '<p>Geen zoekresultaten gevonden..</p>'}
+							${results.allenieuwtjes.map(item => `<li><a href="${item.permalink}">${item.title}</a></li> <div>${item.excerpt}</div> <hr class="footerlijn">`).join('')}
+							${results.allenieuwtjes.length ? '</ul>' : ''}
+						</div>
+			
+						<div data-tab="2" class="tab-container">
+							${results.alletipstricks.length ? '<ul class="search-results__list"' : '<p>Geen zoekresultaten gevonden..</p>'}
+							${results.alletipstricks.map(item => `<li><a href="${item.permalink}">${item.title}</a></li> <div>${item.excerpt}</div> <hr class="footerlijn">`).join('')}
+							${results.alletipstricks.length ? '</ul>' : ''}
+						</div>
+					</div>
+				</div>
+				`;
+			this.isSpinnerVisible = false;
+			
+			this.tabTitles = document.querySelectorAll(".search__tab-headings h2");
+			for(let i=0;i<this.tabTitles.length;i++) {
+				this.tabTitles[i].addEventListener(_.clickEvent(), this.changeTab.bind(this, this.tabTitles[i].getAttribute('data-tab')));
+			}
+		})
 	}
 }
 
-const sbSearch = new SbSearch;
+const search = new Search();

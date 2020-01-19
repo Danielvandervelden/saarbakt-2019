@@ -68,7 +68,7 @@
 			<input id="search-input" type="text">
 		</div>
 
-		<div class="search_results">
+		<div class="search__results">
 
 		</div>
 	</div>

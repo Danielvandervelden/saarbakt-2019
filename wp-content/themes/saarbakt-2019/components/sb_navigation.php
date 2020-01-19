@@ -10,4 +10,5 @@
 
 <div id="sb-menu" class="sb-nav">
 	<?php wp_nav_menu( array( 'container_class' => 'main-nav', 'theme_location' => 'headerMenuLocation', 'depth' => 2 ) ); ?>
+	<i class="fas fa-search" id="search__trigger"></i>
 </div>
