@@ -64,6 +64,7 @@
 
 			li {
 				position: relative;
+				margin-bottom: .5rem;
 
 				&:before {
 					content: '';
@@ -72,7 +73,7 @@
 					display: inline-block;
 					margin-right: 1rem;
 					vertical-align: top;
-					background-image: url('/wp-content/themes/saarbakt-2019/assets/images/kitchenmachine.png');
+					background-image: url('/wp-content/themes/saarbakt-2019/assets/images/weight.svg');
 					background-size: cover;
 					background-position: 0 3px;
 				}
