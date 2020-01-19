@@ -25,10 +25,13 @@
 	&__tab-headings {
 		display: flex;
 		justify-content: space-evenly;
+		overflow: auto;
 
 		h2 {
 			cursor: pointer;
 			transition: all .15s ease-in-out;
+			margin-right: 1.5rem;
+			white-space: nowrap;
 
 			&:hover {
 				color: $color2 !important;
@@ -124,6 +127,7 @@
 		height: calc(100vh - 300px);
 		overflow: auto;
 		list-style: none;
+		padding: 0;
 
 		li {
 			display: flex;
@@ -235,4 +239,10 @@
 /*
 /* Tablet Styles (up to 768px)
 /*_______________________________________________________*/
-@media screen and (max-width: 768px) {}
+@media screen and (max-width: 480px) {
+	.search {
+		&__tab-headings {
+			justify-content: flex-start;
+		}
+	}
+}
