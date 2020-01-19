@@ -17,7 +17,8 @@ class Search {
 		this.isSpinnerVisible = false;
 		this.previousValue;
 		this.typingTimer;
-		this.spinner = `<div class="heart-loader"></div>`
+		this.spinner = `<div class="heart-loader"></div>`;
+		this.dragging = false;
 	}
 
 	//2. events
@@ -26,6 +27,14 @@ class Search {
 		this.openButtonMobile.addEventListener(_.clickEvent(), this.openSearch.bind(this));
 		this.closeButton.addEventListener(_.clickEvent(), this.closeSearch.bind(this));
 		this.searchField.addEventListener("keyup", this.typingLogic.bind(this));
+
+		document.body.addEventListener('touchdown', () => {
+			this.dragging = false;
+		});
+
+		document.body.addEventListener('touchmove', () => {
+			this.dragging = true;
+		} )
 	}
 
 
@@ -45,13 +54,15 @@ class Search {
 		let resultDivs = this.resultsDiv.querySelectorAll('div[data-tab]')
 		let tabTitles = this.resultsDiv.querySelectorAll('.search__tab-headings h2');
 
-		for(let i=0;i<resultDivs.length;i++) {
-			if(resultDivs[i].getAttribute('data-tab') !== tabNumber) {
-				resultDivs[i].classList.remove('active');
-				tabTitles[i].classList.remove('active');
-			} else {
-				resultDivs[i].classList.add('active');
-				tabTitles[i].classList.add('active');
+		if(this.dragging == false) {
+			for(let i=0;i<resultDivs.length;i++) {
+				if(resultDivs[i].getAttribute('data-tab') !== tabNumber) {
+					resultDivs[i].classList.remove('active');
+					tabTitles[i].classList.remove('active');
+				} else {
+					resultDivs[i].classList.add('active');
+					tabTitles[i].classList.add('active');
+				}
 			}
 		}
 	}
