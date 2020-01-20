@@ -46,7 +46,6 @@
 		"not dead"
 	],
 	"dependencies": {
-		"axios": "^0.19.1",
-		"smoothscroll-polyfill": "^0.4.4"
+		"axios": "^0.19.1"
 	}
 }

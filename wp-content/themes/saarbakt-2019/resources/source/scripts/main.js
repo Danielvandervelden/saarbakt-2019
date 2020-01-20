@@ -40,7 +40,7 @@ if (document.body.classList.contains('single')) {
 	document.body.appendChild(toIngredientsButton);
 
 	toIngredientsButton.addEventListener(_.clickEvent(), () => {
-		document.getElementById('ingredients_container').scrollIntoView({behavior: 'smooth', block: 'start'})
+		_.scrollTo('#ingredients_container', 500);
 	})
 
 	let toTopButton = document.createElement('A');
@@ -54,7 +54,7 @@ if (document.body.classList.contains('single')) {
 	document.body.appendChild(toTopButton);
 
 	toTopButton.addEventListener(_.clickEvent(), () => {
-		document.body.scrollIntoView({behavior: 'smooth', block: 'start'})
+		_.scrollTo('body', 500);
 	})
 
 	checkActionButton();
