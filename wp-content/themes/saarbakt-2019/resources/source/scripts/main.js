@@ -40,7 +40,7 @@ if (document.body.classList.contains('single')) {
 	document.body.appendChild(toIngredientsButton);
 
 	toIngredientsButton.addEventListener(_.clickEvent(), () => {
-		_.scrollTo('#ingredients_container', 500);
+		_.scrollTo('.sb-ingredients', 500);
 	})
 
 	let toTopButton = document.createElement('A');
