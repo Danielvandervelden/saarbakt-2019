@@ -5,13 +5,6 @@ import '../styles/main.scss';
 import sbCarousel from './src/sb_carousel';
 import _ from './helper/HelperFunctions';
 
-import smoothscroll from 'smoothscroll-polyfill';
-
-/**
- * Initialize smoothscroll polyfill
- */
-smoothscroll.polyfill();
-
 /*
  * Initialize all carousels
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -40,7 +33,7 @@ if (document.body.classList.contains('single')) {
 	document.body.appendChild(toIngredientsButton);
 
 	toIngredientsButton.addEventListener(_.clickEvent(), () => {
-		_.scrollTo('.sb-ingredients', 500);
+		_.scrollTo('.sb-ingredients', 1000);
 	})
 
 	let toTopButton = document.createElement('A');
@@ -54,7 +47,7 @@ if (document.body.classList.contains('single')) {
 	document.body.appendChild(toTopButton);
 
 	toTopButton.addEventListener(_.clickEvent(), () => {
-		_.scrollTo('body', 500);
+		_.scrollTo('body', 1000);
 	})
 
 	checkActionButton();
