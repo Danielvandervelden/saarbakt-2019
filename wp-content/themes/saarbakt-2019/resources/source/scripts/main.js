@@ -40,7 +40,7 @@ if (document.body.classList.contains('single')) {
 	document.body.appendChild(toIngredientsButton);
 
 	toIngredientsButton.addEventListener(_.clickEvent(), () => {
-		ingredientsContainer.scrollIntoView({behavior: 'smooth', block: 'start'})
+		document.getElementById('ingredients_container').scrollIntoView({behavior: 'smooth', block: 'start'})
 	})
 
 	let toTopButton = document.createElement('A');
