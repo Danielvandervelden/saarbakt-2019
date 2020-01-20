@@ -48,3 +48,4 @@ function wpb_move_comment_field_to_bottom( $fields ) {
 }
 	
 add_filter( 'comment_form_fields', 'wpb_move_comment_field_to_bottom' );
+

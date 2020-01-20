@@ -57,6 +57,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	
 	<?php wp_head(); ?>
 	<title><?php echo get_the_title() ?></title>
 </head>
@@ -64,8 +65,8 @@
 	<div class="search__container sb-container">
 		<i class="fas fa-times search__close"></i>
 		<div class="search__controls">
-			<h5>Waar ben je naar op zoek?</h5>
-			<input id="search-input" type="text">
+			<label for="search"><h5>Waar ben je naar op zoek?</h5></label>
+			<input name="search" id="search-input" type="text">
 		</div>
 
 		<div class="search__results">

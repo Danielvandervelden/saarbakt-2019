@@ -120,6 +120,7 @@
 		&:before {
 			position: relative;
 			top: -1px;
+			left: 1px;
 		}
 
 		&:hover {
@@ -205,6 +206,16 @@
 	.search {
 		&__tab-headings {
 			justify-content: flex-start;
+		}
+
+		&__close {
+			right: 1rem;
+			top: 1rem;
+
+			&:before {
+				left: 1px;
+				top: -2px;
+			}
 		}
 	}
 }
