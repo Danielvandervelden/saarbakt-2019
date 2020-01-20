@@ -1,6 +1,6 @@
 <?php 
 
-$buildVersion = '1.0.11';
+$buildVersion = '1.0.12';
 
 require get_theme_file_path('/inc/search-route.php');
 
