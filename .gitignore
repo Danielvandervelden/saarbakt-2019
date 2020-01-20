@@ -1,3 +1,4 @@
 node_modules
 uploads
 wp-config.php
+.DS_Store
