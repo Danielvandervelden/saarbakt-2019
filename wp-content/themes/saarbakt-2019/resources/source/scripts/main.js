@@ -2,19 +2,19 @@
 import '../styles/main.scss';
 
 /* Import Javascript modules */
-import sbCarousel from './src/sb_carousel';
+// import sbCarousel from './src/sb_carousel';
 import _ from './helper/HelperFunctions';
 
 /*
  * Initialize all carousels
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
-if (document.getElementsByClassName('glide').length > 0) {
-	[...document.getElementsByClassName('glide')].forEach(function(carousel) {
-		let config = JSON.parse(carousel.getAttribute('data-carousel'));
-		new sbCarousel(carousel, config);
-	})
-}
+// if (document.getElementsByClassName('glide').length > 0) {
+// 	[...document.getElementsByClassName('glide')].forEach(function(carousel) {
+// 		let config = JSON.parse(carousel.getAttribute('data-carousel'));
+// 		new sbCarousel(carousel, config);
+// 	})
+// }
 
 /**
  * Fix the "to ingrients" button so it scrolls down to the ingrients.
