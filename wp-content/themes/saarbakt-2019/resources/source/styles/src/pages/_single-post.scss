@@ -2,6 +2,7 @@
 /* Desktop Styles
 /*_______________________________________________________*/
 .single-post {
+
 	#to_ingredients,
 	#to_top {
 		display: none;
@@ -9,7 +10,30 @@
 
 	.sb-breadcrumbs {
 		border-bottom: 1px solid $color3;
-		padding-bottom:2rem;
+		padding-bottom: 2rem;
+	}
+
+	.wp-video {
+		width: 100% !important;
+		height: auto !important;
+		min-width: 0 !important;
+
+		.mejs-container {
+			width: 100% !important;
+			height: auto !important;
+			min-width: 0 !important;
+		}
+
+		.mejs-mediaelement {
+			position: static;
+			height: auto;
+		}
+
+		video {
+			height: 100% !important;
+			width: 100% !important;
+			max-height: 500px;
+		}
 	}
 
 	.sb-container.sb-two-col {
@@ -29,7 +53,7 @@
 	}
 
 	.sb-post-content {
-		padding: 1.5rem  1.5rem 1.5rem 0;
+		padding: 1.5rem 1.5rem 1.5rem 0;
 		border-radius: 1rem;
 		position: relative;
 
@@ -90,7 +114,7 @@
 			list-style: none;
 			padding: 0;
 
-			> li {
+			>li {
 				padding-bottom: 2rem;
 				border-bottom: 1px solid $color2;
 				margin-bottom: 2rem;
@@ -103,8 +127,9 @@
 		}
 
 		.comment-form {
-			label + input,
-			label + textarea {
+
+			label+input,
+			label+textarea {
 				display: block;
 			}
 
@@ -138,13 +163,14 @@
 /*_______________________________________________________*/
 @media screen and (max-width: 768px) {
 	.single-post {
+
 		#to_ingredients,
 		#to_top {
 			display: block;
 			position: fixed;
 			bottom: 1.1rem;
 			right: 1rem;
-			z-index:98;
+			z-index: 98;
 
 			span {
 				pointer-events: none;
@@ -182,6 +208,4 @@
 /*
 /* Mobile Styles (maximum of 320px)
 /*_______________________________________________________*/
-@media screen and (max-width: 320px) {
-
-}
+@media screen and (max-width: 320px) {}
