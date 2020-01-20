@@ -16,6 +16,8 @@ import _ from './helper/HelperFunctions';
 // 	})
 // }
 
+import 'element-closest-polyfill';
+
 /**
  * Fix the "to ingrients" button so it scrolls down to the ingrients.
  */
