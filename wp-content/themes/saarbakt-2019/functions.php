@@ -66,3 +66,7 @@ function filter_site_upload_size_limit( $size ) {
     return $size;
 }
 add_filter( 'upload_size_limit', 'filter_site_upload_size_limit', 20 );
+
+@ini_set( 'upload_max_size' , '64M' );
+@ini_set( 'post_max_size', '64M');
+@ini_set( 'max_execution_time', '300' );
