@@ -38,6 +38,9 @@ function saarbakt_features() {
 }
 add_action('after_setup_theme', 'saarbakt_features');
 
+// disable for posts
+add_filter('use_block_editor_for_post', '__return_false', 10);
+
 function wpb_move_comment_field_to_bottom( $fields ) {
 	$comment_field = $fields['comment'];
 	unset( $fields['comment'] );

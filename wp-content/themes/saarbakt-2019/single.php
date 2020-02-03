@@ -12,6 +12,7 @@ get_header();
 	<div id="ingredients_container" class="sb-ingredients">
 		<h4 class="sb-ingredient-title">Ingredienten</h4>
 		<?php echo get_field('ingredienten') ?>
+		<img src="<?= get_the_post_thumbnail_url(null, 'image_mobile') ?>" alt="<?= get_the_title() ?>">
 	</div>
 </section>
 
