@@ -51,8 +51,15 @@ const CSSLoader = {
 	],
 }
 
+const urlLoader = {
+	test: /\.(png|jpg|svg)$/,
+	exclude: /node_modules/,
+	loader: 'url-loader'
+}
+
 module.exports = {
 	JSLoader,
 	ESLintLoader,
-	CSSLoader
+	CSSLoader,
+	urlLoader
 }
