@@ -11,6 +11,7 @@
  * Instantiates all the options and offers a number of utility methods to work with the options.
  */
 class WPSEO_Options {
+
 	/**
 	 * The option values.
 	 *
@@ -227,8 +228,11 @@ class WPSEO_Options {
 		$option_names = array_filter( $option_names, 'is_string' );
 		foreach ( $option_names as $option_name ) {
 			if ( isset( static::$option_instances[ $option_name ] ) ) {
-				$option  = static::get_option( $option_name );
-				$options = array_merge( $options, $option );
+				$option = static::get_option( $option_name );
+
+				if ( $option !== null ) {
+					$options = array_merge( $options, $option );
+				}
 			}
 		}
 
@@ -587,21 +591,10 @@ class WPSEO_Options {
 	 * Fills our option cache.
 	 *
 	 * @deprecated  12.8.1
+	 * @codeCoverageIgnore
 	 */
 	public static function fill_cache() {
 		_deprecated_function( __METHOD__, 'WPSEO 12.8.1', '::clear_cache' );
 		static::clear_cache();
-	}
-
-	/**
-	 * Correct the inadvertent removal of the fallback to default values from the breadcrumbs.
-	 *
-	 * @since 1.5.2.3
-	 *
-	 * @deprecated 7.0
-	 * @codeCoverageIgnore
-	 */
-	public static function bring_back_breadcrumb_defaults() {
-		_deprecated_function( __METHOD__, 'WPSEO 7.0' );
 	}
 }
