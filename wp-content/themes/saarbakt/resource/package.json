@@ -1,0 +1,51 @@
+{
+	"name": "saarbakt",
+	"version": "1.0.0",
+	"description": "The saarbakt wordpress theme.",
+	"main": "index.js",
+	"scripts": {
+		"build": "webpack -p --config ./config/webpack.config.js --display-error-details",
+		"watch": "webpack -d --watch --config ./config/webpack.config.js --display-error-details"
+	},
+	"author": "Daniel van der Velden",
+	"license": "ISC",
+	"devDependencies": {
+		"@babel/core": "^7.11.0",
+		"@babel/plugin-transform-runtime": "^7.11.0",
+		"@babel/preset-env": "^7.11.0",
+		"@babel/runtime": "^7.11.0",
+		"autoprefixer": "^9.8.6",
+		"axios": "^0.19.2",
+		"babel-loader": "^8.1.0",
+		"core-js": "^3.6.5",
+		"css-loader": "^4.2.0",
+		"cssnano": "^4.1.10",
+		"mini-css-extract-plugin": "^0.9.0",
+		"node-sass": "^4.14.1",
+		"postcss": "^7.0.32",
+		"postcss-import": "^12.0.1",
+		"postcss-loader": "^3.0.0",
+		"postcss-preset-env": "^6.7.0",
+		"sass-loader": "^9.0.2",
+		"url-loader": "^4.1.0",
+		"webpack": "^4.44.1",
+		"webpack-cli": "^3.3.12"
+	},
+	"browserslist": [
+		"> 0.5%",
+		"last 2 versions",
+		"Firefox ESR",
+		"android 4",
+		"opera 12",
+		"ie >= 10",
+		"ie_mob >= 10",
+		"ff >= 30",
+		"chrome >= 34",
+		"safari >= 7",
+		"opera >= 23",
+		"ios >= 7",
+		"android >= 4.4",
+		"bb >= 10",
+		"not dead"
+	]
+}

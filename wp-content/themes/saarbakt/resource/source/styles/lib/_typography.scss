@@ -1,0 +1,126 @@
+/**
+ * Default typography styling
+ */
+
+html {
+	font-size: 62.5%;
+}
+
+body {
+	font-size: 1.6rem;
+	font-family: $main_font_family;
+	color: $color2;
+	line-height: 2.4rem;
+
+	@media screen and (max-width: $break_tablet) {
+		font-size: 1.4rem;
+	}
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: $heading_font_family;
+	margin: 0 0 1.5rem;
+
+	&.page-title {
+		font-size: 3rem;
+		margin-bottom: 3rem;
+
+		&:after {
+			content: '';
+			display: inline-block;
+			margin-left: 1rem;
+			height: 2rem;
+			min-width: 2rem;
+			background-image: url('~images/heart.svg');
+			background-size: cover;
+		}
+
+		@media screen and (min-width: $break_tablet) {
+			font-size: 5rem;
+
+			&:after {
+				height: 4rem;
+				width: 4rem;
+			}
+		}
+	}
+}
+
+h1 {
+	font-size: 4.6rem;
+	line-height: 5.2rem;
+
+	@media screen and (max-width: $break_tablet) {
+		font-size: 3rem;
+		line-height: 3.6rem;
+	}
+}
+
+h2 {
+	font-size: 4rem;
+	line-height: 4.6rem;
+
+	@media screen and (max-width: $break_tablet) {
+		font-size: 2.4rem;
+		line-height: 3rem;
+	}
+}
+
+h3 {
+	font-size: 3.4rem;
+	line-height: 4rem;
+
+	@media screen and (max-width: $break_tablet) {
+		font-size: 2rem;
+		line-height: 2.6rem;
+	}
+}
+
+h4 {
+	font-size: 2.8rem;
+	line-height: 3.4rem;
+
+	@media screen and (max-width: $break_tablet) {
+		font-size: 1.8rem;
+		line-height: 2.4rem;
+	}
+}
+
+h5 {
+	font-size: 2.2rem;
+	line-height: 2.8rem;
+
+	@media screen and (max-width: $break_tablet) {
+		font-size: 1.6rem;
+		line-height: 2.2rem;
+	}
+}
+
+h6 {
+	font-size: 1.8rem;
+	line-height: 2.4rem;
+
+	@media screen and (max-width: $break_tablet) {
+		font-size: 1.4rem;
+		line-height: 2rem;
+	}
+}
+
+
+a:not(.btn),
+a:not(.btn):visited {
+	color: $color1;
+	text-decoration: underline;
+	transition: all .3s ease-in-out;
+}
+
+a:active,
+a:focus,
+a:hover {
+	color: $color3;
+}

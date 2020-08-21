@@ -1,0 +1,52 @@
+/**
+ * Base styling
+ */
+
+ html {
+	*,
+	*:before,
+	*:after {
+		box-sizing: border-box;
+		transition: all .2s ease-in-out;
+	}
+ }
+
+ body {
+	background-color: $color5;
+
+	&:after {
+		content: '';
+		opacity: 0;
+		pointer-events: none;
+		width: 100vw;
+		height: 100vh;
+		background-color: rgba(0, 0, 0, .7);
+		position: fixed;
+		top: 0;
+		left: 0;
+		transition: all .3s ease-in-out;
+	}
+
+	&.backdrop {
+		overflow: hidden;
+
+		&:after {
+			opacity: 1;
+			pointer-events: auto;
+		}
+	}
+ }
+
+iframe.lightwidget-widget {
+	height: 100%;
+}
+
+ main {
+	 display: block;
+	 @include container();
+ }
+
+ /* Buttons */
+ .btn {
+	@include button();
+}
