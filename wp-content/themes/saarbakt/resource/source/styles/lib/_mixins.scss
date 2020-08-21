@@ -11,12 +11,12 @@
 }
 
 @mixin container($width: 1200px) {
-	max-width: $width + 30px;
+	max-width: $width + 20px;
 	width: 100%;
 	margin-left: auto;
 	margin-right: auto;
-	padding-left: 15px;
-	padding-right: 15px
+	padding-left: 10px;
+	padding-right: 10px
 }
 
 @mixin flex($basis, $grow: 0, $shrink: 1) {

@@ -1,3 +1,1 @@
-const test = 'banana';
-
-console.log(test);
+import '../scripts/lib/module.lazy-load';

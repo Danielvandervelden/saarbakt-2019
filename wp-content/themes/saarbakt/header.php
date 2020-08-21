@@ -14,3 +14,6 @@
 </head>
 <body <?php body_class() ?>>
 	<main>
+		
+		<?= get_template_part('components/nav'); ?>
+		<?= get_template_part('components/visual'); ?>
