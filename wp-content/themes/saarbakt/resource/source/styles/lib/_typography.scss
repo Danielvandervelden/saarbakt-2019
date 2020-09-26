@@ -112,8 +112,8 @@ h6 {
 }
 
 
-a:not(.btn),
-a:not(.btn):visited {
+a,
+a:visited {
 	color: $color1;
 	text-decoration: underline;
 	transition: all .3s ease-in-out;

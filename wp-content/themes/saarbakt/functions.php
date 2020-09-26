@@ -12,3 +12,6 @@ function wpb_remove_version() {
 	return '';
 }
 add_filter('the_generator', 'wpb_remove_version');
+
+add_filter('use_block_editor_for_post', '__return_false', 10);
+add_theme_support( 'post-thumbnails' );

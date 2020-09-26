@@ -2,3 +2,9 @@
 @import 'lib/mixins';
 @import 'lib/typography';
 @import 'lib/base';
+
+/**
+ * WIDGETS
+ */
+@import 'widgets/_visual';
+@import 'widgets/category-grid';

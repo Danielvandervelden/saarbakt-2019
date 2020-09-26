@@ -55,3 +55,7 @@ iframe.lightwidget-widget {
  .btn {
 	@include button();
 }
+
+img {
+	max-width: 100%;
+}
