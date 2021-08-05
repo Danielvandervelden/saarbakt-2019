@@ -1,10 +1,9 @@
 <?php 
 
-$buildVersion = '1.0.15';
-
 require get_theme_file_path('/inc/search-route.php');
 
 function saarbakt_theme_files() {
+	$buildVersion = '2.0.0';
 	wp_enqueue_style('saarbakt_styles', get_stylesheet_directory_uri() . '/assets/styles/main.css', array(), $buildVersion);
 	wp_enqueue_script( 'saarbakt_scripts', get_template_directory_uri() . '/assets/scripts/main.js', array(), $buildVersion, true );
 	wp_enqueue_script( 'saarbakt_nav', get_template_directory_uri() . '/assets/scripts/sb_nav.js', array(), $buildVersion, true );
