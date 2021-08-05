@@ -29,6 +29,13 @@ class Nextgen extends Abstract_Page {
 	}
 
 	/**
+	 * Render inner content.
+	 */
+	public function render_inner_content() {
+		$this->view( 'smush-nextgen-page' );
+	}
+
+	/**
 	 * Register meta boxes.
 	 */
 	public function register_meta_boxes() {
@@ -94,6 +101,7 @@ class Nextgen extends Abstract_Page {
 				'image_count'         => $ng->image_count,
 				'lossy_enabled'       => $lossy_enabled,
 				'smushed_image_count' => $smushed_image_count,
+				'super_smushed_count' => $ng->super_smushed,
 				'stats_human'         => $ng->stats['human'] > 0 ? $ng->stats['human'] : '0 MB',
 				'stats_percent'       => $ng->stats['percent'] > 0 ? number_format_i18n( $ng->stats['percent'], 1 ) : 0,
 				'total_count'         => $ng->total_count,
@@ -121,9 +129,9 @@ class Nextgen extends Abstract_Page {
 
 		$resmush_ids = get_option( 'wp-smush-nextgen-resmush-list', false );
 
-		$count = $resmush_ids ? count( $resmush_ids ) : 0;
+		$resmush_count = $resmush_ids ? count( $resmush_ids ) : 0;
 
-		$count += $ng->remaining_count;
+		$count = $resmush_count + $ng->remaining_count;
 
 		$url = add_query_arg(
 			array(
@@ -135,14 +143,12 @@ class Nextgen extends Abstract_Page {
 		$this->view(
 			'nextgen/meta-box',
 			array(
-				'all_done'        => ( $ng->smushed_count == $ng->total_count ) && 0 == count( $ng->resmush_ids ),
-				'count'           => $count,
-				'lossy_enabled'   => WP_Smush::is_pro() && $this->settings->get( 'lossy' ),
-				'ng'              => $ng,
-				'remaining_count' => $ng->remaining_count,
-				'resmush_ids'     => $ng->resmush_ids,
-				'total_count'     => $ng->total_count,
-				'url'             => $url,
+				'total_images_to_smush' => $count,
+				'ng'                    => $ng,
+				'remaining_count'       => $ng->remaining_count,
+				'resmush_count'         => $resmush_count,
+				'total_count'           => $ng->total_count,
+				'url'                   => $url,
 			)
 		);
 	}

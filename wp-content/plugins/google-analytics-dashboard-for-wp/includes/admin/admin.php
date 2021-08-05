@@ -47,6 +47,17 @@ function exactmetrics_admin_menu() {
 
     $submenu_base = add_query_arg( 'page', 'exactmetrics_settings', admin_url( 'admin.php' ) );
 
+	// Add Popular Posts menu item.
+	add_submenu_page( $hook, __( 'Popular Posts:', 'google-analytics-dashboard-for-wp' ), __( 'Popular Posts', 'google-analytics-dashboard-for-wp' ), 'exactmetrics_save_settings', $submenu_base . '#/popular-posts' );
+
+    if ( function_exists( 'aioseo' ) ) {
+        $seo_url = exactmetrics_aioseo_dashboard_url();
+    } else {
+        $seo_url = $submenu_base . '#/seo';
+    }
+    // then SEO
+    add_submenu_page( $hook, __( 'SEO', 'google-analytics-dashboard-for-wp' ), __( 'SEO', 'google-analytics-dashboard-for-wp' ), 'manage_options', $seo_url );
+
     // then tools
     add_submenu_page( $hook, __( 'Tools:', 'google-analytics-dashboard-for-wp' ), __( 'Tools', 'google-analytics-dashboard-for-wp' ), 'manage_options', $submenu_base . '#/tools' );
 
@@ -58,8 +69,30 @@ function exactmetrics_admin_menu() {
 
     // Add About us page.
     add_submenu_page( $hook, __( 'About Us:', 'google-analytics-dashboard-for-wp' ), __( 'About Us', 'google-analytics-dashboard-for-wp' ), 'manage_options', $submenu_base . '#/about' );
+
+    if ( ! exactmetrics_is_pro_version() ) {
+	    add_submenu_page( $hook, __( 'Upgrade to Pro:', 'google-analytics-dashboard-for-wp' ), '<span class="exactmetrics-upgrade-submenu"> ' . __( 'Upgrade to Pro', 'google-analytics-dashboard-for-wp' ) . '</span>', 'exactmetrics_save_settings', exactmetrics_get_upgrade_link( 'admin-menu', 'submenu', "https://www.exactmetrics.com/lite/" ) );
+    }
+
 }
 add_action( 'admin_menu', 'exactmetrics_admin_menu' );
+
+/**
+ * Add this separately so all the Woo menu items are loaded and the position parameter works correctly.
+ */
+function exactmetrics_woocommerce_menu_item() {
+	// Add "Insights" sub menu item for WooCommerce Analytics menu
+	if ( class_exists( 'WooCommerce' ) && ! apply_filters( 'exactmetrics_disable_woo_analytics_menu', false ) ) {
+		if ( class_exists( 'ExactMetrics_eCommerce' ) ) {
+			add_submenu_page( 'wc-admin&path=/analytics/overview', 'ExactMetrics', 'ExactMetrics', 'exactmetrics_view_dashboard', admin_url( 'admin.php?page=exactmetrics_reports#/ecommerce' ), '', 2 );
+		} else {
+			$submenu_base = add_query_arg( 'page', 'exactmetrics_settings', admin_url( 'admin.php' ) );
+			add_submenu_page( 'wc-admin&path=/analytics/overview', 'ExactMetrics', 'ExactMetrics', 'manage_options', $submenu_base . '#/woocommerce-insights', '', 1 );
+		}
+	}
+}
+
+add_action( 'admin_menu', 'exactmetrics_woocommerce_menu_item', 11 );
 
 function exactmetrics_get_menu_hook() {
     $dashboards_disabled = exactmetrics_get_option( 'dashboards_disabled', false );
@@ -93,6 +126,14 @@ function exactmetrics_network_admin_menu() {
     add_submenu_page( $hook, __( 'Network Settings:', 'google-analytics-dashboard-for-wp' ), __( 'Network Settings', 'google-analytics-dashboard-for-wp' ), 'exactmetrics_save_settings', 'exactmetrics_network', 'exactmetrics_network_page' );
 
     add_submenu_page( $hook, __( 'General Reports:', 'google-analytics-dashboard-for-wp' ), __( 'Reports', 'google-analytics-dashboard-for-wp' ), 'exactmetrics_view_dashboard', 'exactmetrics_reports', 'exactmetrics_reports_page' );
+
+    if ( function_exists( 'aioseo' ) ) {
+        $seo_url = exactmetrics_aioseo_dashboard_url();
+    } else {
+        $seo_url = $submenu_base . '#/seo';
+    }
+    // then seo
+    add_submenu_page( $hook, __( 'SEO:', 'google-analytics-dashboard-for-wp' ), __( 'SEO', 'google-analytics-dashboard-for-wp' ), 'manage_options', $seo_url, 'exactmetrics_seo_page' );
 
     // then addons
     add_submenu_page( $hook, __( 'Addons:', 'google-analytics-dashboard-for-wp' ), '<span style="color:' . exactmetrics_menu_highlight_color() . '"> ' . __( 'Addons', 'google-analytics-dashboard-for-wp' ) . '</span>', 'exactmetrics_save_settings', $submenu_base . '#/addons' );
@@ -164,12 +205,6 @@ function exactmetrics_add_action_links( $links ) {
     $docs = '<a title="' . esc_html__( 'ExactMetrics Knowledge Base', 'google-analytics-dashboard-for-wp' ) . '" href="'. exactmetrics_get_url( 'all-plugins', 'kb-link', "https://www.exactmetrics.com/docs/" ) .'">' . esc_html__( 'Documentation', 'google-analytics-dashboard-for-wp' ) . '</a>';
     array_unshift( $links, $docs );
 
-    // If lite, show a link where they can get pro from
-    if ( ! exactmetrics_is_pro_version() ) {
-        $get_pro = '<a title="' . esc_html__( 'Get ExactMetrics Pro', 'google-analytics-dashboard-for-wp' ) .'" href="'. exactmetrics_get_upgrade_link( 'all-plugins', 'upgrade-link', "https://www.exactmetrics.com/docs/" ) .'">' . esc_html__( 'Get ExactMetrics Pro', 'google-analytics-dashboard-for-wp' ) . '</a>';
-        array_unshift( $links, $get_pro );
-    }
-
     // If Lite, support goes to forum. If pro, it goes to our website
     if ( exactmetrics_is_pro_version() ) {
         $support = '<a title="ExactMetrics Pro Support" href="'. exactmetrics_get_url( 'all-plugins', 'pro-support-link', "https://www.exactmetrics.com/my-account/support/" ) .'">' . esc_html__( 'Support', 'google-analytics-dashboard-for-wp' ) . '</a>';
@@ -187,12 +222,16 @@ function exactmetrics_add_action_links( $links ) {
 
     array_unshift( $links, $settings_link );
 
+	// If lite, show a link where they can get pro from
+	if ( ! exactmetrics_is_pro_version() ) {
+		$get_pro = '<a title="' . esc_html__( 'Get ExactMetrics Pro', 'google-analytics-dashboard-for-wp' ) .'" href="'. exactmetrics_get_upgrade_link( 'all-plugins', 'upgrade-link', "https://www.exactmetrics.com/lite/" ) .'" style="font-weight:700">' . esc_html__( 'Get ExactMetrics Pro', 'google-analytics-dashboard-for-wp' ) . '</a>';
+		array_unshift( $links, $get_pro );
+	}
+
     return $links;
 }
 add_filter( 'plugin_action_links_' . plugin_basename( EXACTMETRICS_PLUGIN_FILE ), 'exactmetrics_add_action_links' );
 add_filter( 'network_admin_plugin_action_links_' . plugin_basename( EXACTMETRICS_PLUGIN_FILE ), 'exactmetrics_add_action_links' );
-
-
 
 /**
  * Loads a partial view for the Administration screen
@@ -332,19 +371,19 @@ function exactmetrics_admin_setup_notices() {
     if ( current_user_can( 'update_core' ) ) {
         global $wp_version;
 
-        // PHP 5.2/5.3
-        if ( version_compare( phpversion(), '5.4', '<' ) ) {
+        // PHP 5.2-5.5
+        if ( version_compare( phpversion(), '5.6', '<' ) ) {
             $url = exactmetrics_get_url( 'global-notice', 'settings-page', 'https://www.exactmetrics.com/docs/update-php/' );
             // Translators: Placeholders add the PHP version, a link to the ExactMetrics blog and a line break.
-            $message = sprintf( esc_html__( 'Your site is running an outdated, insecure version of PHP (%1$s), which could be putting your site at risk for being hacked.%4$sWordPress will stop supporting your PHP version in April, 2019.%4$sUpdating PHP only takes a few minutes and will make your website significantly faster and more secure.%4$s%2$sLearn more about updating PHP%3$s', 'google-analytics-dashboard-for-wp' ), phpversion(), '<a href="' . $url . '" target="_blank">', '</a>', '<br>' );
+            $message = sprintf( esc_html__( 'Your site is running an outdated, insecure version of PHP (%1$s), which could be putting your site at risk for being hacked.%4$sWordPress stopped supporting your PHP version in April, 2019.%4$sUpdating PHP only takes a few minutes and will make your website significantly faster and more secure.%4$s%2$sLearn more about updating PHP%3$s', 'google-analytics-dashboard-for-wp' ), phpversion(), '<a href="' . $url . '" target="_blank">', '</a>', '<br>' );
             echo '<div class="error"><p>'. $message.'</p></div>';
             return;
         }
         // WordPress 3.0 - 4.5
-        else if ( version_compare( $wp_version, '4.6', '<' ) ) {
+        else if ( version_compare( $wp_version, '4.9', '<' ) ) {
             $url = exactmetrics_get_url( 'global-notice', 'settings-page', 'https://www.exactmetrics.com/docs/update-wordpress/' );
             // Translators: Placeholders add the current WordPress version and links to the ExactMetrics blog
-            $message = sprintf( esc_html__( 'Your site is running an outdated version of WordPress (%1$s).%4$sExactMetrics will stop supporting WordPress versions lower than 4.6 in April, 2019.%4$sUpdating WordPress takes just a few minutes and will also solve many bugs that exist in your WordPress install.%4$s%2$sLearn more about updating WordPress%3$s', 'google-analytics-dashboard-for-wp' ), $wp_version, '<a href="' . $url . '" target="_blank">', '</a>', '<br>' );
+            $message = sprintf( esc_html__( 'Your site is running an outdated version of WordPress (%1$s).%4$sExactMetrics will stop supporting WordPress versions lower than 4.9 in 2020.%4$sUpdating WordPress takes just a few minutes and will also solve many bugs that exist in your WordPress install.%4$s%2$sLearn more about updating WordPress%3$s', 'google-analytics-dashboard-for-wp' ), $wp_version, '<a href="' . $url . '" target="_blank">', '</a>', '<br>' );
             echo '<div class="error"><p>'. $message.'</p></div>';
             return;
         }
@@ -461,6 +500,7 @@ function exactmetrics_admin_setup_notices() {
                     echo '<img class="exactmetrics-wooedd-upsell-image exactmetrics-wooedd-upsell-image-large" src="' . trailingslashit( EXACTMETRICS_PLUGIN_URL ) . 'assets/images/upsell/woo-edd-upsell.png">';
                 echo '</div>';
             echo '</div>';
+            echo '<style type="text/css">.exactmetrics-wooedd-upsell-left{width:50%;display:table-cell;float:left}.exactmetrics-wooedd-upsell-right{width:50%;display:table-cell;float:left}.exactmetrics-wooedd-upsell-image{width:100%;height:auto;padding:20px}.exactmetrics-wooedd-upsell-image-small{display:none}.exactmetrics-wooedd-upsell-row{display:table}.exactmetrics-wooedd-upsell-left p{margin:1em 0;font-size:16px}@media (max-width:900px){.exactmetrics-wooedd-upsell-left{width:100%}.exactmetrics-wooedd-upsell-right{display:none}.exactmetrics-wooedd-upsell-image-small{display:block}.exactmetrics-wooedd-upsell-image-large{display:none}}</style>';
             return;
         }
     }
@@ -535,4 +575,4 @@ function exactmetrics_admin_menu_inline_styles() {
 	<?php
 }
 
-add_action( 'admin_footer', 'exactmetrics_admin_menu_inline_styles', 300 );
+add_action( 'admin_head', 'exactmetrics_admin_menu_inline_styles', 300 );

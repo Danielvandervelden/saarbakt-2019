@@ -51,11 +51,7 @@
 	.sb-frontpage-content {
 		&__intro {
 			&--left {
-				@include flex(50%);
-			}
-
-			&--right {
-				@include flex(50%);
+				@include flex(100%);
 			}
 		}
 	}
@@ -71,23 +67,7 @@
 			justify-content: space-between;
 
 			&--news {
-				@include flex(48%);
-			}
-
-			&--recipe {
-				@include flex(48%);
-			}
-
-			&:after {
-				content: '';
-				width: 2px;
-				height: 80%;
-				display: block;
-				background-color: $color3;
-				position: absolute;
-				left: 50%;
-				top: 50%;
-				transform: translate(-50%, -50%);
+				@include flex(100%);
 			}
 		}
 	}

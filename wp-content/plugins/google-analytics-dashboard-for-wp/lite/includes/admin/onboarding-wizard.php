@@ -142,16 +142,7 @@ class ExactMetrics_Onboarding_Wizard {
 				'shareasale_id'        => exactmetrics_get_shareasale_id(),
 				'shareasale_url'       => exactmetrics_get_shareasale_url( exactmetrics_get_shareasale_id(), '' ),
 				// Used to add notices for future deprecations.
-				'versions'             => array(
-					'php_version'          => phpversion(),
-					'php_version_below_54' => apply_filters( 'exactmetrics_temporarily_hide_php_52_and_53_upgrade_warnings', version_compare( phpversion(), '5.4', '<' ) ),
-					'php_version_below_56' => apply_filters( 'exactmetrics_temporarily_hide_php_54_and_55_upgrade_warnings', version_compare( phpversion(), '5.6', '<' ) ),
-					'php_update_link'      => exactmetrics_get_url( 'settings-notice', 'settings-page', 'https://www.exactmetrics.com/docs/update-php/' ),
-					'wp_version'           => $wp_version,
-					'wp_version_below_46'  => version_compare( $wp_version, '4.6', '<' ),
-					'wp_version_below_49'  => version_compare( $wp_version, '4.9', '<' ),
-					'wp_update_link'       => exactmetrics_get_url( 'settings-notice', 'settings-page', 'https://www.exactmetrics.com/docs/update-wordpress/' ),
-				),
+				'versions'             => exactmetrics_get_php_wp_version_warning_data(),
 				'plugin_version'       => EXACTMETRICS_VERSION,
 				'migrated'             => exactmetrics_get_option( 'gadwp_migrated', false ),
 			)
@@ -207,7 +198,7 @@ class ExactMetrics_Onboarding_Wizard {
 	public function should_include_eu_addon() {
 
 		// Is WooCommerce installed and the countries class installed.
-		if ( class_exists( 'WooCommerce' ) && class_exists( 'WC_Countries' ) ) {
+		if ( class_exists( 'WooCommerce' ) && class_exists( 'WC_Countries' ) && method_exists( 'WC_Countries', 'get_continent_code_for_country' ) ) {
 			$wc_countries = new WC_Countries();
 			$country      = $wc_countries->get_base_country();
 			$continent    = $wc_countries->get_continent_code_for_country( $country );
@@ -248,7 +239,7 @@ class ExactMetrics_Onboarding_Wizard {
 
 		check_ajax_referer( 'exactmetrics-install', 'nonce' );
 
-		if ( ! current_user_can( 'install_plugins' ) ) {
+		if ( ! exactmetrics_can_install_plugins() ) {
 			wp_send_json( array(
 				'message' => esc_html__( 'You are not allowed to install plugins', 'google-analytics-dashboard-for-wp' ),
 			) );
@@ -302,9 +293,7 @@ class ExactMetrics_Onboarding_Wizard {
 		}
 
 		// We do not need any extra credentials if we have gotten this far, so let's install the plugin.
-		require_once ABSPATH . 'wp-admin/includes/class-wp-upgrader.php';
-		$base = ExactMetrics();
-		require_once plugin_dir_path( $base->file ) . '/includes/admin/licensing/skin.php';
+		exactmetrics_require_upgrader( false );
 
 		// Create the plugin upgrader with our custom skin.
 		$installer = new Plugin_Upgrader( new ExactMetrics_Skin() );

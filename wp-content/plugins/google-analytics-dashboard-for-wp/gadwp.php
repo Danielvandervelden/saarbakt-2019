@@ -4,7 +4,9 @@
  * Plugin URI: https://exactmetrics.com
  * Description: Displays Google Analytics Reports and Real-Time Statistics in your Dashboard. Automatically inserts the tracking code in every page of your website.
  * Author: ExactMetrics
- * Version: 6.1.0
+ * Version: 6.8.0
+ * Requires at least: 3.8.0
+ * Requires PHP: 5.2
  * Author URI: https://exactmetrics.com
  * Text Domain: google-analytics-dashboard-for-wp
  * Domain Path: /languages
@@ -42,7 +44,7 @@ final class ExactMetrics_Lite {
 	 * @access public
 	 * @var string $version Plugin version.
 	 */
-	public $version = '6.1.0';
+	public $version = '6.8.0';
 
 	/**
 	 * Plugin file.
@@ -99,6 +101,15 @@ final class ExactMetrics_Lite {
 	public $notifications;
 
 	/**
+	 * Holds instance of ExactMetrics Notification Events
+	 *
+	 * @since 6.2.3
+	 * @access public
+	 * @var ExactMetrics_Notification_Event $notification_event Instance of ExactMetrics_Notification_Event class.
+	 */
+	public $notification_event;
+
+	/**
 	 * Holds instance of ExactMetrics Reporting class.
 	 *
 	 * @since 6.0.0
@@ -133,6 +144,15 @@ final class ExactMetrics_Lite {
 	 * @var ExactMetrics_Rest_Routes $routes Instance of rest routes.
 	 */
 	public $routes;
+
+	/**
+	 * The tracking mode used in the frontend.
+	 *
+	 * @since 7.15.0
+	 * @accces public
+	 * @var string
+	 */
+	public $tracking_mode;
 
 	/**
 	 * Primary class constructor.
@@ -189,7 +209,7 @@ final class ExactMetrics_Lite {
 
 			// This does the version to version background upgrade routines and initial install
 			$em_version = get_option( 'exactmetrics_current_version', '5.5.3' );
-			if ( version_compare( $em_version, '6.1.0', '<' ) ) {
+			if ( version_compare( $em_version, '6.5.0', '<' ) ) {
 				exactmetrics_lite_call_install_and_upgrade();
 			}
 
@@ -198,15 +218,16 @@ final class ExactMetrics_Lite {
 			}
 
 			// Load the plugin textdomain.
-			add_action( 'plugins_loaded', array( self::$instance, 'load_plugin_textdomain' ) );
+			add_action( 'plugins_loaded', array( self::$instance, 'load_plugin_textdomain' ), 15 );
 
 			// Load admin only components.
 			if ( is_admin() || ( defined( 'DOING_CRON' ) && DOING_CRON ) ) {
-				self::$instance->notices          = new ExactMetrics_Notice_Admin();
-				self::$instance->reporting 	      = new ExactMetrics_Reporting();
-				self::$instance->api_auth    	  = new ExactMetrics_API_Auth();
-				self::$instance->routes 		  = new ExactMetrics_Rest_Routes();
-				self::$instance->notifications    = new ExactMetrics_Notifications();
+				self::$instance->notices            = new ExactMetrics_Notice_Admin();
+				self::$instance->reporting          = new ExactMetrics_Reporting();
+				self::$instance->api_auth           = new ExactMetrics_API_Auth();
+				self::$instance->routes             = new ExactMetrics_Rest_Routes();
+				self::$instance->notifications      = new ExactMetrics_Notifications();
+				self::$instance->notification_event = new ExactMetrics_Notification_Event();
 			}
 
 			if ( exactmetrics_is_pro_version() ) {
@@ -486,6 +507,7 @@ final class ExactMetrics_Lite {
 			require_once EXACTMETRICS_PLUGIN_DIR . 'assets/lib/pandora/class-am-deactivation-survey.php';
 			require_once EXACTMETRICS_PLUGIN_DIR . 'includes/admin/ajax.php';
 			require_once EXACTMETRICS_PLUGIN_DIR . 'includes/admin/admin.php';
+			require_once EXACTMETRICS_PLUGIN_DIR . 'includes/admin/em-admin.php';
 			require_once EXACTMETRICS_PLUGIN_DIR . 'includes/admin/common.php';
 			require_once EXACTMETRICS_PLUGIN_DIR . 'includes/admin/notice.php';
 			require_once EXACTMETRICS_PLUGIN_DIR . 'includes/admin/licensing/autoupdate.php';
@@ -509,11 +531,18 @@ final class ExactMetrics_Lite {
 			// Routes used by Vue
 			require_once EXACTMETRICS_PLUGIN_DIR . 'includes/admin/routes.php';
 
+			// Load gutenberg editor functions
+			require_once EXACTMETRICS_PLUGIN_DIR . 'includes/gutenberg/gutenberg.php';
+
 			// Emails
 			require_once EXACTMETRICS_PLUGIN_DIR . 'includes/emails/class-emails.php';
 
 			// Notifications class.
 			require_once EXACTMETRICS_PLUGIN_DIR . 'includes/admin/notifications.php';
+			require_once EXACTMETRICS_PLUGIN_DIR . 'includes/admin/notification-event.php';
+			require_once EXACTMETRICS_PLUGIN_DIR . 'includes/admin/notification-event-runner.php';
+			// Add notification manual events for lite version.
+			require_once EXACTMETRICS_PLUGIN_DIR . 'includes/admin/notifications/notification-events.php';
 		}
 
 		require_once EXACTMETRICS_PLUGIN_DIR . 'includes/api-request.php';
@@ -526,6 +555,21 @@ final class ExactMetrics_Lite {
 		require_once EXACTMETRICS_PLUGIN_DIR . 'includes/frontend/frontend.php';
 		require_once EXACTMETRICS_PLUGIN_DIR . 'includes/frontend/seedprod.php';
 		require_once EXACTMETRICS_PLUGIN_DIR . 'includes/measurement-protocol.php';
+	}
+
+	/**
+	 * Get the tracking mode for the frontend scripts.
+	 *
+	 * @return string
+	 */
+	public function get_tracking_mode() {
+
+		if ( ! isset( $this->tracking_mode ) ) {
+			// This will already be set to 'analytics' to anybody already using the plugin before 7.15.0.
+			$this->tracking_mode = exactmetrics_get_option( 'tracking_mode', 'gtag' );
+		}
+
+		return $this->tracking_mode;
 	}
 }
 
@@ -622,6 +666,18 @@ function exactmetrics_lite_uninstall_hook() {
 
 		// Delete data
 		$instance->reporting->delete_aggregate_data('site');
+	}
+
+	// Clear notification cron schedules
+	$schedules = wp_get_schedules();
+
+	if  ( is_array( $schedules ) && ! empty( $schedules ) ) {
+		foreach ( $schedules as $key => $value ) {
+			if ( 0 === strpos($key, "exactmetrics_notification_") ) {
+				$cron_hook = implode("_", explode( "_", $key, -2 ) ) . '_cron';
+				wp_clear_scheduled_hook( $cron_hook );
+			}
+		}
 	}
 
 }
