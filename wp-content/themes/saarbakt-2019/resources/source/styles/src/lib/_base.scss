@@ -225,6 +225,11 @@ textarea {
 	box-sizing: border-box !important; 
 	font-size: 1.6rem !important; 
 	outline-color: $color3 !important;
+	font-family: $main_font_family;
+}
+
+.forminator-button {
+	@include button();
 }
 
 div.wpforms-container-full .wpforms-form button[type=submit] {
