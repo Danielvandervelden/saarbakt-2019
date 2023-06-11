@@ -27,7 +27,7 @@ if (!class_exists('Forminator_Google_Client')) {
 
 class Forminator_Google_IO_Curl extends Forminator_Google_IO_Abstract
 {
-  // cURL hex representation of version 7.30.0
+  // cURL hex representation of version 7.30.0.
   const NO_QUIRK_VERSION = 0x071E00;
 
   private $options = array();
@@ -82,8 +82,8 @@ class Forminator_Google_IO_Curl extends Forminator_Google_IO_Abstract
     curl_setopt($curl, CURLOPT_FOLLOWLOCATION, false);
     curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, true);
 
-    // The SSL version will be determined by the underlying library
-    // @see https://github.com/google/google-api-php-client/pull/644
+    // The SSL version will be determined by the underlying library.
+    // @see https://github.com/google/google-api-php-client/pull/644.
     //curl_setopt($curl, CURLOPT_SSLVERSION, 1);
 
     curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -157,9 +157,9 @@ class Forminator_Google_IO_Curl extends Forminator_Google_IO_Abstract
    */
   public function setTimeout($timeout)
   {
-    // Since this timeout is really for putting a bound on the time
-    // we'll set them both to the same. If you need to specify a longer
-    // CURLOPT_TIMEOUT, or a higher CONNECTTIMEOUT, the best thing to
+    // Since this timeout is really for putting a bound on the time.
+    // we'll set them both to the same. If you need to specify a longer.
+    // CURLOPT_TIMEOUT, or a higher CONNECTTIMEOUT, the best thing to.
     // do is use the setOptions method for the values individually.
     $this->options[CURLOPT_CONNECTTIMEOUT] = $timeout;
     $this->options[CURLOPT_TIMEOUT] = $timeout;

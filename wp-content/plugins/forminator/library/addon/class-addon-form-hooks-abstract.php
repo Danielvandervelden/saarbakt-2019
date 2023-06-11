@@ -44,7 +44,6 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 	 *
 	 * @since 1.1
 	 * @var Forminator_Addon_Form_Settings_Abstract|null
-	 *
 	 */
 	protected $form_settings_instance;
 
@@ -83,7 +82,7 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 	public function __construct( Forminator_Addon_Abstract $addon, $form_id ) {
 		$this->addon       = $addon;
 		$this->form_id     = $form_id;
-		$this->custom_form = Forminator_Form_Model::model()->load( $this->form_id );
+		$this->custom_form = Forminator_Base_Form_Model::get_model( $this->form_id );
 		if ( ! $this->custom_form ) {
 			/* translators: ... */
 			throw new Forminator_Addon_Exception( sprintf( __( 'Form with id %d could not be found', 'forminator' ), $this->form_id ) );
@@ -91,8 +90,8 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 
 		$this->_submit_form_error_message = __( 'Failed to submit form because of an addon, please check your form and try again' );
 
-		// get form settings instance to be available throughout cycle
-		$this->form_settings_instance = $this->addon->get_addon_form_settings( $this->form_id );
+		// get form settings instance to be available throughout cycle.
+		$this->form_settings_instance = $this->addon->get_addon_settings( $this->form_id, 'form' );
 	}
 
 	/**
@@ -121,8 +120,8 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.1
 		 *
-		 * @param int                                          $form_id                current Form ID
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings
+		 * @param int                                          $form_id                current Form ID.
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings.
 		 */
 		do_action(
 			'forminator_addon_' . $addon_slug . '_on_before_render_form_fields',
@@ -156,8 +155,8 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.1
 		 *
-		 * @param int                                          $form_id                current Form ID
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings
+		 * @param int                                          $form_id                current Form ID.
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings.
 		 */
 		do_action(
 			'forminator_addon_' . $addon_slug . '_on_after_render_form_fields',
@@ -191,8 +190,8 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.1
 		 *
-		 * @param int                                          $form_id                current Form ID
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings
+		 * @param int                                          $form_id                current Form ID.
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings.
 		 */
 		do_action(
 			'forminator_addon_' . $addon_slug . '_on_after_render_form',
@@ -230,8 +229,8 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.1
 		 *
 		 * @param array                                        $submitted_data
-		 * @param int                                          $form_id                current Form ID
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance Addon Form Settings instance
+		 * @param int                                          $form_id                current Form ID.
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance Addon Form Settings instance.
 		 */
 		$submitted_data = apply_filters(
 			'forminator_addon_' . $addon_slug . '_form_submitted_data',
@@ -253,9 +252,9 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.1
 		 *
 		 * @param bool                                         $is_success
-		 * @param int                                          $form_id                current Form ID
+		 * @param int                                          $form_id                current Form ID.
 		 * @param array                                        $submitted_data
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance Addon Form Settings instance
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance Addon Form Settings instance.
 		 */
 		$is_success = apply_filters(
 			'forminator_addon_' . $addon_slug . '_on_form_submit_result',
@@ -265,9 +264,9 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 			$form_settings_instance
 		);
 
-		// process filter
+		// process filter.
 		if ( true !== $is_success ) {
-			// only update `_submit_form_error_message` when not empty
+			// only update `_submit_form_error_message` when not empty.
 			if ( ! empty( $is_success ) ) {
 				$this->_submit_form_error_message = (string) $is_success;
 			}
@@ -318,8 +317,8 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.1
 		 *
 		 * @param array                                        $submitted_data
-		 * @param int                                          $form_id                current Form ID
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance Addon Form Settings instance
+		 * @param int                                          $form_id                current Form ID.
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance Addon Form Settings instance.
 		 */
 		$submitted_data = apply_filters(
 			'forminator_addon_' . $addon_slug . '_form_submitted_data',
@@ -328,7 +327,7 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 			$form_settings_instance
 		);
 
-		// get second optional param `$form_entry_fields`
+		// get second optional param `$form_entry_fields`.
 		$form_entry_fields = array();
 		$func_args         = func_get_args();
 		if ( isset( $func_args[1] ) ) {
@@ -347,8 +346,8 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @param array                                        $form_entry_fields
 		 * @param array                                        $submitted_data
-		 * @param int                                          $form_id                current Form ID
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance Addon Form Settings instance
+		 * @param int                                          $form_id                current Form ID.
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance Addon Form Settings instance.
 		 */
 		$form_entry_fields = apply_filters(
 			'forminator_addon_' . $addon_slug . '_form_entry_fields',
@@ -366,10 +365,10 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.2 Add `$form_entry_fields` as param
 		 *
 		 * @param array                                        $entry_fields
-		 * @param int                                          $form_id                current Form ID
+		 * @param int                                          $form_id                current Form ID.
 		 * @param array                                        $submitted_data
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance Addon Form Settings instance
-		 * @param array                                        $form_entry_fields      Current entry fields of the form
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance Addon Form Settings instance.
+		 * @param array                                        $form_entry_fields      Current entry fields of the form.
 		 */
 		$entry_fields = apply_filters(
 			'forminator_addon_' . $addon_slug . '_entry_fields',
@@ -408,9 +407,9 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.1
 		 *
-		 * @param int                                          $form_id                current Form ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings
+		 * @param int                                          $form_id                current Form ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model.
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings.
 		 */
 		do_action(
 			'forminator_addon_' . $addon_slug . '_after_entry_saved',
@@ -436,7 +435,7 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 	 * @since 1.1
 	 *
 	 * @param Forminator_Form_Entry_Model $entry_model
-	 * @param     array                   $addon_meta_data specific meta_data that added by current addon from @see: add_entry_fields()
+	 * @param     array                       $addon_meta_data specific meta_data that added by current addon from @see: add_entry_fields().
 	 *
 	 * @return array
 	 */
@@ -457,9 +456,9 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.1
 		 *
 		 * @param array                                        $addon_meta_data
-		 * @param int                                          $form_id                current Form ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings
+		 * @param int                                          $form_id                current Form ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model.
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_' . $addon_slug . '_metadata',
@@ -480,11 +479,11 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.1
 		 *
-		 * @param array                                        $entry_items            row(s) to be displayed on entries page
-		 * @param int                                          $form_id                current Form ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Form Entry Model
-		 * @param array                                        $addon_meta_data        meta data saved by addon on entry fields
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings
+		 * @param array                                        $entry_items            row(s) to be displayed on entries page.
+		 * @param int                                          $form_id                current Form ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Form Entry Model.
+		 * @param array                                        $addon_meta_data        meta data saved by addon on entry fields.
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings.
 		 */
 		$entry_items = apply_filters(
 			'forminator_addon_' . $addon_slug . '_entry_items',
@@ -529,9 +528,9 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.1
 		 *
-		 * @param array                                        $export_headers         headers to be displayed on export file
-		 * @param int                                          $form_id                current Form ID
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings
+		 * @param array                                        $export_headers         headers to be displayed on export file.
+		 * @param int                                          $form_id                current Form ID.
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings.
 		 */
 		$export_headers = apply_filters(
 			'forminator_addon_' . $addon_slug . '_export_headers',
@@ -579,9 +578,9 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.1
 		 *
 		 * @param array                                        $addon_meta_data
-		 * @param int                                          $form_id                current Form ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings
+		 * @param int                                          $form_id                current Form ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model.
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_' . $addon_slug . '_metadata',
@@ -602,11 +601,11 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.1
 		 *
-		 * @param array                                        $export_columns         column to be exported
-		 * @param int                                          $form_id                current Form ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Form Entry Model
-		 * @param array                                        $addon_meta_data        meta data saved by addon on entry fields
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings
+		 * @param array                                        $export_columns         column to be exported.
+		 * @param int                                          $form_id                current Form ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Form Entry Model.
+		 * @param array                                        $addon_meta_data        meta data saved by addon on entry fields.
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings.
 		 */
 		$export_columns = apply_filters(
 			'forminator_addon_' . $addon_slug . '_export_columns',
@@ -642,9 +641,9 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.1
 		 *
-		 * @param array                                        $export_columns         column to be exported
-		 * @param int                                          $form_id                current Form ID
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings
+		 * @param array                                        $export_columns         column to be exported.
+		 * @param int                                          $form_id                current Form ID.
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings.
 		 */
 		$error_message = apply_filters(
 			'forminator_addon_' . $addon_slug . '_submit_form_error_message',
@@ -686,9 +685,9 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.1
 		 *
 		 * @param array                                        $addon_meta_data
-		 * @param int                                          $form_id                current Form ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings
+		 * @param int                                          $form_id                current Form ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model.
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_' . $addon_slug . '_metadata',
@@ -708,10 +707,10 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.1
 		 *
-		 * @param int                                          $form_id                current Form ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model
-		 * @param array                                        $addon_meta_data        addon meta data
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings
+		 * @param int                                          $form_id                current Form ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model.
+		 * @param array                                        $addon_meta_data        addon meta data.
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings.
 		 */
 		do_action(
 			'forminator_addon_' . $addon_slug . '_on_before_delete_submission',
@@ -848,6 +847,58 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 	}
 
 	/**
+	 * Check if element_id is Datepicker
+	 *
+	 * @since 1.15.12
+	 *
+	 * @param $element_id
+	 *
+	 * @return bool
+	 */
+	public static function element_is_datepicker( $element_id ) {
+		$is_datepicker = stripos( $element_id, 'date-' ) !== false;
+
+		/**
+		 * Filter date flag of element
+		 *
+		 * @since 1.15.12
+		 *
+		 * @param bool   $is_datepicker
+		 * @param string $element_id
+		 *
+		 * @return bool
+		 */
+		$is_datepicker = apply_filters( 'forminator_addon_element_is_datepicker', $is_datepicker, $element_id );
+
+		return $is_datepicker;
+	}
+
+	/**
+	 * Check if element_id is Signature
+	 *
+	 * @param string $element_id Field slug.
+	 *
+	 * @return bool
+	 */
+	public static function element_is_signature( $element_id ) {
+		$is_signature = stripos( $element_id, 'signature-' ) !== false;
+
+		/**
+		 * Filter date flag of element
+		 *
+		 * @since 1.16.0
+		 *
+		 * @param bool   $is_signature
+		 * @param string $element_id Field slug
+		 *
+		 * @return bool
+		 */
+		$is_signature = apply_filters( 'forminator_addon_element_is_signature', $is_signature, $element_id );
+
+		return $is_signature;
+	}
+
+	/**
 	 * Find stripe fields from entry fields
 	 *
 	 * @since 1.7
@@ -881,6 +932,123 @@ abstract class Forminator_Addon_Form_Hooks_Abstract extends Forminator_Addon_Hoo
 		$meta_value = apply_filters( 'forminator_addon_stripe_fields_entry_fields', $meta_value, $form_entry_fields );
 
 		return $meta_value;
+	}
+
+	/**
+	 * Check if element_id is upload
+	 *
+	 * @since 1.15.7
+	 *
+	 * @param $element_id
+	 *
+	 * @return bool
+	 */
+	public static function element_is_upload( $element_id ) {
+		$is_upload = stripos( $element_id, 'upload' ) !== false;
+
+		/**
+		 * Filter upload flag of element
+		 *
+		 * @since 1.15.7
+		 *
+		 * @param bool   $is_upload
+		 * @param string $element_id
+		 *
+		 * @return bool
+		 */
+		$is_upload = apply_filters( 'forminator_addon_element_is_upload', $is_upload, $element_id );
+
+		return $is_upload;
+	}
+
+	/**
+	 * Return field data value as string
+	 *
+	 * @since 1.15.7
+	 *
+	 * @param $element_id
+	 *
+	 * @return bool
+	 */
+	public static function get_field_value( $element_id, $element ) {
+
+		if ( is_array( $element ) ) {
+
+			if ( self::element_is_upload( $element_id ) && isset( $element['file']['file_url'] ) ) {
+				if ( is_array( $element['file']['file_url'] ) ) {
+					$element_value = implode( ',', $element['file']['file_url'] );
+				} else {
+					$element_value = $element['file']['file_url'];
+				}
+			} else {
+				$element_value = implode( ',', $element );
+			}
+
+		} else {
+			$element_value = trim( $element );
+		}
+
+		/**
+		 * Filter element value
+		 *
+		 * @since 1.15.7
+		 *
+		 * @param bool   $element_value
+		 * @param string $element_id
+		 *
+		 * @return bool
+		 */
+		$element_value = apply_filters( 'forminator_addon_element_value', $element_value, $element_id );
+
+		return $element_value;
+	}
+
+	/**
+	 * Return date value as Unix timestamp in milliseconds
+	 *
+	 * @since 1.15.12
+	 *
+	 * @param $element_id
+	 * @param $value
+	 *
+	 * @return bool
+	 */
+	public static function get_date_in_ms( $element_id, $value, $form_id ) {
+		$field 			   = Forminator_API::get_form_field( $form_id, $element_id );
+		$normalized_format = new Forminator_Date();
+		$normalized_format = $normalized_format->normalize_date_format( $field['date_format'] );
+		$date              = date_create_from_format( $normalized_format, $value );
+		$date->setTimezone( timezone_open( 'UTC' ) );
+		$date->modify( 'midnight' );
+
+		return $date->getTimestamp() * 1000;
+	}
+
+	/**
+	 * Prepare field value for passing to addon
+	 *
+	 * @param string $element_id Field slug.
+	 * @param type $form_entry_fields Form entry fields.
+	 * @param array $submitted_data Submitted data.
+	 * @return string
+	 */
+	public static function prepare_field_value_for_addon( $element_id, $form_entry_fields, $submitted_data ) {
+		$element_value = null;
+		if ( self::element_is_calculation( $element_id ) ) {
+			$meta_value    = self::find_meta_value_from_entry_fields( $element_id, $form_entry_fields );
+			$element_value = Forminator_Form_Entry_Model::meta_value_to_string( 'calculation', $meta_value );
+		} elseif ( self::element_is_stripe( $element_id ) ) {
+			$meta_value    = self::find_meta_value_from_entry_fields( $element_id, $form_entry_fields );
+			$element_value = Forminator_Form_Entry_Model::meta_value_to_string( 'stripe', $meta_value );
+		} elseif ( self::element_is_signature( $element_id ) ) {
+			$meta_value    = self::find_meta_value_from_entry_fields( $element_id, $form_entry_fields );
+			$element_value = Forminator_Form_Entry_Model::meta_value_to_string( 'signature', $meta_value );
+		} elseif ( ! empty( $submitted_data[ $element_id ] ) ) {
+			$field_type    = Forminator_Core::get_field_type( $element_id );
+			$element_value = Forminator_Form_Entry_Model::meta_value_to_string( $field_type, $submitted_data[ $element_id ] );
+		}
+
+		return $element_value;
 	}
 
 }

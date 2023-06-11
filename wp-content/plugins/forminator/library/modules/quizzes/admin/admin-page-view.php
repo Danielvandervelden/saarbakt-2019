@@ -33,19 +33,19 @@ class Forminator_Quiz_Page extends Forminator_Admin_Module_Edit_Page {
 	 */
 	protected static function module_array( $id, $title, $views, $date, $status, $model ) {
 		return array(
-					"id"              => $id,
-					"title"           => $title,
-					"entries"         => Forminator_Form_Entry_Model::count_entries( $id ),
-					"has_leads"       => self::has_leads( $model ),
-					"leads_id"        => self::get_leads_id( $model ),
-					"leads"           => Forminator_Form_Entry_Model::count_leads( $id ),
-					"last_entry_time" => forminator_get_latest_entry_time_by_form_id( $id ),
-					"views"           => $views,
-					'type'            => $model->quiz_type,
-					"date"            => $date,
-					'status'          => $status,
-					'name'            => forminator_get_name_from_model( $model ),
-				);
+			'id'              => $id,
+			'title'           => $title,
+			'entries'         => Forminator_Form_Entry_Model::count_entries( $id ),
+			'has_leads'       => self::has_leads( $model ),
+			'leads_id'        => self::get_leads_id( $model ),
+			'leads'           => Forminator_Form_Entry_Model::count_leads( $id ),
+			'last_entry_time' => forminator_get_latest_entry_time_by_form_id( $id ),
+			'views'           => $views,
+			'type'            => $model->quiz_type,
+			'date'            => $date,
+			'status'          => $status,
+			'name'            => forminator_get_name_from_model( $model ),
+		);
 	}
 
 	/**
@@ -56,7 +56,7 @@ class Forminator_Quiz_Page extends Forminator_Admin_Module_Edit_Page {
 	 * @return bool
 	 */
 	public static function has_leads( $model ) {
-		if ( isset( $model->settings['hasLeads'] ) && in_array( $model->settings['hasLeads'], array( true, 'true' ), true ) ) {
+		if ( isset( $model->settings['hasLeads'] ) && filter_var( $model->settings['hasLeads'], FILTER_VALIDATE_BOOLEAN ) ) {
 			return true;
 		}
 
@@ -90,7 +90,7 @@ class Forminator_Quiz_Page extends Forminator_Admin_Module_Edit_Page {
 	 */
 	public static function getLeadsRate( $module ) {
 		if ( $module['views'] > 0 ) {
-			$rate = round( ( $module["leads"] * 100 ) / $module["views"], 1 );
+			$rate = round( ( $module['leads'] * 100 ) / $module['views'], 1 );
 		} else {
 			$rate = 0;
 		}
@@ -108,10 +108,13 @@ class Forminator_Quiz_Page extends Forminator_Admin_Module_Edit_Page {
 		return apply_filters(
 			'forminator_quizzes_bulk_actions',
 			array(
-				//'clone-quizzes'          => __( "Duplicate", 'forminator' ),
-				'reset-views-quizzes'    => __( "Reset Tracking Data", 'forminator' ),
-				'delete-entries-quizzes' => __( "Delete Submissions", 'forminator' ),
-				'delete-quizzes'         => __( "Delete", 'forminator' ),
-			) );
+				'publish-quizzes'        => __( 'Publish', 'forminator' ),
+				'draft-quizzes'          => __( 'Unpublish', 'forminator' ),
+				// 'clone-quizzes'          => __( "Duplicate", 'forminator' ),.
+				'reset-views-quizzes'    => __( 'Reset Tracking Data', 'forminator' ),
+				'delete-entries-quizzes' => __( 'Delete Submissions', 'forminator' ),
+				'delete-quizzes'         => __( 'Delete', 'forminator' ),
+			)
+		);
 	}
 }

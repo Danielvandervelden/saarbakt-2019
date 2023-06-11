@@ -93,7 +93,7 @@ class Stats extends NextGen {
 		} else {
 			$last_checked = $super_smushed['timestamp'];
 
-			$diff = $last_checked - current_time( 'timestamp' );
+			$diff = $last_checked - time();
 
 			// Difference in hour.
 			$diff_h = $diff / 3600;
@@ -125,7 +125,7 @@ class Stats extends NextGen {
 				}
 			}
 
-			$super_smushed['timestamp'] = current_time( 'timestamp' );
+			$super_smushed['timestamp'] = time();
 
 			update_option( $key, $super_smushed, false );
 		}
@@ -189,7 +189,8 @@ class Stats extends NextGen {
 		// If nothing is found, build the object.
 		if ( ! $images || $force_update ) {
 			// Query Attachments for meta key.
-			while ( $attachments = $wpdb->get_results( "SELECT pid, meta_data FROM $wpdb->nggpictures LIMIT {$offset}, {$limit}" ) ) {
+			$attachments = $wpdb->get_results( $wpdb->prepare( "SELECT pid, meta_data FROM {$wpdb->nggpictures} LIMIT %d, %d", $offset, $limit ) ); // Db call ok.
+			while ( ! empty( $attachments ) ) {
 				foreach ( $attachments as $attachment ) {
 					// Check if it has `wp_smush` key.
 					if ( class_exists( 'Ngg_Serializable' ) ) {
@@ -217,6 +218,8 @@ class Stats extends NextGen {
 				}
 				// Set the offset.
 				$offset += $limit;
+
+				$attachments = $wpdb->get_results( $wpdb->prepare( "SELECT pid, meta_data FROM {$wpdb->nggpictures} LIMIT %d, %d", $offset, $limit ) ); // Db call ok.
 			}
 			if ( ! empty( $smushed_images ) ) {
 				wp_cache_set( 'wp_smush_images_smushed', $smushed_images, 'nextgen', 300 );
@@ -280,7 +283,11 @@ class Stats extends NextGen {
 					$status_txt .= '</div>';
 				}
 			} elseif ( ! empty( $percent ) && ! empty( $bytes_readable ) ) {
-				$status_txt  = sprintf( __( 'Reduced by %1$s (%2$01.1f%%)', 'wp-smushit' ), $bytes_readable, number_format_i18n( $percent, 2 ) );
+				$status_txt  = sprintf( /* translators: %1$s: reduced by bytes, %2$s: size format */
+					__( 'Reduced by %1$s (%2$01.1f%%)', 'wp-smushit' ),
+					$bytes_readable,
+					number_format_i18n( $percent, 2 )
+				);
 				$status_txt .= '<div class="sui-smush-media smush-status-links">';
 
 				$show_resmush = $this->show_resmush( $show_resmush, $wp_smush_data );
@@ -612,6 +619,8 @@ class Stats extends NextGen {
 	 * @param array  $size_stats  Size stats.
 	 * @param string $full_image  Full size image.
 	 *
+	 * TODO: Remove this method as no longer need.
+	 *
 	 * @return array
 	 */
 	private function get_skipped_images( $size_stats, $full_image ) {
@@ -796,14 +805,14 @@ class Stats extends NextGen {
 		if ( empty( $stats['bytes'] ) && ! empty( $stats['size_before'] ) ) {
 			$stats['bytes'] = $stats['size_before'] - $stats['size_after'];
 		}
-		$stats['human'] = size_format( $stats['bytes'] );
+		$stats['human'] = size_format( ! empty( $stats['bytes'] ) ? $stats['bytes'] : 0 );
 		if ( ! empty( $stats['size_before'] ) ) {
 			$stats['percent'] = ( $stats['bytes'] / $stats['size_before'] ) * 100;
 			$stats['percent'] = round( $stats['percent'], 2 );
 		}
 
 		$super_smushed['ids']       = $lossy;
-		$super_smushed['timestamp'] = current_time( 'timestamp' );
+		$super_smushed['timestamp'] = time();
 
 		// Update Re-smush list.
 		if ( is_array( WP_Smush::get_instance()->core()->nextgen->ng_admin->resmush_ids ) && is_array( $smushed_images ) ) {

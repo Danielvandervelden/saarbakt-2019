@@ -1,8 +1,8 @@
 <?php
-$section              = isset( $_GET['section'] ) ? sanitize_text_field( $_GET['section'] ) : 'dashboard';
-$nonce                = wp_create_nonce( 'forminator_save_popup_uninstall_settings' );
-$forminator_uninstall = get_option( 'forminator_uninstall_clear_data', false );
-
+$section                  = Forminator_Core::sanitize_text_field( 'section', 'dashboard' );
+$nonce                    = wp_create_nonce( 'forminator_save_popup_uninstall_settings' );
+$forminator_uninstall     = get_option( 'forminator_uninstall_clear_data', false );
+$forminator_custom_upload = get_option( 'forminator_custom_upload', false );
 ?>
 
 <div class="sui-box" data-nav="data" style="<?php echo esc_attr( 'data' !== $section ? 'display: none;' : '' ); ?>">
@@ -55,6 +55,80 @@ $forminator_uninstall = get_option( 'forminator_uninstall_clear_data', false );
 				</div>
 
 			<?php endif; ?>
+
+            <div class="sui-box-settings-row">
+
+                <div class="sui-box-settings-col-1">
+                    <span class="sui-settings-label"><?php esc_html_e( 'File Upload Storage', 'forminator' ); ?></span>
+                    <span class="sui-description">
+                        <?php printf( __( 'For security reasons, we store all the file uploads of your forms with random names under the designated subdirectories of the “%s/wp-content/uploads/forminator/%s” directory. You can also specify a custom storage directory under the custom tab.', 'forminator' ), '<strong>', '</strong>' ); ?>
+                    </span>
+                </div>
+                <div class="sui-box-settings-col-2">
+                    <div class="sui-side-tabs" style="margin-top: 10px;">
+
+                        <div class="sui-tabs-menu">
+
+                            <label for="custom_upload-false" class="sui-tab-item<?php echo( $forminator_custom_upload ? '' : ' active' ); ?>">
+                                <input type="radio"
+                                       name="custom_upload"
+                                       value="false"
+                                       id="custom_upload-false"
+                                    <?php echo esc_attr( checked( $forminator_custom_upload, false ) ); ?> />
+                                <?php esc_html_e( 'Default', 'forminator' ); ?>
+                            </label>
+
+                            <label for="custom_upload-true" class="sui-tab-item<?php echo( $forminator_custom_upload ? ' active' : '' ); ?>">
+                                <input type="radio"
+                                       name="custom_upload"
+                                       value="true"
+                                       id="custom_upload-true"
+                                       data-tab-menu="forminator-custom_upload-true"
+                                    <?php echo esc_attr( checked( $forminator_custom_upload, true ) ); ?> />
+                                <?php esc_html_e( 'Custom', 'forminator' ); ?>
+                            </label>
+
+                        </div>
+
+                        <div class="sui-tabs-content">
+
+                            <div data-tab-content="forminator-custom_upload-true" class="sui-tab-content sui-tab-boxed<?php echo( $forminator_custom_upload ? ' active' : '' ); ?>">
+                                <div class="sui-form-field">
+                                    <span class="sui-description">
+                                        <?php esc_html_e( 'Enter a directory path to store uploaded files', 'forminator' ); ?>
+                                    </span>
+                                    <div class="sui-control-with-icon">
+                                        <span class="sui-icon-folder" aria-hidden="true"></span>
+                                        <input type="text"
+                                           name="custom_upload_root"
+                                           value="<?php echo esc_html( forminator_upload_root() ); ?>"
+                                           class="sui-form-control"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div role="alert" class="sui-notice sui-active" style="display: block; text-align: left;" aria-live="assertive">
+
+                                    <div class="sui-notice-content">
+
+                                        <div class="sui-notice-message">
+
+                                            <span class="sui-notice-icon sui-icon-info" aria-hidden="true"></span>
+
+                                            <p><?php esc_html_e( 'Note: If the above directory is not available, it will be automatically created.', 'forminator' ); ?></p>
+
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
 
 			<div class="sui-box-settings-row">
 

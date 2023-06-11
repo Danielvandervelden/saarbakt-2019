@@ -29,10 +29,6 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 
 	protected $_position = 5;
 
-	private $_app_key = '770a78f0ec0d8749df82fbbe150d80da';
-
-	private static $api;
-
 	const CARD_DELETE_MODE_DELETE = 'delete';
 	const CARD_DELETE_MODE_CLOSED = 'closed';
 
@@ -56,6 +52,20 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 	 */
 	private $_token = '';
 
+	/**
+	 * API key
+	 *
+	 * @var string
+	 */
+	private $_app_key = '';
+
+	/**
+	 * Identifier
+	 *
+	 * @var string
+	 */
+	private $identifier = '';
+
 	protected $_poll_settings = 'Forminator_Addon_Trello_Poll_Settings';
 	protected $_poll_hooks    = 'Forminator_Addon_Trello_Poll_Hooks';
 
@@ -68,7 +78,7 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 	 * @since 1.0 Trello Addon
 	 */
 	public function __construct() {
-		// late init to allow translation
+		// late init to allow translation.
 		$this->_description                = __( 'Get awesome by your form.', 'forminator' );
 		$this->_activation_error_message   = __( 'Sorry but we failed to activate Trello Integration, don\'t hesitate to contact us', 'forminator' );
 		$this->_deactivation_error_message = __( 'Sorry but we failed to deactivate Trello Integration, please try again', 'forminator' );
@@ -82,6 +92,10 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 		$this->_icon_x2  = forminator_addon_trello_assets_url() . 'icons/trello@2x.png';
 		$this->_image    = forminator_addon_trello_assets_url() . 'img/trello.png';
 		$this->_image_x2 = forminator_addon_trello_assets_url() . 'img/trello@2x.png';
+
+		$this->is_multi_global = true;
+
+		$this->global_id_for_new_integrations = uniqid( '', true );
 	}
 
 	/**
@@ -107,14 +121,14 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 	 */
 	public function is_connected() {
 		try {
-			// check if its active
+			// check if its active.
 			if ( ! $this->is_active() ) {
 				throw new Forminator_Addon_Trello_Exception( __( 'Trello is not active', 'forminator' ) );
 			}
 
 			$is_connected   = false;
 			$setting_values = $this->get_settings_values();
-			// if user completed api setup
+			// if user completed api setup.
 			if ( isset( $setting_values['token'] ) && ! empty( $setting_values['token'] ) ) {
 				$is_connected = true;
 			}
@@ -150,12 +164,12 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 				throw new Forminator_Addon_Trello_Exception( __( ' Trello is not connected', 'forminator' ) );
 			}
 
-			$form_settings_instance = $this->get_addon_form_settings( $form_id );
+			$form_settings_instance = $this->get_addon_settings( $form_id, 'form' );
 			if ( ! $form_settings_instance instanceof Forminator_Addon_Trello_Form_Settings ) {
 				throw new Forminator_Addon_Trello_Exception( __( 'Invalid Form Settings of Trello', 'forminator' ) );
 			}
 
-			// Mark as active when there is at least one active connection
+			// Mark as active when there is at least one active connection.
 			if ( false === $form_settings_instance->find_one_active_connection() ) {
 				throw new Forminator_Addon_Trello_Exception( __( 'No active Trello connection found in this form', 'forminator' ) );
 			}
@@ -173,8 +187,8 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 		 * @since 1.2
 		 *
 		 * @param bool                                       $is_form_connected
-		 * @param int                                        $form_id                Current Form ID
-		 * @param Forminator_Addon_Trello_Form_Settings|null $form_settings_instance Instance of form settings, or null when unavailable
+		 * @param int                                        $form_id                Current Form ID.
+		 * @param Forminator_Addon_Trello_Form_Settings|null $form_settings_instance Instance of form settings, or null when unavailable.
 		 *
 		 */
 		$is_form_connected = apply_filters( 'forminator_addon_trello_is_form_connected', $is_form_connected, $form_id, $form_settings_instance );
@@ -263,7 +277,7 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 		 */
 		$card_delete_mode = apply_filters( 'forminator_addon_trello_card_delete_mode', $card_delete_mode );
 
-		// fallback to delete
+		// fallback to delete.
 		if ( ! in_array( $card_delete_mode, self::get_card_delete_modes(), true ) ) {
 			$card_delete_mode = self::CARD_DELETE_MODE_DELETE;
 		}
@@ -292,7 +306,7 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 	 */
 	public function get_app_key() {
 		$app_key = $this->_app_key;
-		// check override by config constant
+		// check override by config constant.
 		if ( defined( 'FORMINATOR_ADDON_TRELLO_APP_KEY' ) && FORMINATOR_ADDON_TRELLO_APP_KEY ) {
 			$app_key = FORMINATOR_ADDON_TRELLO_APP_KEY;
 		}
@@ -318,6 +332,10 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 	public function settings_wizards() {
 		return array(
 			array(
+				'callback'     => array( $this, 'setup_api_key' ),
+				'is_completed' => array( $this, 'setup_api_key_is_completed' ),
+			),
+			array(
 				'callback'     => array( $this, 'authorize_access' ),
 				'is_completed' => array( $this, 'authorize_access_is_completed' ),
 			),
@@ -326,6 +344,94 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 				'is_completed' => array( $this, 'is_authorized' ),
 			),
 		);
+	}
+
+	/**
+	 * Setup API key
+	 *
+	 * @param $submitted_data
+	 *
+	 * @return array
+	 */
+	public function setup_api_key( $submitted_data ) {
+		$settings_values = $this->get_settings_values();
+		$template        = forminator_addon_trello_dir() . 'views/settings/setup-api.php';
+
+		$buttons = array();
+		if ( $this->is_connected() ) {
+			$buttons['disconnect']     = array(
+				'markup' => self::get_button_markup( esc_html__( 'Disconnect', 'forminator' ), 'sui-button-ghost forminator-addon-disconnect' ),
+			);
+			$buttons['next']['markup'] = '<div class="sui-actions-right">' .
+			                             self::get_button_markup( esc_html__( 'RE-AUTHORIZE', 'forminator' ), 'forminator-addon-next' ) .
+			                             '</div>';
+		} else {
+			$buttons['next']['markup'] = '<div class="sui-actions-right">' .
+			                             self::get_button_markup( esc_html__( 'Next', 'forminator' ), 'forminator-addon-next' ) .
+			                             '</div>';
+		}
+
+		$template_params = array(
+			'identifier'    => '',
+			'token'         => $this->_token,
+			'api_key'       => '',
+			'api_key_error' => '',
+			'error_message' => '',
+		);
+
+		$has_errors = false;
+		$is_submit  = ! empty( $submitted_data );
+
+		foreach ( $template_params as $key => $value ) {
+			if ( isset( $submitted_data[ $key ] ) ) {
+				$template_params[ $key ] = $submitted_data[ $key ];
+			} elseif ( isset( $settings_values[ $key ] ) ) {
+				$template_params[ $key ] = $settings_values[ $key ];
+			}
+		}
+
+		if ( empty( $template_params['api_key'] ) ) {
+			$saved_api_key = $this->get_app_key();
+			if ( ! empty( $saved_api_key ) ) {
+				$template_params['api_key'] = $saved_api_key;
+			}
+		}
+
+		if ( $is_submit ) {
+			$api_key    = isset( $submitted_data['api_key'] ) ? $submitted_data['api_key'] : '';
+			$identifier = isset( $submitted_data['identifier'] ) ? $submitted_data['identifier'] : '';
+
+			if ( empty( $api_key ) ) {
+				$template_params['api_key_error'] = __( 'Please input valid API Key', 'forminator' );
+				$has_errors                         = true;
+			}
+
+			if ( ! $has_errors ) {
+				// validate api.
+				$this->_app_key = $api_key;
+				$this->identifier = $identifier;
+			}
+		}
+
+		return array(
+			'html'       => self::get_template( $template, $template_params ),
+			'buttons'    => $buttons,
+			'redirect'   => false,
+			'has_errors' => $has_errors,
+			'size'       => 'normal',
+		);
+	}
+
+	/**
+	 * Setup API key is complete
+	 *
+	 * @param $submitted_data
+	 *
+	 * @return bool
+	 */
+	public function setup_api_key_is_completed( $submitted_data ) {
+
+		return true;
 	}
 
 	/**
@@ -338,6 +444,11 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 		$template = forminator_addon_trello_dir() . 'views/settings/authorize.php';
 
 		$buttons = array();
+		if ( $this->is_connected() ) {
+			$buttons['disconnect'] = array(
+				'markup' => self::get_button_markup( esc_html__( 'DISCONNECT', 'forminator' ), 'sui-button-ghost forminator-addon-disconnect' ),
+			);
+		}
 
 		$template_params = array(
 			'connected_account' => $this->connected_account,
@@ -400,7 +511,7 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 	public function is_authorized( $submitted_data ) {
 		$setting_values = $this->get_settings_values();
 
-		// check api_key and and api_url set up
+		// check api_key and and api_url set up.
 		return isset( $setting_values['token'] ) && ! empty( $setting_values['token'] );
 	}
 
@@ -456,8 +567,13 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 
 		if ( isset( $query_args['token'] ) ) {
 			try {
-				$token     = $query_args['token'];
-				$validated = $this->validate_token( $token );
+				$identifier = ! empty( $query_args['identifier'] ) ? $query_args['identifier'] : '';
+				if ( ! empty( $query_args['global_id'] ) ) {
+					$this->multi_global_id = $query_args['global_id'];
+				}
+				$token      = $query_args['token'];
+				$api_key    = $query_args['api_key'];
+				$validated = $this->validate_token( $token, $api_key );
 				if ( true !== $validated ) {
 					throw new Forminator_Addon_Trello_Exception( $validated );
 				}
@@ -468,8 +584,13 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 						throw new Forminator_Addon_Trello_Exception( $last_message );
 					}
 				}
-
-				$this->save_settings_values( array( 'token' => $token ) );
+				$this->save_settings_values(
+					array(
+						'api_key'    => $api_key,
+						'token'      => $token,
+						'identifier' => $identifier,
+					)
+				);
 				$template_params['is_close'] = true;
 			} catch ( Forminator_Addon_Trello_Exception $e ) {
 				$template_params['error_message'] = $e->getMessage();
@@ -491,18 +612,19 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 	public function get_auth_url( $return_url = '' ) {
 		$authorize_url = 'https://trello.com/1/authorize/';
 		if ( ! $return_url ) {
-			$return_url = forminator_addon_integration_section_admin_url( $this->_slug, 'authorize', true );
+			$return_url = forminator_addon_integration_section_admin_url( $this, 'authorize', true, $this->identifier );
+			$return_url = add_query_arg( 'api_key', $this->get_app_key(), $return_url );
 		}
 		$return_url = rawurlencode( $return_url );
-		// https://developers.trello.com/page/authorization
+		// https://developers.trello.com/page/authorization.
 		$auth_params = array(
 			'callback_method' => 'fragment',
-			'return_url'      => $return_url,
 			'scope'           => 'read,write,account',
 			'expiration'      => 'never',
 			'name'            => __( 'Forminator Pro', 'forminator' ),
 			'key'             => $this->get_app_key(),
 			'response_type'   => 'token',
+			'return_url'      => $return_url,
 		);
 
 		/**
@@ -530,11 +652,10 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 	 *
 	 * @return bool|string
 	 */
-	public function validate_token( $token ) {
+	public function validate_token( $token, $api_key ) {
 		try {
-			// ensure new instance
-			self::$api  = null;
-			$api        = $this->get_api( $token );
+			// ensure new instance.
+			$api        = $this->get_api( $token, $api_key );
 			$me_request = $api->get_( 'members/me/' );
 
 			if ( ! isset( $me_request->id ) || empty( $me_request->id ) ) {
@@ -564,27 +685,24 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 	 * @return Forminator_Addon_Trello_Wp_Api
 	 * @throws Forminator_Addon_Trello_Wp_Api_Exception
 	 */
-	public function get_api( $token = null ) {
-		if ( is_null( self::$api ) ) {
-			if ( is_null( $token ) ) {
-				$setting_values = $this->get_settings_values();
-				if ( isset( $setting_values['token'] ) ) {
-					$token = $setting_values['token'];
-				}
+	public function get_api( $token = null, $api_key = null ) {
+		if ( is_null( $token ) ) {
+			$setting_values = $this->get_settings_values();
+			if ( isset( $setting_values['token'] ) ) {
+				$token = $setting_values['token'];
 			}
-			$api       = new Forminator_Addon_Trello_Wp_Api( $this->get_app_key(), $token );
-			self::$api = $api;
+			if ( isset( $setting_values['api_key'] ) ) {
+				$api_key = $setting_values['api_key'];
+			}
 		}
-
-		return self::$api;
+		$api = new Forminator_Addon_Trello_Wp_Api( $api_key, $token );
+		return $api;
 	}
 
 	/**
 	 * Before get Setting Values
 	 *
-	 * Get `connected_account`
-	 *
-	 * @since 1.0 Trello Addon
+	 * @since 1.0 Slack Addon
 	 *
 	 * @param $values
 	 *
@@ -604,27 +722,6 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 	}
 
 	/**
-	 * Before save Setting Values
-	 *
-	 * Append `connected_account`
-	 *
-	 * @since 1.0 Trello Addon
-	 *
-	 * @param $values
-	 *
-	 * @return mixed
-	 */
-	public function before_save_settings_values( $values ) {
-		if ( ! empty( $this->connected_account ) && is_array( $this->connected_account ) ) {
-			$values['connected_account'] = $this->connected_account;
-		} else {
-			unset( $values['connected_account'] );
-		}
-
-		return $values;
-	}
-
-	/**
 	 * Revoke token on Trello before deactivate
 	 *
 	 * @since 1.0 Trello Addon
@@ -634,15 +731,15 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 		$this->connected_account = array();
 		try {
 			$api = $this->get_api();
-			// revoke token from trello server
+			// revoke token from trello server.
 			forminator_addon_maybe_log( __METHOD__, $this->_token );
 			$api->delete_( 'tokens/' . $this->_token );
 		} catch ( Forminator_Addon_Trello_Wp_Api_Exception $e ) {
-			// API error, okay to be ignored, can be externally un-authorized
+			// API error, okay to be ignored, can be externally un-authorized.
 			forminator_addon_maybe_log( __METHOD__, $e->getMessage() );
 		} catch ( Forminator_Addon_Trello_Exception $e ) {
-			// this will never throws, but here for reference
-			// just in case we add more logic on deactivate
+			// this will never throws, but here for reference.
+			// just in case we add more logic on deactivate.
 			$this->_deactivation_error_message = $e->getMessage();
 
 			return false;
@@ -690,12 +787,12 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 				throw new Forminator_Addon_Trello_Exception( 'Trello is not connected' );
 			}
 
-			$poll_settings_instance = $this->get_addon_poll_settings( $poll_id );
+			$poll_settings_instance = $this->get_addon_settings( $poll_id, 'poll' );
 			if ( ! $poll_settings_instance instanceof Forminator_Addon_Trello_Poll_Settings ) {
 				throw new Forminator_Addon_Trello_Exception( 'Invalid Poll Settings of Trello' );
 			}
 
-			// Mark as active when there is at least one active connection
+			// Mark as active when there is at least one active connection.
 			if ( false === $poll_settings_instance->find_one_active_connection() ) {
 				throw new Forminator_Addon_Trello_Exception( 'No active Poll connection found in this poll' );
 			}
@@ -708,13 +805,13 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 		}
 
 		/**
-		 * Filter connected status Slack with the poll
+		 * Filter connected status Trello with the poll
 		 *
 		 * @since 1.6.1
 		 *
 		 * @param bool                                       $is_poll_connected
-		 * @param int                                        $poll_id                Current Poll ID
-		 * @param Forminator_Addon_Trello_Poll_Settings|null $poll_settings_instance Instance of poll settings, or null when unavailable
+		 * @param int                                        $poll_id                Current Poll ID.
+		 * @param Forminator_Addon_Trello_Poll_Settings|null $poll_settings_instance Instance of poll settings, or null when unavailable.
 		 *
 		 */
 		$is_poll_connected = apply_filters( 'forminator_addon_trello_is_poll_connected', $is_poll_connected, $poll_id, $poll_settings_instance );
@@ -750,12 +847,12 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 				throw new Forminator_Addon_Trello_Exception( 'Trello is not connected' );
 			}
 
-			$quiz_settings_instance = $this->get_addon_quiz_settings( $quiz_id );
+			$quiz_settings_instance = $this->get_addon_settings( $quiz_id, 'quiz' );
 			if ( ! $quiz_settings_instance instanceof Forminator_Addon_Trello_Quiz_Settings ) {
 				throw new Forminator_Addon_Trello_Exception( 'Invalid Quiz Settings of Trello' );
 			}
 
-			// Mark as active when there is at least one active connection
+			// Mark as active when there is at least one active connection.
 			if ( false === $quiz_settings_instance->find_one_active_connection() ) {
 				throw new Forminator_Addon_Trello_Exception( 'No active Trello connection found in this quiz' );
 			}
@@ -768,13 +865,13 @@ final class Forminator_Addon_Trello extends Forminator_Addon_Abstract {
 		}
 
 		/**
-		 * Filter connected status Slack with the quiz
+		 * Filter connected status Trello with the quiz
 		 *
 		 * @since 1.6.1
 		 *
 		 * @param bool                                       $is_quiz_connected
-		 * @param int                                        $quiz_id                Current Quiz ID
-		 * @param Forminator_Addon_Trello_Quiz_Settings|null $quiz_settings_instance Instance of quiz settings, or null when unavailable
+		 * @param int                                        $quiz_id                Current Quiz ID.
+		 * @param Forminator_Addon_Trello_Quiz_Settings|null $quiz_settings_instance Instance of quiz settings, or null when unavailable.
 		 *
 		 */
 		$is_quiz_connected = apply_filters( 'forminator_addon_trello_is_quiz_connected', $is_quiz_connected, $quiz_id, $quiz_settings_instance );

@@ -7,10 +7,10 @@ class OAuthService extends \Forminator\Stripe\Service\AbstractService
     /**
      * Sends a request to Stripe's Connect API.
      *
-     * @param string $method the HTTP method
-     * @param string $path the path of the request
-     * @param array $params the parameters of the request
-     * @param array|\Forminator\Stripe\Util\RequestOptions $opts the special modifiers of the request
+     * @param string $method the HTTP method.
+     * @param string $path the path of the request.
+     * @param array $params the parameters of the request.
+     * @param array|\Forminator\Stripe\Util\RequestOptions $opts the special modifiers of the request.
      *
      * @return \Forminator\Stripe\StripeObject the object returned by Stripe's Connect API
      */
@@ -116,7 +116,7 @@ class OAuthService extends \Forminator\Stripe\Service\AbstractService
     }
 
     /**
-     * @param array|\Forminator\Stripe\Util\RequestOptions $opts the special modifiers of the request
+     * @param array|\Forminator\Stripe\Util\RequestOptions $opts the special modifiers of the request.
      *
      * @throws \Forminator\Stripe\Exception\InvalidArgumentException
      *
@@ -126,8 +126,8 @@ class OAuthService extends \Forminator\Stripe\Service\AbstractService
     {
         if (\is_array($opts)) {
             if (\array_key_exists('connect_base', $opts)) {
-                // Throw an exception for the convenience of anybody migrating to
-                // \Forminator\Stripe\Service\OAuthService from \Forminator\Stripe\OAuth, where `connect_base`
+                // Throw an exception for the convenience of anybody migrating to.
+                // \Forminator\Stripe\Service\OAuthService from \Forminator\Stripe\OAuth, where `connect_base`.
                 // was the name of the parameter that behaves as `api_base` does here.
                 throw new \Forminator\Stripe\Exception\InvalidArgumentException('Use `api_base`, not `connect_base`');
             }

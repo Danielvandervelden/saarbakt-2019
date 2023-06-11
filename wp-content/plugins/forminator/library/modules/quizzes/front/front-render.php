@@ -32,82 +32,105 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 	 * @param      $id
 	 * @param bool $is_preview
 	 * @param bool $data
-	 * @param bool $hide If true, display: none will be added on the form markup and later removed with JS
+	 * @param bool $hide If true, display: none will be added on the form markup and later removed with JS.
 	 */
 	public function display( $id, $is_preview = false, $data = false, $hide = true ) {
-		$this->model = Forminator_Quiz_Model::model()->load( $id );
+		$this->model = Forminator_Base_Form_Model::get_model( $id );
 		if ( ! $this->model instanceof Forminator_Quiz_Model ) {
 			return;
 		}
 
 		$this->set_lead_data();
 
-		echo $this->lead_wrapper_start();
+		echo $this->lead_wrapper_start(); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 
-		$version       = FORMINATOR_VERSION;
-		$module_type   = 'quiz';
+		if ( $this->model->form_is_visible( $is_preview ) ) {
+			$version     = FORMINATOR_VERSION;
+			$module_type = 'quiz';
 
-		if ( $data && ! empty( $data ) ) {
-			// New form, we have to update the form id
-			$has_id = filter_var( $id, FILTER_VALIDATE_BOOLEAN );
+			if ( $data && ! empty( $data ) ) {
+				// New form, we have to update the form id.
+				$has_id = filter_var( $id, FILTER_VALIDATE_BOOLEAN );
 
-			if ( ! $has_id && isset( $data['settings']['form_id'] ) ) {
-				$id = $data['settings']['form_id'];
-			}
-
-			$this->model = Forminator_Quiz_Model::model()->load_preview( $id, $data );
-			// its preview!
-			$this->model->id = $id;
-
-			// If this module haven't been saved, the preview will be of the wrong module
-			// if ( ! isset( $data['settings']['quiz_title'] ) || $data['settings']['quiz_title'] !== $this->model->settings['quiz_title'] ) {
-			// 	echo $this->message_save_to_preview(); // WPCS: XSS ok.
-
-			// 	return;
-			// }
-		}
-
-		$this->maybe_define_cache_constants();
-
-		// TODO: make preview and ajax load working similar
-		$is_ajax_load = $this->is_ajax_load( $is_preview );
-
-		// Load assets conditionally
-		$assets = new Forminator_Assets_Enqueue_Quiz( $this->model, $is_ajax_load );
-		$assets->enqueue_styles();
-		$assets->enqueue_scripts();
-
-		if ( $is_ajax_load ) {
-			$this->generate_render_id( $id );
-			$this->get_form_placeholder( esc_attr( $id ), true );
-
-			return;
-		}
-
-		if ( $this->is_displayable( $is_preview ) ) {
-
-			echo $this->get_html( $hide, $is_preview );// wpcs xss ok.
-
-			if ( is_admin() || $is_preview ) {
-				$this->print_styles();
-			}
-
-			$google_fonts = $this->get_google_fonts();
-
-			foreach ( $google_fonts as $font_name ) {
-				if ( ! empty( $font_name ) ) {
-					wp_enqueue_style( 'forminator-font-' . sanitize_title( $font_name ), 'https://fonts.googleapis.com/css?family=' . $font_name, array(), '1.0' );
+				if ( ! $has_id && isset( $data['settings']['form_id'] ) ) {
+					$id = $data['settings']['form_id'];
 				}
+
+				$this->model = Forminator_Quiz_Model::model()->load_preview( $id, $data );
+				// its preview!
+				$this->model->id = $id;
+
+				// If this module haven't been saved, the preview will be of the wrong module.
+				// if ( ! isset( $data['settings']['quiz_title'] ) || $data['settings']['quiz_title'] !== $this->model->settings['quiz_title'] ) {.
+				// echo $this->message_save_to_preview();.
+
+				// return;.
+				// }
 			}
 
-			add_action( 'wp_footer', array( $this, 'forminator_render_front_scripts' ), 9999 );
+			$this->maybe_define_cache_constants();
+
+			// TODO: make preview and ajax load working similar.
+			$is_ajax_load = $this->is_ajax_load( $is_preview );
+
+			// Load assets conditionally.
+			$assets = new Forminator_Assets_Enqueue_Quiz( $this->model, $is_ajax_load );
+			$assets->enqueue_styles();
+			$assets->enqueue_scripts();
+
+			if ( $is_ajax_load ) {
+				$this->generate_render_id( $id );
+				$this->get_form_placeholder( esc_attr( $id ), true );
+
+				if ( $this->has_lead() && ! $is_preview ) {
+					$custom_form_view = Forminator_CForm_Front::get_instance();
+					$custom_form_view->display( $this->get_leads_id(), $is_preview, $data, true, $this->model );
+				}
+
+				return;
+			}
+
+			if ( $this->is_displayable( $is_preview ) ) {
+
+				$this->generate_render_id( $id );
+
+				echo $this->get_html( $hide, $is_preview ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+
+				if ( is_admin() || $is_preview ) {
+					$this->print_styles();
+				}
+
+				$google_fonts = $this->get_google_fonts();
+
+				foreach ( $google_fonts as $font_name ) {
+					if ( ! empty( $font_name ) ) {
+						wp_enqueue_style( 'forminator-font-' . sanitize_title( $font_name ), 'https://fonts.bunny.net/css?family=' . $font_name, array(), '1.0' );
+					}
+				}
+
+				add_action( 'wp_footer', array( $this, 'forminator_render_front_scripts' ), 9999 );
+			}
+
+			if ( $this->has_lead() && ! $is_preview && ! $is_ajax_load ) {
+				$custom_form_view = Forminator_CForm_Front::get_instance();
+				$custom_form_view->display( $this->get_leads_id(), $is_preview, $data, true, $this->model );
+			}
+
+		} else {
+			$form_settings = $this->get_form_settings();
+			?>
+            <div class="forminator-quiz">
+				<?php
+				if ( isset( $form_settings['expire_message'] ) && '' !== $form_settings['expire_message'] ) {
+					$message = $form_settings['expire_message'];
+					?>
+                    <label class="forminator-label--info"><span><?php echo esc_html( $message ); ?></span></label>
+				<?php } ?>
+            </div>
+			<?php
 		}
 
-		if ( $this->has_lead() && ! $is_preview ) {
-			$custom_form_view = Forminator_CForm_Front::get_instance();
-			$custom_form_view->display( $this->get_leads_id(), $is_preview, $data, true, $this->model );
-		}
-		echo $this->lead_wrapper_end();
+		echo wp_kses_post( $this->lead_wrapper_end() );
 
 	}
 
@@ -151,7 +174,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 
 		$html = '';
 
-		$fields = $this->get_fields();
+		$fields     = $this->get_fields();
 		$num_fields = count( $fields );
 
 		if ( $with_pagination ) {
@@ -162,7 +185,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 			$page_indicator     = ! isset( $form_settings['page-indicator'] ) || $form_settings['page-indicator'];
 			$questions_per_page = empty( $form_settings['questions-per-page'] ) || 1 > $form_settings['questions-per-page']
 					? 1 : $form_settings['questions-per-page'];
-			self::$steps_count  = ceil( $num_fields/$questions_per_page );
+			self::$steps_count  = ceil( $num_fields / $questions_per_page );
 		}
 
 		$i = 0;
@@ -178,17 +201,17 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 			do_action( 'forminator_before_field_render', $field );
 
 			if ( $with_pagination ) {
-				$step = ceil( $i/$questions_per_page );
+				$step = ceil( $i / $questions_per_page );
 				if ( $new_step ) {
 					$new_step = false;
-					$html    .= self::pagination_content_start( $module_id, $step-1, $page_indicator );
+					$html    .= self::pagination_content_start( $module_id, $step - 1, $page_indicator );
 				}
 			}
-				// Render field
+				// Render field.
 				$html .= $this->render_field( $field, $last_field );
 
 			if ( $with_pagination ) {
-				$next_step = ceil( ( $i + 1 )/$questions_per_page );
+				$next_step = ceil( ( $i + 1 ) / $questions_per_page );
 				if ( $last_field || $step !== $next_step ) {
 					$new_step = true;
 					$html    .= self::pagination_content_end();
@@ -198,7 +221,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 		}
 
 		if ( $render ) {
-			echo wp_kses_post( $html ); // WPCS: XSS ok.
+			echo wp_kses_post( $html );
 		} else {
 			return apply_filters( 'forminator_render_fields_markup', $html, $fields );
 		}
@@ -220,7 +243,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 		$html .= '<div class="forminator-pagination--content">';
 		if ( $page_indicator ) {
 			$html .= '<div class="forminator-page-indicator"><span>';
-			$html .= esc_html( sprintf( __( 'Page %1$s of %2$s', 'forminator' ), $step+1, self::$steps_count ) );
+			$html .= esc_html( sprintf( __( 'Page %1$s of %2$s', 'forminator' ), $step + 1, self::$steps_count ) );
 			$html .= '</span></div>';
 		}
 
@@ -278,7 +301,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 		$form_settings = $this->get_form_settings();
 		$form_design   = $this->get_quiz_theme();
 
-		// Make sure slug key exist
+		// Make sure slug key exist.
 		if ( isset( $field['slug'] ) ) {
 			$field_slug = $field['slug'];
 		}
@@ -291,15 +314,15 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 		<div
 			tabindex="0"
 			role="radiogroup"
-			id="<?php echo esc_html( $field_slug ); ?>"
+			id="<?php echo esc_attr( $field_slug ); ?>"
 			class="forminator-question<?php echo ( true === $last_field && ! $with_pagination ) ? ' forminator-last' : ''; ?>"
 			data-question-type="<?php echo ( isset( $field['type'] ) && 'knowledge' === $field['type'] ) ? 'knowledge' : 'personality'; ?>"
-			aria-labelledby="<?php echo esc_html( $field_slug ) . '-label'; ?>"
-			aria-describedby="<?php echo esc_html( $field_slug ) . '-description'; ?>"
+			aria-labelledby="<?php echo esc_attr( $field_slug ) . '-label'; ?>"
+			aria-describedby="<?php echo esc_attr( $field_slug ) . '-description'; ?>"
 			aria-required="true"
 		>
 
-			<?php echo $this->get_question_intro( $field, $field_slug ); ?>
+			<?php echo wp_kses_post( $this->get_question_intro( $field, $field_slug ) ); ?>
 
 			<?php
 			if ( $has_answers ) {
@@ -319,7 +342,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 					} else {
 						if ( $has_image ) {
 							$empty_class = ' forminator-only--image';
-						} else if ( $has_label ) {
+						} elseif ( $has_label ) {
 							$empty_class = ' forminator-only--text';
 						} else {
 							$empty_class = ' forminator-empty';
@@ -327,7 +350,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 					}
 					?>
 
-					<label for="<?php echo esc_attr( $answer_id ); ?>" class="forminator-answer<?php echo $empty_class; // WPCS: XSS ok. ?>">
+					<label for="<?php echo esc_attr( $answer_id ); ?>" class="forminator-answer<?php echo esc_attr( $empty_class ); ?>">
 
 						<input
 							type="radio"
@@ -337,9 +360,11 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 							class="<?php echo esc_attr( $class ); ?>"
 						/>
 
-						<?php if ( 'none' !== $form_design ) {
+						<?php
+						if ( 'none' !== $form_design ) {
 							echo '<span class="forminator-answer--design" for="' . esc_attr( $answer_id ) . '">';
-						} ?>
+						}
+						?>
 
 						<?php if ( $has_image ) : ?>
 
@@ -368,13 +393,15 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 							<span class="forminator-answer--name"><?php echo esc_html( $label ); ?></span>
 						<?php endif; ?>
 
-						<?php if ( 'none' !== $form_design ) {
+						<?php
+						if ( 'none' !== $form_design ) {
 							echo '</span>';
-						} ?>
+						}
+						?>
 
 					</label>
 
-				<?php
+					<?php
 				}
 			}
 			?>
@@ -406,29 +433,29 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 		$form_settings = $this->get_form_settings();
 		$form_design   = $this->get_quiz_theme();
 
-		// Make sure slug key exist
+		// Make sure slug key exist.
 		if ( isset( $field['slug'] ) ) {
 			$field_slug = $field['slug'];
 		}
 
 		$answers         = $field['answers'];
 		$has_answers     = ( isset( $answers ) && ! empty( $answers ) );
-        $role            = 'radio' === $input_type ? 'radiogroup' : 'checkbox';
+		$role            = 'radio' === $input_type ? 'radiogroup' : 'checkbox';
 		$with_pagination = ! empty( $form_settings['pagination'] );
 		?>
 
 		<div
 			tabindex="0"
 			role="<?php echo esc_attr( $role ); ?>"
-			id="<?php echo esc_html( $field_slug ); ?>"
+			id="<?php echo esc_attr( $field_slug ); ?>"
 			class="forminator-question<?php echo ( true === $last_field && ! $with_pagination ) ? ' forminator-last' : ''; ?>"
-			data-multichoice="<?php echo $this->is_muti_choice( $answers ); ?>"
-			aria-labelledby="<?php echo esc_html( $field_slug ) . '-label'; ?>"
-			aria-describedby="<?php echo esc_html( $field_slug ) . '-description'; ?>"
+			data-multichoice="<?php echo esc_attr( $this->is_muti_choice( $answers ) ); ?>"
+			aria-labelledby="<?php echo esc_attr( $field_slug ) . '-label'; ?>"
+			aria-describedby="<?php echo esc_attr( $field_slug ) . '-description'; ?>"
 			aria-required="true"
 		>
 
-			<?php echo $this->get_question_intro( $field, $field_slug ); ?>
+			<?php echo wp_kses_post( $this->get_question_intro( $field, $field_slug ) ); ?>
 
 			<?php
 			if ( $has_answers ) {
@@ -439,7 +466,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 					$label         = $answer['title'];
 					$input_name    = 'end' === $result_behav ? $field_slug . '-' . $k : $field_slug;
 					$image         = isset( $answer['image'] ) ? $answer['image'] : '';
-					$image_alt     = '';
+					$image_alt     = isset( $answer['image_filename'] ) ? $answer['image_filename'] : '';
 					$has_label     = isset( $label ) && '' !== $label;
 					$has_image     = ( ! empty( $image ) );
 					$has_image_alt = ( isset( $image_alt ) && ! empty( $image_alt ) );
@@ -449,7 +476,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 					} else {
 						if ( $has_image ) {
 							$empty_class = ' forminator-only--image';
-						} else if ( $has_label ) {
+						} elseif ( $has_label ) {
 							$empty_class = ' forminator-only--text';
 						} else {
 							$empty_class = ' forminator-empty';
@@ -457,7 +484,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 					}
 					?>
 
-					<label for="<?php echo esc_attr( $answer_id ); ?>" class="forminator-answer<?php echo $empty_class; // WPCS: XSS ok. ?>">
+					<label for="<?php echo esc_attr( $answer_id ); ?>" class="forminator-answer<?php echo esc_attr( $empty_class ); ?>">
 
 						<input
 							type="<?php echo esc_attr( $input_type ); ?>"
@@ -467,9 +494,11 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 							class="<?php echo esc_attr( $class ); ?>"
 						/>
 
-						<?php if ( 'none' !== $form_design ) {
+						<?php
+						if ( 'none' !== $form_design ) {
 							echo '<span class="forminator-answer--design" for="' . esc_attr( $answer_id ) . '">';
-						} ?>
+						}
+						?>
 
 						<?php if ( $has_image ) : ?>
 
@@ -496,20 +525,22 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 							<span class="forminator-answer--name"><?php echo esc_html( $label ); ?></span>
 						<?php endif; ?>
 
-						<?php if ( 'none' !== $form_design ) {
+						<?php
+						if ( 'none' !== $form_design ) {
 							echo '</span>';
-						} ?>
+						}
+						?>
 
 					</label>
 
-				<?php
+					<?php
 				}
 			}
 			?>
 
-			<span id="<?php echo esc_html( $field_slug ) . '-description'; ?>" class="forminator-question--result"></span>
+			<span id="<?php echo esc_attr( $field_slug ) . '-description'; ?>" class="forminator-question--result"></span>
 
-		</div><?php // END .forminator-question ?>
+		</div><?php // END .forminator-question. ?>
 
 		<?php
 		$html = ob_get_clean();
@@ -520,7 +551,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 	/**
 	 * Returns true if there is more than 1 correct answer
 	 *
-	 * @param array  $answers Array of answers.
+	 * @param array $answers Array of answers.
 	 * @return string
 	 */
 	private function is_muti_choice( $answers ) {
@@ -545,19 +576,19 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 	private function get_question_intro( $field, $field_slug ) {
 		global $wp_embed;
 		$question    = $field['title'];
-		$description = isset( $field['question_description'] ) ? $field['question_description'] : '';
+		$description = isset( $field['question_description'] ) ? wp_kses_post( $field['question_description'] ) : '';
 		$image       = isset( $field['image'] ) ? $field['image'] : '';
 		$image_alt   = isset( $field['image_alt'] ) ? $field['image_alt'] : '';
 
 		$question = '<span id="' . esc_attr( $field_slug ) . '-label" class="forminator-legend">' . esc_html( $question ) . '</span>';
 
 		if ( $description ) {
-			$description = '<div class="forminator-question--description">' . $wp_embed->autoembed( $description ) . '</div>';
+			$description = '<div class="forminator-question--description">' . wp_kses_post( $wp_embed->autoembed( $description ) ) . '</div>';
 		}
 
 		if ( ! empty( $image ) ) {
 			$image = '<div class="forminator-image"' . ( ! empty( $image_alt ) ? '' : ' aria-hidden="true"' ) . '>' .
-				'<img src="' . esc_attr( $field['image'] ) . '"' .
+				'<img src="' . esc_url( $field['image'] ) . '"' .
 					( ! empty( $image_alt ) ? ' alt="' . esc_attr( $image_alt ) . '"' : '' ) . ' />' .
 			'</div>';
 		}
@@ -585,7 +616,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 	 * @return mixed
 	 */
 	public function message_save_to_preview() {
-		return esc_html__( "Please, save the quiz in order to preview it.", 'forminator' );
+		return esc_html__( 'Please, save the quiz in order to preview it.', 'forminator' );
 	}
 
 	/**
@@ -621,7 +652,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 	 * @since 1.0
 	 * @return string
 	 */
-	public function render_form_header() {
+	public function render_form_header( $maybe_error = '' ) {
 		global $wp_embed;
 		ob_start();
 
@@ -629,27 +660,29 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 		$feat_image_alt = ! empty( $this->model->settings['quiz_feat_image_alt'] ) ? $this->model->settings['quiz_feat_image_alt'] : '';
 		?>
 
-		<?php if ( isset( $this->model->settings['quiz_name'] ) && ! empty( $this->model->settings['quiz_name'] ) ): ?>
+		<?php if ( isset( $this->model->settings['quiz_name'] ) && ! empty( $this->model->settings['quiz_name'] ) ) : ?>
 			<h3 class="forminator-quiz--title"><?php echo esc_html( $this->model->settings['quiz_name'] ); ?></h3>
 		<?php endif; ?>
 
-		<?php if ( isset( $this->model->settings['quiz_feat_image'] ) && ! empty( $this->model->settings['quiz_feat_image'] ) ): ?>
+		<?php if ( isset( $this->model->settings['quiz_feat_image'] ) && ! empty( $this->model->settings['quiz_feat_image'] ) ) : ?>
 			<img
-				src="<?php echo esc_html( $this->model->settings['quiz_feat_image'] ); ?>"
+				src="<?php echo esc_url( $this->model->settings['quiz_feat_image'] ); ?>"
 				class="forminator-quiz--image"
-				<?php echo ( '' !== $feat_image_alt ) ? 'alt="' . esc_html( $feat_image_alt ) . '"' : 'aria-hidden="true"'; ?>
+				<?php echo ( '' !== $feat_image_alt ) ? 'alt="' . esc_attr( $feat_image_alt ) . '"' : 'aria-hidden="true"'; ?>
 			/>
 		<?php endif; ?>
 
-		<?php if ( isset( $this->model->settings['quiz_description'] ) && ! empty( $this->model->settings['quiz_description'] ) ):
+		<?php
+		if ( isset( $this->model->settings['quiz_description'] ) && ! empty( $this->model->settings['quiz_description'] ) ) :
 
 			$content = forminator_replace_variables( $this->model->settings['quiz_description'], $this->model->id );
 
 			if ( stripos( $content, '{quiz_name}' ) !== false ) :
 				$quiz_name = forminator_get_name_from_model( $this->model );
 				$content   = str_ireplace( '{quiz_name}', $quiz_name, $content );
-			endif; ?>
-			<div class="forminator-quiz--description"><?php echo $wp_embed->autoembed( wp_kses_post( $content ) ); ?></div>
+			endif;
+			?>
+			<div class="forminator-quiz--description"><?php echo wp_kses_post( $wp_embed->autoembed( $content ) ); ?></div>
 		<?php endif; ?>
 
 		<?php
@@ -657,7 +690,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 
 		if ( ! empty( $this->model->settings['pagination'] ) ) {
 			$start_text = $this->get_start_button_text();
-			$html  = '<div class="forminator-quiz-intro">' . $intro;
+			$html       = '<div class="forminator-quiz-intro">' . $intro;
 			if ( ! $this->has_lead() || 'beginning' !== $this->get_form_placement() ) {
 				$html .= '<button class="forminator-button forminator-quiz-start" style="margin: 0 auto; display: block;">' . esc_html( $start_text ) . '</button>';
 			}
@@ -673,12 +706,12 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 		$settings = $this->get_form_settings();
 
 		$data = array(
-			'class' => '',
-			'label' => esc_html__( "Ready to send", 'forminator' ),
-			'loading' => esc_html__( "Calculating Result", 'forminator' )
+			'class'   => '',
+			'label'   => esc_html__( 'Ready to send', 'forminator' ),
+			'loading' => esc_html__( 'Calculating Result', 'forminator' ),
 		);
 
-		// Submit data is missing
+		// Submit data is missing.
 		if ( ! isset( $settings['submitData'] ) ) {
 			return $data;
 		}
@@ -704,14 +737,14 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 	 * @since 1.0
 	 *
 	 * @param      $form_id
-	 * @param bool $render
+	 * @param bool    $render
 	 *
 	 * @return mixed
 	 */
 	public function get_submit( $form_id, $render = true ) {
 
-		// FIX:
-		// https://app.asana.com/0/385581670491499/789649735369091/f
+		// FIX:.
+		// https://app.asana.com/0/385581670491499/789649735369091/f.
 		$disabled = '';
 		$html     = '';
 
@@ -741,17 +774,17 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 
 				$html .= sprintf(
 					'<button class="forminator-button forminator-button-submit %s" %s data-loading="%s" aria-live="polite"><span class="forminator-button--mask" aria-label="hidden"></span><span class="forminator-button--text">%s</span></button>',
-					$classes,
+					esc_attr( $classes ),
 					$disabled,
-					$submit_data['loading'],
+					esc_attr( $submit_data['loading'] ),
 					$label
 				);
 			} else {
 
 				$html .= sprintf(
 					'<button class="forminator-button forminator-button-submit %s" data-loading="%s" %s>%s</button>',
-					$classes,
-					$submit_data['loading'],
+					esc_attr( $classes ),
+					esc_attr( $submit_data['loading'] ),
 					$disabled,
 					$label
 				);
@@ -759,26 +792,26 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 		} elseif ( 'nowrong' === $this->model->quiz_type || 'end' === $result_behav ) {
 			$label = $submit_data['label'];
 
-				if ( 'material' === $this->get_quiz_theme() ) {
+			if ( 'material' === $this->get_quiz_theme() ) {
 
-					$html .= sprintf(
-						'<button class="forminator-button forminator-button-submit %s" %s data-loading="%s" aria-live="polite"><span class="forminator-button--mask" aria-label="hidden"></span><span class="forminator-button--text">%s</span></button>',
-						$classes,
-						$disabled,
-						$submit_data['loading'],
-						$label
-					);
-				} else {
+				$html .= sprintf(
+					'<button class="forminator-button forminator-button-submit %s" %s data-loading="%s" aria-live="polite"><span class="forminator-button--mask" aria-label="hidden"></span><span class="forminator-button--text">%s</span></button>',
+					esc_attr( $classes ),
+					$disabled,
+					esc_attr( $submit_data['loading'] ),
+					$label
+				);
+			} else {
 
-					$html .= sprintf(
-						'<button class="forminator-button forminator-button-submit %s" data-loading="%s" %s>%s</button>',
-						$classes,
-						$submit_data['loading'],
-						$disabled,
-						$label
-					);
-				}
+				$html .= sprintf(
+					'<button class="forminator-button forminator-button-submit %s" data-loading="%s" %s>%s</button>',
+					esc_attr( $classes ),
+					esc_attr( $submit_data['loading'] ),
+					$disabled,
+					$label
+				);
 			}
+		}
 
 		$html .= '</div>';
 
@@ -788,13 +821,13 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 
 		$html .= $nonce;
 		$html .= sprintf( '<input type="hidden" name="has_lead" value="%s">', $this->has_lead() );
-		$html .= sprintf( '<input type="hidden" name="form_id" value="%s">', $form_id );
-		$html .= sprintf( '<input type="hidden" name="page_id" value="%s">', $post_id );
-		$html .= sprintf( '<input type="hidden" name="current_url" value="%s">', $current_url );
+		$html .= sprintf( '<input type="hidden" name="form_id" value="%s">', intval( $form_id ) );
+		$html .= sprintf( '<input type="hidden" name="page_id" value="%s">', intval( $post_id ) );
+		$html .= sprintf( '<input type="hidden" name="current_url" value="%s">', esc_url( $current_url ) );
 
 		if ( $this->has_lead() ) {
 			$html .= sprintf( '<input type="hidden" name="entry_id" value="">' );
-        }
+		}
 
 		if ( $this->is_preview ) {
 			$html .= '<input type="hidden" name="action" value="forminator_submit_preview_form_quizzes" />';
@@ -803,7 +836,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 		}
 
 		if ( $render ) {
-			echo apply_filters( 'forminator_render_form_submit_markup', $html, $form_id, $post_id, $nonce ); // WPCS: XSS ok.
+			echo apply_filters( 'forminator_render_form_submit_markup', $html, $form_id, $post_id, $nonce ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		} else {
 			return apply_filters( 'forminator_render_form_submit_markup', $html, $form_id, $post_id, $nonce );
 		}
@@ -875,7 +908,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 		 *
 		 * @param string $quiz_theme ,
 		 * @param int    $quiz_id
-		 * @param array  $settings   quiz settings
+		 * @param array  $settings   quiz settings.
 		 */
 		$quiz_theme = apply_filters( 'forminator_quiz_theme', $quiz_theme, $quiz_id, $settings );
 
@@ -895,7 +928,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 		$quiz_type = $this->model->quiz_type;
 
 		$custom_typography_enabled = false;
-		// on clean design, disable google fonts
+		// on clean design, disable google fonts.
 		if ( 'none' !== $this->get_quiz_theme() ) {
 
 			if ( 'nowrong' === $quiz_type ) {
@@ -928,8 +961,8 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 		 *
 		 * @param array  $fonts
 		 * @param int    $quiz_id
-		 * @param string $quiz_type (nowrong|knowledge)
-		 * @param array  $settings  quiz settings
+		 * @param string $quiz_type (nowrong|knowledge).
+		 * @param array  $settings  quiz settings.
 		 */
 		$fonts = apply_filters( 'forminator_quiz_google_fonts', $fonts, $quiz_id, $quiz_type, $settings );
 
@@ -986,28 +1019,28 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 	 * @return object
 	 */
 	protected function set_form_model_data( $form_model, $data ) {
-		$questions  = $results = [];
+		$questions = $results = array();
 		$msg_count = false;
 
 		$title = isset( $data['settings']['quiz_name'] ) ? sanitize_text_field( $data['settings']['quiz_name'] ) : sanitize_text_field( $data['settings']['formName'] );
 
-		// Detect action
+		// Detect action.
 		$action = isset( $data['type'] ) ? sanitize_text_field( $data['type'] ) : '';
 		if ( 'knowledge' === $action ) {
 			$form_model->quiz_type = 'knowledge';
 		} elseif ( 'nowrong' === $action ) {
 			$form_model->quiz_type = 'nowrong';
 		} else {
-			return [];
+			return array();
 		}
 
-		// Check if results exist
+		// Check if results exist.
 		if ( isset( $data['results'] ) && is_array( $data['results'] ) ) {
-			$results = forminator_sanitize_field( $data['results'] );
+			$results = forminator_sanitize_array_field( $data['results'] );
 			foreach ( $data['results'] as $key => $result ) {
 				$description = '';
 				if ( isset( $result['description'] ) ) {
-					$description = $result['description'];
+					$description = wp_kses_post( $result['description'] );
 				}
 				$results[ $key ]['description'] = $description;
 			}
@@ -1015,11 +1048,11 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 			$form_model->results = $results;
 		}
 
-		// Check if answers exist
+		// Check if answers exist.
 		if ( isset( $data['questions'] ) ) {
-			$questions = forminator_sanitize_field( $data['questions'] );
+			$questions = forminator_sanitize_array_field( $data['questions'] );
 
-			// Check if questions exist
+			// Check if questions exist.
 			if ( isset( $questions ) ) {
 				foreach ( $questions as &$question ) {
 					$question['type'] = $form_model->quiz_type;
@@ -1030,19 +1063,19 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 			}
 		}
 
-		// Handle quiz questions
+		// Handle quiz questions.
 		$form_model->questions = $questions;
 
 		if ( isset( $data['msg_count'] ) ) {
-			$msg_count = forminator_sanitize_field( $data['msg_count'] ); //Backup, we allow html here
+			$msg_count = wp_kses_post( $data['msg_count'] ); // Backup, we allow html here.
 		}
 
-		// Sanitize quiz description
+		// Sanitize quiz description.
 		if ( isset( $data['settings']['quiz_description'] ) ) {
-			$form_model->settings['quiz_description'] = $data['settings']['quiz_description'];
+			$form_model->settings['quiz_description'] = wp_kses_post( $data['settings']['quiz_description'] );
 		}
 
-		// Update with backuped version
+		// Update with backuped version.
 		if ( $msg_count ) {
 			$form_model->settings['msg_count'] = $msg_count;
 		}
@@ -1056,14 +1089,14 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 	 * Enqueue quiz scripts
 	 *
 	 * @param      $is_preview
-	 * @param bool $is_ajax_load
+	 * @param bool       $is_ajax_load
 	 */
 	public function enqueue_form_scripts( $is_preview, $is_ajax_load = false ) {
 		$google_fonts = $this->get_google_fonts();
 		foreach ( $google_fonts as $font_name ) {
 			if ( ! empty( $font_name ) ) {
 				$this->styles[ 'forminator-font-' . sanitize_title( $font_name ) ] =
-					array( 'src' => 'https://fonts.googleapis.com/css?family=' . $font_name );
+					array( 'src' => 'https://fonts.bunny.net/css?family=' . $font_name );
 			}
 		}
 	}
@@ -1087,7 +1120,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 			'quiz_id'         => $this->model->id,
 			'form_type'       => $this->get_form_type(),
 			'has_quiz_loader' => $this->form_has_loader( $form_properties ),
-			'hasLeads'        => $this->has_lead()
+			'hasLeads'        => $this->has_lead(),
 		);
 
 		if ( ! empty( $form_properties['settings']['text-next'] ) ) {
@@ -1116,7 +1149,7 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 	 * @return bool
 	 */
 	public function form_has_loader( $properties ) {
-		if( isset( $properties['settings' ]['quiz-ajax-loader'] ) && "show" === $properties['settings' ]['quiz-ajax-loader'] ) {
+		if ( ! isset( $properties['settings']['quiz-ajax-loader'] ) || 'show' === $properties['settings']['quiz-ajax-loader'] ) {
 			return true;
 		}
 
@@ -1131,17 +1164,21 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 	 * @return void
 	 */
 	public static function ajax_reload_module() {
-		if ( ! isset( $_REQUEST['nonce'] ) || ! wp_verify_nonce( $_REQUEST['nonce'], 'forminator_submit_form' ) ) {
+		$nonce = Forminator_Core::sanitize_text_field( 'nonce' );
+		if ( ! wp_verify_nonce( $nonce, 'forminator_submit_form' ) ) {
 			wp_send_json_error( new WP_Error( 'invalid_code' ) );
 		}
 
-		$page_id = isset( $_POST['pageId'] ) ? sanitize_text_field( $_POST['pageId'] ) : false; // WPCS: CSRF OK
+		$page_id = Forminator_Core::sanitize_text_field( 'pageId' );
 
 		if ( $page_id ) {
 			$link = get_permalink( $page_id );
 
 			if ( $link ) {
-				$response = array( 'success' => true, 'html' => $link );
+				$response = array(
+					'success' => true,
+					'html'    => $link,
+				);
 				wp_send_json( $response );
 			} else {
 				wp_send_json_error( new WP_Error( 'invalid_post' ) );
@@ -1152,51 +1189,51 @@ class Forminator_QForm_Front extends Forminator_Render_Form {
 	}
 
 	/**
-     * Lead wrapper start
-     *
+	 * Lead wrapper start
+	 *
 	 * @return string
 	 */
 	public function lead_wrapper_start() {
 		$wrapper = '';
-	    if ( $this->has_lead() ) {
-		    $form_settings = $this->get_form_settings();
-		    $form_design   = $this->get_form_design();
+		if ( $this->has_lead() ) {
+			$form_settings = $this->get_form_settings();
+			$form_design   = $this->get_form_design();
 
-		    $quiz_spacing   = 'data-spacing="default"';
-		    $quiz_alignment = 'data-alignment="left"';
+			$quiz_spacing   = 'data-spacing="default"';
+			$quiz_alignment = 'data-alignment="left"';
 
-		    if ( isset( $form_settings['quiz-spacing'] ) && ! empty( $form_settings['quiz-spacing'] ) ) {
-			    $quiz_spacing = 'data-spacing="' . $form_settings['quiz-spacing'] . '"';
-		    }
+			if ( isset( $form_settings['quiz-spacing'] ) && ! empty( $form_settings['quiz-spacing'] ) ) {
+				$quiz_spacing = 'data-spacing="' . $form_settings['quiz-spacing'] . '"';
+			}
 
-		    if ( isset( $form_settings['quiz-alignment'] ) && ! empty( $form_settings['quiz-alignment'] ) ) {
-			    $quiz_alignment = 'data-alignment="' . $form_settings['quiz-alignment'] . '"';
-		    } else {
+			if ( isset( $form_settings['quiz-alignment'] ) && ! empty( $form_settings['quiz-alignment'] ) ) {
+				$quiz_alignment = 'data-alignment="' . $form_settings['quiz-alignment'] . '"';
+			} else {
 
-			    if ( false !== strpos( $form_design, 'grid' ) ) {
-				    $quiz_alignment = 'data-alignment="center"';
-			    }
-		    }
+				if ( false !== strpos( $form_design, 'grid' ) ) {
+					$quiz_alignment = 'data-alignment="center"';
+				}
+			}
 
-		    $visual_style = isset( $form_settings['visual_style'] ) ? $form_settings['visual_style'] : 'list';
+			$visual_style = isset( $form_settings['visual_style'] ) ? $form_settings['visual_style'] : 'list';
 
 			$wrapper = sprintf(
 				'<div id="forminator-quiz-leads-%s" class="forminator-ui forminator-quiz-leads forminator-quiz--%s" data-design="%s" %s %s>',
-				$form_settings['form_id'],
-				$visual_style,
-			    $this->get_quiz_theme(),
-			    $quiz_spacing,
-			    $quiz_alignment
-		    );
-	    }
+				esc_attr( $form_settings['form_id'] ),
+				esc_attr( $visual_style ),
+				esc_attr( $this->get_quiz_theme() ),
+				esc_attr( $quiz_spacing ),
+				esc_attr( $quiz_alignment )
+			);
+		}
 
 		return $wrapper;
 
-    }
+	}
 
 	/**
-     * Lead wrapper end
-     *
+	 * Lead wrapper end
+	 *
 	 * @return string
 	 */
 	public function lead_wrapper_end() {

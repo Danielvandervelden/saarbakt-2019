@@ -70,7 +70,7 @@ class Forminator_Calculator_Parser_Tokenizer {
 	/**
 	 * Returns true, if a given character is a letter (a-z and A-Z).
 	 *
-	 * @param string $char A single character
+	 * @param string $char A single character.
 	 *
 	 * @return bool
 	 */
@@ -93,7 +93,7 @@ class Forminator_Calculator_Parser_Tokenizer {
 	/**
 	 * Returns true, if a given character is a digit (0-9).
 	 *
-	 * @param string|null $char A single character
+	 * @param string|null $char A single character.
 	 *
 	 * @return bool
 	 */
@@ -115,7 +115,7 @@ class Forminator_Calculator_Parser_Tokenizer {
 	/**
 	 * Returns true, if a given character is a period ('.').
 	 *
-	 * @param string|null $char A single character
+	 * @param string|null $char A single character.
 	 *
 	 * @return bool
 	 */
@@ -156,7 +156,7 @@ class Forminator_Calculator_Parser_Tokenizer {
 		$word = '';
 
 		$char = $this->read_current();
-		// Try to read the word
+		// Try to read the word.
 		while ( null !== $char ) {
 			if ( $this->is_letter( $char ) ) {
 				$word .= $char;
@@ -164,7 +164,7 @@ class Forminator_Calculator_Parser_Tokenizer {
 				break;
 			}
 
-			// Just move the cursor to the next position
+			// Just move the cursor to the next position.
 			$char = $this->read_next();
 		}
 
@@ -184,7 +184,7 @@ class Forminator_Calculator_Parser_Tokenizer {
 		$found_period = false;
 
 		// Try to read the number.
-		// Notice: It does not matter if the number only consists of a single period
+		// Notice: It does not matter if the number only consists of a single period.
 		// or if it ends with a period.
 		$char = $this->read_current();
 		while ( null !== $char ) {
@@ -202,7 +202,7 @@ class Forminator_Calculator_Parser_Tokenizer {
 				break;
 			}
 
-			// read next
+			// read next.
 			$char = $this->read_next();
 		}
 
@@ -217,7 +217,7 @@ class Forminator_Calculator_Parser_Tokenizer {
 	 */
 	protected function read_char() {
 		$char = $this->read_current();
-		// Just move the cursor to the next position
+		// Just move the cursor to the next position.
 		$this->read_next();
 
 		return $char;

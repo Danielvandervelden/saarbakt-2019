@@ -39,7 +39,7 @@ class ExactMetrics_Connect {
 
 		// Check for permissions.
 		if ( ! exactmetrics_can_install_plugins() ) {
-			wp_send_json_error( array( 'message' => esc_html__( 'You are not allowed to install plugins.', 'google-analytics-dashboard-for-wp' ) ) );
+			wp_send_json_error( array( 'message' => esc_html__( 'Oops! You are not allowed to install plugins. Please contact your site administrator.', 'google-analytics-dashboard-for-wp' ) ) );
 		}
 
 		if ( exactmetrics_is_dev_url( home_url() ) ) {
@@ -64,13 +64,13 @@ class ExactMetrics_Connect {
 			// Deactivate plugin.
 			deactivate_plugins( plugin_basename( EXACTMETRICS_PLUGIN_FILE ), false, false );
 			wp_send_json_error( array(
-				'message' => esc_html__( 'Pro version is already installed.', 'google-analytics-dashboard-for-wp' ),
+				'message' => esc_html__( 'You already have ExactMetrics Pro installed.', 'google-analytics-dashboard-for-wp' ),
 				'reload'  => true,
 			) );
 		}
 
 		// Network?
-		$network = ! empty( $_POST['network'] ) && $_POST['network'];
+		$network = ! empty( $_POST['network'] ) && $_POST['network']; // phpcs:ignore
 
 		// Redirect.
 		$oth = hash( 'sha512', wp_rand() );
@@ -105,11 +105,16 @@ class ExactMetrics_Connect {
 	 * Process ExactMetrics Connect.
 	 */
 	public function process() {
-		$error = esc_html__( 'Could not install upgrade. Please download from exactmetrics.com and install manually.', 'google-analytics-dashboard-for-wp' );
+		// Translators: Link tag starts with url and link tag ends.
+		$error = sprintf(
+			esc_html__( 'Oops! We could not automatically install an upgrade. Please install manually by visiting %1$sexactmetrics.com%2$s.', 'google-analytics-dashboard-for-wp' ),
+			'<a target="_blank" href="' . exactmetrics_get_url( 'notice', 'could-not-upgrade', 'https://www.exactmetrics.com/' ) . '">',
+			'</a>'
+		);
 
 		// verify params present (oth & download link).
 		$post_oth = ! empty( $_REQUEST['oth'] ) ? sanitize_text_field( $_REQUEST['oth'] ) : '';
-		$post_url = ! empty( $_REQUEST['file'] ) ? $_REQUEST['file'] : '';
+		$post_url = ! empty( $_REQUEST['file'] ) ? sanitize_text_field($_REQUEST['file']) : '';
 		$license  = get_option( 'exactmetrics_connect', false );
 		$network  = ! empty( $license['network'] ) ? (bool) $license['network'] : false;
 		if ( empty( $post_oth ) || empty( $post_url ) ) {
@@ -201,7 +206,7 @@ class ExactMetrics_Connect {
 			} else {
 				// Reactivate the lite plugin if pro activation failed.
 				activate_plugin( plugin_basename( EXACTMETRICS_PLUGIN_FILE ), '', $network, true );
-				wp_send_json_error( esc_html__( 'Pro version installed but needs to be activated from the Plugins page inside your WordPress admin.', 'google-analytics-dashboard-for-wp' ) );
+				wp_send_json_error( esc_html__( 'Please activate ExactMetrics Pro from your WordPress plugins page.', 'google-analytics-dashboard-for-wp' ) );
 			}
 		}
 		wp_send_json_error( $error );

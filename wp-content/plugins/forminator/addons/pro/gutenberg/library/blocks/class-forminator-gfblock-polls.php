@@ -41,7 +41,7 @@ class Forminator_GFBlock_Polls extends Forminator_GFBlock_Abstract {
 	 * @since 1.0 Gutenberg Addon
 	 */
 	public function __construct() {
-		// Initialize block
+		// Initialize block.
 		$this->init();
 	}
 
@@ -49,7 +49,7 @@ class Forminator_GFBlock_Polls extends Forminator_GFBlock_Abstract {
 	 * Render block markup on front-end
 	 *
 	 * @since 1.0 Gutenberg Addon
-	 * @param array $properties Block properties
+	 * @param array $properties Block properties.
 	 *
 	 * @return string
 	 */
@@ -61,7 +61,7 @@ class Forminator_GFBlock_Polls extends Forminator_GFBlock_Abstract {
 	 * Preview form markup in block
 	 *
 	 * @since 1.0 Gutenberg Addon
-	 * @param array $properties Block properties
+	 * @param array $properties Block properties.
 	 *
 	 * @return string
 	 */
@@ -80,7 +80,7 @@ class Forminator_GFBlock_Polls extends Forminator_GFBlock_Abstract {
 	 * @since 1.0 Gutenberg Addon
 	 */
 	public function load_assets() {
-		// Scripts
+		// Scripts.
 		wp_enqueue_script(
 			'forminator-block-polls',
 			forminator_gutenberg()->get_plugin_url() . '/js/polls-block.min.js',
@@ -89,7 +89,7 @@ class Forminator_GFBlock_Polls extends Forminator_GFBlock_Abstract {
 			false
 		);
 
-		// Localize scripts
+		// Localize scripts.
 		wp_localize_script(
 			'forminator-block-polls',
 			'frmnt_poll_data',
@@ -121,6 +121,9 @@ class Forminator_GFBlock_Polls extends Forminator_GFBlock_Abstract {
 
 		if ( is_array( $forms ) ) {
 			foreach ( $forms as $form ) {
+				if ( ! is_object( $form ) ) {
+					continue;
+				}
 				$poll_name = $form->name;
 
 				if ( isset( $form->settings['formName'] ) && ! empty( $form->settings['formName'] ) ) {

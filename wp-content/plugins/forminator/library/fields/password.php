@@ -115,22 +115,21 @@ class Forminator_Password extends Forminator_Field {
 	 * @since 1.0
 	 *
 	 * @param $field
-	 * @param $settings
+	 * @param Forminator_Render_Form $views_obj Forminator_Render_Form object.
 	 *
 	 * @return mixed
 	 */
-	public function markup( $field, $settings = array() ) {
+	public function markup( $field, $views_obj ) {
 
+		$settings            = $views_obj->model->settings;
 		$this->field         = $field;
 		$this->form_settings = $settings;
-
-		$this->init_autofill( $settings );
 
 		$html        = '';
 		$id          = self::get_property( 'element_id', $field );
 		$name        = $id;
 		$ariaid      = $id;
-		$id          = 'forminator-field-' . $id;
+		$id          = 'forminator-field-' . $id . '_' . Forminator_CForm_Front::$uid;
 		$required    = self::get_property( 'required', $field, false );
 		$ariareq     = 'false';
 		$default     = self::get_property( 'default', $field, false );
@@ -143,7 +142,7 @@ class Forminator_Password extends Forminator_Field {
 		$limit_type  = self::get_property( 'limit_type', $field, '', 'str' );
 		$is_confirm  = self::get_property( 'confirm-password', $field, '', 'bool' );
 
-		$autofill_markup = $this->get_element_autofill_markup_attr( self::get_property( 'element_id', $field ), $this->form_settings );
+		$autofill_markup = $this->get_element_autofill_markup_attr( self::get_property( 'element_id', $field ) );
 
 		if ( (bool) $required ) {
 			$ariareq = 'true';
@@ -156,11 +155,15 @@ class Forminator_Password extends Forminator_Field {
 			'id'            => $id,
 			'class'         => 'forminator-input forminator-name--field',
 			'data-required' => $required,
-			'type'          => 'password'
+			'type'          => 'password',
 		);
 
 		if ( ! empty( $default ) ) {
 			$input_text['value'] = $default;
+		}
+
+		if ( ! empty( $description ) ) {
+			$input_text['aria-describedby'] = $id . '-description';
 		}
 
 		$input_text = array_merge( $input_text, $autofill_markup );
@@ -177,28 +180,30 @@ class Forminator_Password extends Forminator_Field {
 
 		$html .= '</div>';
 
-		// Counter
+		// Counter.
 		if ( ! empty( $description ) || ( ! empty( $limit ) && ! empty( $limit_type ) ) ) {
 
-			$html .= '<div class="forminator-description forminator-description-password">';
+			$html .= sprintf( '<div class="forminator-description forminator-description-password" id="%s">', $id . '-description' );
 
-				if ( ! empty( $description ) ) {
-					$html .= $description;
-				}
+			$description = str_replace( '{lostpassword_url}', wp_lostpassword_url( get_permalink() ), $description );
 
-				if ( ( ! empty( $limit ) && ! empty( $limit_type ) ) ) {
-					$html .= sprintf( '<span data-limit="%s" data-type="%s">0 / %s</span>', $limit, $limit_type, $limit );
-				}
+			if ( ! empty( $description ) ) {
+				$html .= wp_kses_post( $description );
+			}
+
+			if ( ( ! empty( $limit ) && ! empty( $limit_type ) ) ) {
+				$html .= sprintf( '<span data-limit="%s" data-type="%s">0 / %s</span>', $limit, $limit_type, $limit );
+			}
 
 			$html .= '</div>';
 
 		}
 
-		//Confirm password
+		// Confirm password.
 		if ( $is_confirm ) {
-			$id          = $this->confirm_prefix . '_' . self::get_property( 'element_id', $field );
-			$name        = $id;
-			$id          = 'forminator-field-' . $id;
+			$id   = $this->confirm_prefix . '_' . self::get_property( 'element_id', $field );
+			$name = $id;
+			$id   = 'forminator-field-' . $id . '_' . Forminator_CForm_Front::$uid;
 
 			$confirm_password_label       = self::get_property( 'confirm-password-label', $field, '' );
 			$confirm_password_placeholder = self::get_property( 'confirm-password-placeholder', $field );
@@ -211,8 +216,12 @@ class Forminator_Password extends Forminator_Field {
 				'id'            => $id,
 				'class'         => 'forminator-input forminator-name--field',
 				'data-required' => $required,
-				'type'          => 'password'
- 			);
+				'type'          => 'password',
+			);
+
+			if ( ! empty( $confirm_password_description ) ) {
+				$input_text['aria-describedby'] = $id . '-description';
+			}
 
 			if ( ! empty( $default ) ) {
 				$confirm_input_text['value'] = $default;
@@ -220,12 +229,12 @@ class Forminator_Password extends Forminator_Field {
 
 			$confirm_input_text = array_merge( $confirm_input_text, $autofill_markup );
 
-			//Field 'Confirm password' is inside the separated 'forminator row'
-			$html_prev_field = '</div></div>';//because there are '.forminator-row' and '.forminator-col' classes for Password field
-			$html .= apply_filters( 'forminator_prev_last_tag_before_conf_password_field_markup', $html_prev_field, $field );
+			// Field 'Confirm password' is inside the separated 'forminator row'.
+			$html_prev_field = '</div></div>';// because there are '.forminator-row' and '.forminator-col' classes for Password field.
+			$html           .= apply_filters( 'forminator_prev_last_tag_before_conf_password_field_markup', $html_prev_field, $field );
 
-			$html .= '<div class="forminator-row">';
-			$cols = 12;
+			$html                           .= '<div class="forminator-row">';
+			$cols                            = 12;
 			$html_before_conf_password_field = sprintf( '<div class="forminator-col forminator-col-%s">', $cols );
 
 			$html .= apply_filters( 'forminator_before_conf_password_field_markup', $html_before_conf_password_field );
@@ -241,11 +250,11 @@ class Forminator_Password extends Forminator_Field {
 
 			$html .= '</div>';
 
-			// Counter
+			// Counter.
 			if ( ! empty( $confirm_password_description ) || ( ! empty( $limit ) && ! empty( $limit_type ) ) ) {
-				$html .= '<span class="forminator-description">';
+				$html .= sprintf( '<span class="forminator-description" id="%s">', $id . '-description' );
 				if ( ! empty( $confirm_password_description ) ) {
-					$html .= $confirm_password_description;
+					$html .= wp_kses_post( $confirm_password_description );
 				}
 
 				if ( ( ! empty( $limit ) && ! empty( $limit_type ) ) ) {
@@ -271,6 +280,11 @@ class Forminator_Password extends Forminator_Field {
 		$symbol_size = 0;
 		$strlen      = mb_strlen( $password );
 
+		// Password is optional and empty so don't check strength.
+		if ( 0 === $strlen ) {
+			return true;
+		}
+
 		if ( $strlen < 8 ) {
 			return false;
 		}
@@ -292,7 +306,7 @@ class Forminator_Password extends Forminator_Field {
 		}
 
 		$nat_log = log( pow( $symbol_size, $strlen ) );
-		$score  = $nat_log / log( 2 );
+		$score   = $nat_log / log( 2 );
 
 		return $score >= 54;
 	}
@@ -304,15 +318,21 @@ class Forminator_Password extends Forminator_Field {
 	 * @return string
 	 */
 	public function get_validation_rules() {
-		$field       = $this->field;
-		$id          = self::get_property( 'element_id', $field );
-		$is_required = $this->is_required( $field );
-		$has_limit   = $this->has_limit( $field );
-		$rules       = '';
-		$is_confirm  = self::get_property( 'confirm-password', $field, '', 'bool' );
-		$is_valid    = self::get_property( 'validation', $field, 'bool' );
-
+		$field                 = $this->field;
+		$id                    = self::get_property( 'element_id', $field );
+		$is_required           = $this->is_required( $field );
+		$has_limit             = $this->has_limit( $field );
+		$rules                 = '';
+		$is_confirm            = self::get_property( 'confirm-password', $field, '', 'bool' );
 		$min_password_strength = self::get_property( 'strength', $field );
+		$module_id             = isset( $this->form_settings['form_id'] ) ? $this->form_settings['form_id'] : '';
+		$module_selector       = '';
+
+		if ( ! empty( $module_id ) ) {
+			$module_selector = "#forminator-module-{$module_id}";
+			$render_id       = Forminator_Render_Form::get_render_id( $module_id );
+			$module_selector .= "[data-forminator-render='{$render_id}']";
+		}
 
 		if ( ! isset( $field['limit'] ) ) {
 			$field['limit'] = 0;
@@ -332,21 +352,18 @@ class Forminator_Password extends Forminator_Field {
 				}
 			}
 		}
-		//Min password strength
+		// Min password strength.
 		if ( isset( $min_password_strength ) && '' !== $min_password_strength && 'none' !== $min_password_strength ) {
 			$rules .= '"forminatorPasswordStrength": true,';
 		}
 		$rules .= '},';
 
 		if ( $is_confirm ) {
-			$rules .= '"'. $this->confirm_prefix . '_' . $this->get_id( $field ) . '": {';
+			$rules .= '"' . $this->confirm_prefix . '_' . $this->get_id( $field ) . '": {';
 			if ( $is_required ) {
 				$rules .= '"required": true,';
 			}
-			//If 'Validate' is enabled
-			if ( 'true' === $is_valid ) {
-				$rules .= '"equalTo": "#forminator-field-' . $this->get_id( $field ) . '",' . "\n";
-			}
+			$rules .= '"equalTo": "' . $module_selector . ' #forminator-field-' . $this->get_id( $field ) . '_' . Forminator_CForm_Front::$uid . '",' . "\n";
 			$rules .= '},';
 		}
 
@@ -367,7 +384,6 @@ class Forminator_Password extends Forminator_Field {
 		$messages         = '';
 		$required_message = self::get_property( 'required_message', $field, '' );
 		$is_confirm       = self::get_property( 'confirm-password', $field, '', 'bool' );
-		$is_valid         = self::get_property( 'validation', $field, 'bool' );
 
 		$min_password_strength = self::get_property( 'strength', $field );
 
@@ -380,7 +396,7 @@ class Forminator_Password extends Forminator_Field {
 					$id,
 					$field
 				);
-				$messages       .= '"required": "' . $required_error . '",' . "\n";
+				$messages      .= '"required": "' . $required_error . '",' . "\n";
 			}
 
 			if ( $has_limit ) {
@@ -391,7 +407,7 @@ class Forminator_Password extends Forminator_Field {
 						$id,
 						$field
 					);
-					$messages         .= '"maxlength": "' . $max_length_error . '",' . "\n";
+					$messages        .= '"maxlength": "' . $max_length_error . '",' . "\n";
 				} else {
 					$max_words_error = apply_filters(
 						'forminator_text_field_words_validation_message',
@@ -399,27 +415,27 @@ class Forminator_Password extends Forminator_Field {
 						$id,
 						$field
 					);
-					$messages        .= '"maxwords": "' . $max_words_error . '",' . "\n";
+					$messages       .= '"maxwords": "' . $max_words_error . '",' . "\n";
 				}
 			}
 		}
-		//Min password strength
+		// Min password strength.
 		if ( isset( $min_password_strength ) && '' !== $min_password_strength && 'none' !== $min_password_strength ) {
 			$strength_validation_message = self::get_property( 'strength_validation_message', $field, '' );
-			$min_strength_error = apply_filters(
+			$min_strength_error          = apply_filters(
 				'forminator_text_field_min_password_strength_validation_message',
 				! empty( $strength_validation_message ) ? $strength_validation_message : __( 'Your password doesn\'t meet the minimum strength requirement. We recommend using 8 or more characters with a mix of letters, numbers & symbols.', 'forminator' ),
 				$id,
 				$field
 			);
-			$messages .= '"forminatorPasswordStrength": "' . $min_strength_error . '",' . "\n";
+			$messages                   .= '"forminatorPasswordStrength": "' . $min_strength_error . '",' . "\n";
 		}
 		$messages .= '},';
 
 		if ( $is_confirm ) {
 			$required_confirm_message = self::get_property( 'required_confirm_message', $field, '' );
 
-			$messages .= '"'. $this->confirm_prefix . '_' . $this->get_id( $field ) . '": {';
+			$messages .= '"' . $this->confirm_prefix . '_' . $this->get_id( $field ) . '": {';
 			if ( $is_required ) {
 				$required_error = apply_filters(
 					'forminator_confirm_password_field_required_validation_message',
@@ -428,19 +444,17 @@ class Forminator_Password extends Forminator_Field {
 					$field
 				);
 
-				$messages       .= '"required": "' . $required_error . '",' . "\n";
+				$messages .= '"required": "' . $required_error . '",' . "\n";
 			}
-			//If 'Validate' is enabled
-			if( 'true' === $is_valid ) {
-				$validation_message_not_match = self::get_property( 'validation_message', $field, '' );
-				$not_match_error = apply_filters(
-					'forminator_confirm_password_field_not_match_validation_message',
-					! empty( $validation_message_not_match ) ? $validation_message_not_match : __( 'Your passwords don\'t match.', 'forminator' ),
-					$id,
-					$field
-				);
-				$messages .= '"equalTo": "' . $not_match_error . '",' . "\n";
-			}
+
+			$validation_message_not_match = self::get_property( 'validation_message', $field, '' );
+			$not_match_error              = apply_filters(
+				'forminator_confirm_password_field_not_match_validation_message',
+				! empty( $validation_message_not_match ) ? $validation_message_not_match : __( 'Your passwords don\'t match.', 'forminator' ),
+				$id,
+				$field
+			);
+			$messages                    .= '"equalTo": "' . $not_match_error . '",' . "\n";
 			$messages .= '},';
 		}
 
@@ -454,12 +468,13 @@ class Forminator_Password extends Forminator_Field {
 	 *
 	 * @param array        $field
 	 * @param array|string $data
-	 * @param array $post_data
 	 */
-	public function validate( $field, $data, $post_data = array() ) {
+	public function validate( $field, $data ) {
 		$id                    = self::get_property( 'element_id', $field );
 		$min_password_strength = self::get_property( 'strength', $field );
 		$is_confirm            = self::get_property( 'confirm-password', $field, '', 'bool' );
+
+		// TODO: Remove old property "validation".
 
 		if ( ! isset( $field['limit'] ) ) {
 			$field['limit'] = 0;
@@ -485,7 +500,7 @@ class Forminator_Password extends Forminator_Field {
 					$field
 				);
 			} elseif ( ( isset( $field['limit_type'] ) && 'words' === trim( $field['limit_type'] ) ) ) {
-				$words = preg_split( "/\s+/", $data );
+				$words = preg_split( '/\s+/', $data );
 				if ( is_array( $words ) && count( $words ) > $field['limit'] ) {
 					$this->validation_message[ $id ] = apply_filters(
 						'forminator_text_field_words_validation_message',
@@ -507,6 +522,20 @@ class Forminator_Password extends Forminator_Field {
 				);
 			}
 		}
+
+		if ( $is_confirm && ! empty( $data ) &&
+				Forminator_CForm_Front_Action::$prepared_data[ $id ] !== Forminator_CForm_Front_Action::$prepared_data[ 'confirm_' . $id ] ) {
+			$validation_message_not_match 		  = self::get_property( 'validation_message', $field, '' );
+			$validation_message_not_match_message = apply_filters(
+				'forminator_confirm_password_field_not_match_validation_message',
+				! empty( $validation_message_not_match ) ? $validation_message_not_match : __( 'Your passwords don\'t match.', 'forminator' ),
+				$id,
+				$field
+			);
+
+			$this->validation_message[ $id ] = $validation_message_not_match_message;
+			$this->validation_message[ 'confirm_' . $id ] = $validation_message_not_match_message;
+		}
 	}
 
 	/**
@@ -515,14 +544,18 @@ class Forminator_Password extends Forminator_Field {
 	 * @since 1.0.2
 	 *
 	 * @param array        $field
-	 * @param array|string $data - the data to be sanitized
+	 * @param array|string $data - the data to be sanitized.
 	 *
 	 * @return array|string $data - the data after sanitization
 	 */
 	public function sanitize( $field, $data ) {
 		$original_data = $data;
-		// Sanitize
-		$data = forminator_sanitize_field( $data );
+		// Sanitize.
+		if ( is_array( $data ) ) {
+			$data = forminator_sanitize_array_field( $data );
+		} else {
+			$data = forminator_sanitize_field( $data );
+		}
 
 		return apply_filters( 'forminator_field_text_sanitize', $data, $field, $original_data );
 	}

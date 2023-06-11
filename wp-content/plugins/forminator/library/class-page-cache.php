@@ -30,8 +30,7 @@ class Forminator_Page_Cache {
 	public function __construct() {
 		add_action( 'clean_post_cache', array( $this, 'on_clean_post_cache' ), 99, 2 );
 
-
-		// publish action triggered by this
+		// publish action triggered by this.
 		add_action( 'transition_post_status', array( $this, 'on_transition_post_status' ), 99, 3 );
 	}
 
@@ -51,10 +50,10 @@ class Forminator_Page_Cache {
 	 *
 	 * @param         $new_status
 	 * @param         $old_status
-	 * @param WP_Post $post
+	 * @param WP_Post    $post
 	 */
 	public function on_transition_post_status( $new_status, $old_status, $post ) {
-		// no status changed
+		// no status changed.
 		if ( $new_status === $old_status ) {
 			return;
 		}
@@ -75,10 +74,10 @@ class Forminator_Page_Cache {
 	 * @param $post
 	 */
 	public function execute_page_caches( $post_id, $post ) {
-		// get fresh post
+		// get fresh post.
 		$wp_post = get_post( $post_id );
 
-		// this is deleted / invalid post
+		// this is deleted / invalid post.
 		if ( ! $wp_post instanceof WP_Post ) {
 			$this->remove_forminator_module_from_posts_map( $post_id );
 			$this->remove_post_from_posts_map( $post_id );
@@ -160,8 +159,8 @@ class Forminator_Page_Cache {
 		$content          = $post->post_content;
 
 		if ( has_shortcode( $content, 'forminator_form' )
-		     || has_shortcode( $content, 'forminator_poll' )
-		     || has_shortcode( $content, 'forminator_quiz' )
+			 || has_shortcode( $content, 'forminator_poll' )
+			 || has_shortcode( $content, 'forminator_quiz' )
 		) {
 
 			$module_ids      = array();
@@ -179,18 +178,16 @@ class Forminator_Page_Cache {
 					continue;
 				}
 
-
 				$attr = shortcode_parse_atts( $shortcode_attr_text );
 
 				if ( isset( $attr['id'] ) ) {
 					$module_ids[] = (int) $attr['id'];
 				}
-
 			}
 
 			$module_ids = array_unique( $module_ids, SORT_NUMERIC );
 
-			// Add
+			// Add.
 			foreach ( $module_ids as $module_id ) {
 				$module_id = (int) $module_id;
 				if ( ! isset( $posts_map_option[ $module_id ] ) ) {
@@ -205,13 +202,13 @@ class Forminator_Page_Cache {
 				}
 			}
 
-			// Cleanup
+			// Cleanup.
 			foreach ( $posts_map_option as $module_id => $saved_post_ids ) {
 				foreach ( $saved_post_ids as $saved_post_id ) {
 					if ( $post_id === $saved_post_id ) {
 						$saved_module_id = (int) $module_id;
 
-						// this post does not have `saved_module_id` anymore
+						// this post does not have `saved_module_id` anymore.
 						if ( ! in_array( $saved_module_id, $module_ids, true ) ) {
 							$post_ids = array_diff( $saved_post_ids, array( $post_id ) );
 							sort( $post_ids );
@@ -220,20 +217,16 @@ class Forminator_Page_Cache {
 							} else {
 								$posts_map_option[ $module_id ] = $post_ids;
 							}
-
 						}
 					}
 				}
-
 			}
-
-
 		} else {
-			// Cleanup
+			// Cleanup.
 			foreach ( $posts_map_option as $module_id => $saved_post_ids ) {
 				foreach ( $saved_post_ids as $saved_post_id ) {
 					if ( $post_id === $saved_post_id ) {
-						// this post does not have `forminator` anymore
+						// this post does not have `forminator` anymore.
 						$post_ids = array_diff( $saved_post_ids, array( $post_id ) );
 						sort( $post_ids );
 						if ( empty( $post_ids ) ) {
@@ -241,10 +234,8 @@ class Forminator_Page_Cache {
 						} else {
 							$posts_map_option[ $module_id ] = $post_ids;
 						}
-
 					}
 				}
-
 			}
 		}
 
@@ -306,15 +297,15 @@ class Forminator_Page_Cache {
 	public function bust_cache_post( $to_bust_cache_post_id ) {
 		if ( function_exists( 'clean_post_cache' ) ) {
 			forminator_maybe_log( 'clean_post_cache exists' );
-			// w3-total-cache use `clean_post_cache`
+			// w3-total-cache use `clean_post_cache`.
 			clean_post_cache( $to_bust_cache_post_id );
 		}
 
-		// hummingbird
+		// hummingbird.
 		do_action( 'wphb_clear_page_cache', $to_bust_cache_post_id );
 	}
 
 }
 
-// init
+// init.
 Forminator_Page_Cache::get_instance();

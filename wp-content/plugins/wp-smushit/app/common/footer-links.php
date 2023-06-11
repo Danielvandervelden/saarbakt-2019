@@ -23,11 +23,7 @@ if ( WP_Smush::is_pro() ) {
 ?>
 
 <div class="sui-footer">
-	<?php
-	// @codingStandardsIgnoreStart
-	echo $footer_text;
-	// @codingStandardsIgnoreEnd
-	?>
+	<?php echo wp_kses_post( $footer_text ); ?>
 </div>
 
 <ul class="sui-footer-nav">
@@ -71,9 +67,6 @@ if ( WP_Smush::is_pro() ) {
 			</a></li>
 		<li><a href="https://wpmudev.com/hub2/community/" target="_blank">
 				<?php esc_html_e( 'Community', 'wp-smushit' ); ?>
-			</a></li>
-		<li><a href="https://wpmudev.com/academy/" target="_blank">
-				<?php esc_html_e( 'Academy', 'wp-smushit' ); ?>
 			</a></li>
 		<li><a href="https://wpmudev.com/terms-of-service/" target="_blank">
 				<?php esc_html_e( 'Terms of Service', 'wp-smushit' ); ?>

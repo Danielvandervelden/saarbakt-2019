@@ -130,7 +130,7 @@ class Forminator_Google_Http_Batch
             $response = Forminator_Google_Http_REST::decodeHttpResponse($response, $this->client);
             $responses[$key] = $response;
           } catch (Forminator_Google_Service_Exception $e) {
-            // Store the exception as the response, so successful responses
+            // Store the exception as the response, so successful responses.
             // can be processed.
             $responses[$key] = $e;
           }

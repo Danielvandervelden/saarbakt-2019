@@ -46,6 +46,16 @@ class Forminator_Postdata extends Forminator_Field {
 	public $icon = 'sui-icon-post-pin';
 
 	/**
+	 * @var array
+	 */
+	public $draft_values = array();
+
+	/**
+	 * @var array
+	 */
+	public $image_extensions = array( 'jpg', 'jpeg', 'jpe', 'gif', 'png', 'bmp' );
+
+	/**
 	 * Forminator_Postdata constructor.
 	 *
 	 * @since 1.0
@@ -100,24 +110,24 @@ class Forminator_Postdata extends Forminator_Field {
 	public function autofill_settings( $settings = array() ) {
 		return $settings;
 
-		// TODO: support autofill-for-postdata
-		//      $title_providers    = apply_filters( 'forminator_field_' . $this->slug . '_post_titlle_autofill', array(), $this->slug . '_post_titlle' );
-		//      $content_providers  = apply_filters( 'forminator_field_' . $this->slug . '_post_content_autofill', array(), $this->slug . '_post_content' );
-		//      $excerpt_providers  = apply_filters( 'forminator_field_' . $this->slug . '_post_excerpt_autofill', array(), $this->slug . '_post_excerpt' );
+		// TODO: support autofill-for-postdata.
+		// $title_providers    = apply_filters( 'forminator_field_' . $this->slug . '_post_titlle_autofill', array(), $this->slug . '_post_titlle' );.
+		// $content_providers  = apply_filters( 'forminator_field_' . $this->slug . '_post_content_autofill', array(), $this->slug . '_post_content' );.
+		// $excerpt_providers  = apply_filters( 'forminator_field_' . $this->slug . '_post_excerpt_autofill', array(), $this->slug . '_post_excerpt' );.
 		//
-		//      $autofill_settings = array(
-		//          'postdata-post-title'    => array(
-		//              'values' => forminator_build_autofill_providers( $title_providers ),
-		//          ),
-		//          'postdata-post-content'  => array(
-		//              'values' => forminator_build_autofill_providers( $content_providers ),
-		//          ),
-		//          'postdata-post-excerpt'  => array(
-		//              'values' => forminator_build_autofill_providers( $excerpt_providers ),
-		//          ),
-		//      );
+		// $autofill_settings = array(.
+		// 'postdata-post-title'    => array(.
+		// 'values' => forminator_build_autofill_providers( $title_providers ),.
+		// ),.
+		// 'postdata-post-content'  => array(.
+		// 'values' => forminator_build_autofill_providers( $content_providers ),.
+		// ),.
+		// 'postdata-post-excerpt'  => array(.
+		// 'values' => forminator_build_autofill_providers( $excerpt_providers ),.
+		// ),.
+		// );.
 		//
-		//      return $autofill_settings;
+		// return $autofill_settings;.
 	}
 
 	/**
@@ -126,13 +136,15 @@ class Forminator_Postdata extends Forminator_Field {
 	 * @since 1.0
 	 *
 	 * @param $field
-	 * @param $settings
+	 * @param Forminator_Render_Form $views_obj Forminator_Render_Form object.
 	 *
 	 * @return mixed
 	 */
-	public function markup( $field, $settings = array() ) {
+	public function markup( $field, $views_obj, $draft_value = null ) {
 
-		$this->field = $field;
+		$settings           = $views_obj->model->settings;
+		$this->field        = $field;
+		$this->draft_values = ! empty( $draft_value['value'] ) ? $draft_value['value'] : array();
 
 		$html     = '';
 		$required = self::get_property( 'required', $field, false );
@@ -335,9 +347,9 @@ class Forminator_Postdata extends Forminator_Field {
 	 * @param        $type
 	 * @param        $class
 	 * @param        $input_suffix
-	 * @param array  $options
-	 * @param string $value
-	 * @param string $design
+	 * @param array        $options
+	 * @param string       $value
+	 * @param string       $design
 	 *
 	 * @return string
 	 */
@@ -346,7 +358,9 @@ class Forminator_Postdata extends Forminator_Field {
 		$html          = '';
 		$field_enabled = self::get_property( $field_name, $field, '' );
 		$type          = trim( $type );
-		$full_id       = 'forminator-field-' . $input_suffix . '-' . $id;
+		$full_id       = 'forminator-field-' . $input_suffix . '-' . $id . '_' . Forminator_CForm_Front::$uid;
+		$is_preview    = filter_input( INPUT_POST, 'is_preview', FILTER_VALIDATE_BOOLEAN );
+		$draft_value   = isset( $this->draft_values[ $input_suffix ] ) ? $this->draft_values[ $input_suffix ] : '';
 
 		if ( ! empty( $field_enabled ) ) {
 			$cols         = 12;
@@ -376,20 +390,30 @@ class Forminator_Postdata extends Forminator_Field {
 
 					$html .= '<div class="forminator-field">';
 
+			$ajax = ! empty( $options['ajax'] );
 			if ( 'wp_editor' === $type ) {
 				// multiple wp_editor support.
-				$field_markup['id'] = $field_markup['id'] . '-' . uniqid();
+				$field_markup['id'] = $field_markup['id'];
 			}
 
-			$ajax = ! empty( $options['ajax'] );
-			if ( 'wp_editor' === $type && ! $ajax ) {
+			if ( 'wp_editor' === $type && ! $is_preview && ! $ajax ) {
+
+				if ( ! empty( $draft_value ) ) {
+					$field_markup['content'] = $draft_value;
+				}
+
 				$html .= self::create_wp_editor(
 					$field_markup,
 					$label,
 					$description,
 					$required
 				);
-			} elseif ( in_array( $type, array( 'textarea', 'wp_editor' ), true ) ) {
+			} elseif ( 'textarea' === $type || 'wp_editor' === $type && ( $ajax || $is_preview ) ) {
+
+				if ( ! empty( $draft_value ) ) {
+					$field_markup['content'] = $draft_value;
+				}
+
 				$html .= self::create_textarea(
 					$field_markup,
 					$label,
@@ -397,7 +421,8 @@ class Forminator_Postdata extends Forminator_Field {
 					$required,
 					$design
 				);
-				if ( 'wp_editor' === $type && $ajax ) {
+
+				if ( 'wp_editor' === $type ) {
 					$_id   = $field_markup['id'];
 					$args  = self::get_tinymce_args( $_id );
 					$html .= '<script>wp.editor.initialize("' . esc_attr( $_id ) . '", ' . $args . ');</script>';
@@ -406,6 +431,11 @@ class Forminator_Postdata extends Forminator_Field {
 
 				if ( empty( $options ) ) {
 					unset( $field_markup['required'] );
+				}
+
+				if ( ! empty( $draft_value ) ) {
+					// Users might switch from multi select
+					$value = is_array( $draft_value ) ? $draft_value[0] : $draft_value;
 				}
 
 				$html .= self::create_select(
@@ -434,11 +464,18 @@ class Forminator_Postdata extends Forminator_Field {
 					}
 				}
 
-				$post_value = self::get_post_data( $name, self::FIELD_PROPERTY_VALUE_NOT_EXIST );
-				$name       = $id . '-' . $field_name . '[]';
-				$get_id     = $id . '-' . $field_name;
-				$html      .= '<div class="forminator-multiselect">';
-				$i          = 1;
+				if ( ! empty( $draft_value ) ) {
+					// Users might switch from single select
+					$post_value = is_array( $draft_value ) ? $draft_value : array( $draft_value );
+				} else {
+					$post_value = self::get_post_data( $name, self::FIELD_PROPERTY_VALUE_NOT_EXIST );
+				}
+
+				$name   = $id . '-' . $field_name . '[]';
+				$get_id = $id . '-' . $field_name;
+				$html  .= '<div class="forminator-multiselect">';
+				$i      = 1;
+
 				foreach ( $options as $option ) {
 
 					$value    = $option['value'] ? $option['value'] : $option['label'];
@@ -446,16 +483,21 @@ class Forminator_Postdata extends Forminator_Field {
 
 					$selected = false;
 
-					if ( self::FIELD_PROPERTY_VALUE_NOT_EXIST !== $post_value ) {
-
+					if ( self::FIELD_PROPERTY_VALUE_NOT_EXIST !== $post_value || ! empty( $draft_value ) ) {
 						if ( is_array( $post_value ) ) {
 							$selected = in_array( $value, $post_value ); // phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
 						}
 					}
 
-					$selected = $selected ? 'checked="checked"' : '';
+					if ( $selected ) {
+						$selected       = esc_attr( 'checked="checked"' );
+						$selected_class = esc_attr( 'forminator-option forminator-is_checked' );
+					} else {
+						$selected       = '';
+						$selected_class = esc_attr( 'forminator-option' );
+					}
 
-					$html .= sprintf( '<label for="%s" class="forminator-option">', $input_id );
+					$html .= sprintf( '<label for="%s" class="%s">', $input_id, $selected_class );
 
 					$html .= sprintf(
 						'<input type="checkbox" name="%s" value="%s" id="%s" %s />',
@@ -497,13 +539,21 @@ class Forminator_Postdata extends Forminator_Field {
 				}
 
 				$html .= self::create_file_upload(
-					$input_suffix . '-' . $id,
+					$input_suffix . '-' . $id . '_' . Forminator_CForm_Front::$uid,
 					$name . '-' . $input_suffix,
 					$description,
 					$required,
-					$design
+					$design,
+					'single',
+					0,
+					array(
+						'accept' => '.' . implode( ',.', $this->image_extensions ),
+					)
 				);
 			} else {
+				if ( ! empty( $draft_value ) ) {
+					$field_markup['value'] = $draft_value;
+				}
 
 				$html .= self::create_input(
 					$field_markup,
@@ -547,9 +597,9 @@ class Forminator_Postdata extends Forminator_Field {
 
 			if ( ! empty( $custom_vars ) ) {
 				$html .= '<div class="forminator-row forminator-row--inner">';
-				$i = 1;
+				$i     = 1;
 				foreach ( $custom_vars as $variable ) {
-					$html         .= sprintf( '<div class="forminator-col forminator-col-%s">', $cols );
+					$html .= sprintf( '<div class="forminator-col forminator-col-%s">', $cols );
 					if ( ! empty( $variable['value'] ) ) {
 						$value    = $variable['value'];
 						$input_id = $value;
@@ -568,8 +618,8 @@ class Forminator_Postdata extends Forminator_Field {
 						'value'       => $value,
 					);
 
-					$html         .= self::create_input( $field_markup, $label, '' );
-					$html         .= '</div>';
+					$html .= self::create_input( $field_markup, $label, '' );
+					$html .= '</div>';
 					$i++;
 				}
 			}
@@ -587,9 +637,8 @@ class Forminator_Postdata extends Forminator_Field {
 	 *
 	 * @param array        $field
 	 * @param array|string $data
-	 * @param array        $post_data
 	 */
-	public function validate( $field, $data, $post_data = array() ) {
+	public function validate( $field, $data ) {
 
 		$id = self::get_property( 'element_id', $field );
 
@@ -598,6 +647,7 @@ class Forminator_Postdata extends Forminator_Field {
 		$post_excerpt             = self::get_property( 'post_excerpt', $field, '' );
 		$setting_required_message = self::get_property( 'required_message', $field, '' );
 		$post_type                = self::get_property( 'post_type', $field, 'post' );
+		$post_image               = self::get_property( 'post_image', $field, '' );
 
 		$title         = isset( $data['post-title'] ) ? $data['post-title'] : '';
 		$content       = isset( $data['post-content'] ) ? $data['post-content'] : '';
@@ -614,7 +664,6 @@ class Forminator_Postdata extends Forminator_Field {
 				);
 				$this->validation_message[ $id ] = $postdata_validation_message;
 			} elseif ( is_array( $data ) ) {
-				$post_image = self::get_property( 'post_image', $field, '' );
 
 				if ( ! empty( $post_title ) && empty( $title ) ) {
 
@@ -667,10 +716,10 @@ class Forminator_Postdata extends Forminator_Field {
 		} else {
 			// validation for postdata when its not required.
 			// `wp_insert_post` required at least ONE OF THESE to be available title / content / excerpt.
-			// check only when user send some data
+			// check only when user send some data.
 			if ( ! empty( $data ) && is_array( $data ) ) {
 				if ( ! $title && ! $content && ! $excerpt ) {
-					// check if there is any field with content
+					// check if there is any field with content.
 					$is_content_available = false;
 					foreach ( $data as $datum ) {
 						if ( ! empty( $datum ) ) {
@@ -679,12 +728,12 @@ class Forminator_Postdata extends Forminator_Field {
 						}
 					}
 
-					// when $is_content_available false means, field not required, and user didnt put any content on form
+					// when $is_content_available false means, field not required, and user didnt put any content on form.
 					if ( $is_content_available ) {
-						//check if on postdata these sub field is avail available
+						// check if on postdata these sub field is avail available.
 						if ( ! empty( $post_title ) ) {
 							$this->validation_message[ $id . '-post-title' ] = apply_filters(
-								// nr = not required
+								// nr = not required.
 								'forminator_postdata_field_post_title_nr_validation_message',
 								__( 'At least one of these fields is required: Post Title, Post Excerpt or Post Content.', 'forminator' ),
 								$id
@@ -692,7 +741,7 @@ class Forminator_Postdata extends Forminator_Field {
 						}
 						if ( ! empty( $post_content ) ) {
 							$this->validation_message[ $id . '-post-content' ] = apply_filters(
-								// nr = not required
+								// nr = not required.
 								'forminator_postdata_field_post_content_nr_validation_message',
 								__( 'At least one of these fields is required: Post Title, Post Excerpt or Post Content.', 'forminator' ),
 								$id
@@ -700,12 +749,27 @@ class Forminator_Postdata extends Forminator_Field {
 						}
 						if ( ! empty( $post_excerpt ) ) {
 							$this->validation_message[ $id . '-post-excerpt' ] = apply_filters(
-								// nr = not required
+								// nr = not required.
 								'forminator_postdata_field_post_excerpt_nr_validation_message',
 								__( 'At least one of these fields is required: Post Title, Post Excerpt or Post Content.', 'forminator' ),
 								$id
 							);
 						}
+					}
+				}
+			}
+			$image_field_name = $id . '-post-image';
+			if ( ! empty( $post_image ) && isset( $_FILES[ $image_field_name ] ) ) {
+				if ( isset( $_FILES[ $image_field_name ]['name'] ) && ! empty( $_FILES[ $image_field_name ]['name'] ) ) {
+					$file_name = sanitize_file_name( $_FILES[ $image_field_name ]['name'] );
+					$valid     = wp_check_filetype( $file_name );
+
+					if ( false === $valid['ext'] || ! in_array( $valid['ext'], $this->image_extensions ) ) {
+						$this->validation_message[ $image_field_name ] = apply_filters(
+							'forminator_postdata_field_post_image_nr_validation_message',
+							__( "Uploaded file's extension is not allowed.", 'forminator' ),
+							$id
+						);
 					}
 				}
 			}
@@ -717,74 +781,71 @@ class Forminator_Postdata extends Forminator_Field {
 	 *
 	 * @since 1.0
 	 *
-	 * @param array  $field      - the field
-	 * @param string $field_name - the field name
+	 * @param array  $field      - the field.
+	 * @param string $field_name - the field name.
 	 *
 	 * @return array|bool - if success, return an array
 	 */
 	public function upload_post_image( $field, $field_name ) {
 		$post_image = self::get_property( 'post_image', $field, '' );
 
-		if ( ! empty( $post_image ) ) {
-			if ( isset( $_FILES[ $field_name ] ) ) {
-				if ( isset( $_FILES[ $field_name ]['name'] ) && ! empty( $_FILES[ $field_name ]['name'] ) ) {
-					$file_name = sanitize_file_name( $_FILES[ $field_name ]['name'] );
-					//TODO: refactor upload to use WP filesystem api
-					$file_data        = file_get_contents( $_FILES[ $field_name ]['tmp_name'] ); // phpcs:ignore
-					$upload_dir       = wp_upload_dir(); // Set upload folder
-					$unique_file_name = wp_unique_filename( $upload_dir['path'], $file_name );
-					$filename         = basename( $unique_file_name ); // Create base file name
+		if ( empty( $post_image ) ) {
+			return true;
+		}
+		if ( ! empty( $_FILES[ $field_name ]['name'] ) ) {
+			$file_name = sanitize_file_name( $_FILES[ $field_name ]['name'] );
+			// TODO: refactor upload to use WP filesystem api.
+			$file_data        = file_get_contents( $_FILES[ $field_name ]['tmp_name'] );
+			$upload_dir       = wp_upload_dir(); // Set upload folder.
+			$unique_file_name = wp_unique_filename( $upload_dir['path'], $file_name );
+			$filename         = basename( $unique_file_name ); // Create base file name.
 
-					if ( wp_mkdir_p( $upload_dir['path'] ) ) {
-						$file = $upload_dir['path'] . '/' . $filename;
-					} else {
-						$file = $upload_dir['basedir'] . '/' . $filename;
-					}
-
-					// Create the  file on the server
-					file_put_contents( $file, $file_data ); // phpcs:ignore
-
-					// Check image file type
-					$wp_filetype = wp_check_filetype( $filename, null );
-					$image_exts  = apply_filters( 'forminator_field_postdata_image_file_types', array( 'jpg', 'jpeg', 'jpe', 'gif', 'png', 'bmp' ) );
-					if ( in_array( (string) $wp_filetype['ext'], $image_exts, true ) ) {
-						// Set attachment data
-						$attachment = array(
-							'post_mime_type' => $wp_filetype['type'],
-							'post_title'     => sanitize_file_name( $filename ),
-							'post_content'   => '',
-							'post_status'    => 'inherit',
-						);
-
-						// Create the attachment
-						$attachment_id = wp_insert_attachment( $attachment, $file );
-
-						// Include image.php
-						require_once ABSPATH . 'wp-admin/includes/image.php';
-
-						// Define attachment metadata
-						$attach_data = wp_generate_attachment_metadata( $attachment_id, $file );
-
-						// Assign metadata to attachment
-						wp_update_attachment_metadata( $attachment_id, $attach_data );
-						$uploaded_file = wp_get_attachment_image_src( $attachment_id, 'large', false );
-						if ( $uploaded_file && is_array( $uploaded_file ) ) {
-							return array(
-								'attachment_id' => $attachment_id,
-								'uploaded_file' => $uploaded_file,
-							);
-						}
-					}
-				}
+			if ( wp_mkdir_p( $upload_dir['path'] ) ) {
+				$file = $upload_dir['path'] . '/' . $filename;
+			} else {
+				$file = $upload_dir['basedir'] . '/' . $filename;
 			}
 
-			return array(
-				'attachment_id' => 0,
-				'uploaded_file' => 0,
-			);
+			// Create the  file on the server.
+			file_put_contents( $file, $file_data );
+
+			// Check image file type.
+			$wp_filetype = wp_check_filetype( $filename, null );
+			$image_exts  = apply_filters( 'forminator_field_postdata_image_file_types', $this->image_extensions );
+			if ( in_array( (string) $wp_filetype['ext'], $image_exts, true ) ) {
+				// Set attachment data.
+				$attachment = array(
+					'post_mime_type' => $wp_filetype['type'],
+					'post_title'     => sanitize_file_name( $filename ),
+					'post_content'   => '',
+					'post_status'    => 'inherit',
+				);
+
+				// Create the attachment.
+				$attachment_id = wp_insert_attachment( $attachment, $file );
+
+				// Include image.php.
+				require_once ABSPATH . 'wp-admin/includes/image.php';
+
+				// Define attachment metadata.
+				$attach_data = wp_generate_attachment_metadata( $attachment_id, $file );
+
+				// Assign metadata to attachment.
+				wp_update_attachment_metadata( $attachment_id, $attach_data );
+				$uploaded_file = wp_get_attachment_image_src( $attachment_id, 'large', false );
+				if ( $uploaded_file && is_array( $uploaded_file ) ) {
+					return array(
+						'attachment_id' => $attachment_id,
+						'uploaded_file' => $uploaded_file,
+					);
+				}
+			}
 		}
 
-		return true;
+		return array(
+			'attachment_id' => 0,
+			'uploaded_file' => 0,
+		);
 	}
 
 	/**
@@ -792,8 +853,8 @@ class Forminator_Postdata extends Forminator_Field {
 	 *
 	 * @since 1.0
 	 *
-	 * @param array $field - field array
-	 * @param array $data  - post data
+	 * @param array $field - field array.
+	 * @param array $data  - post data.
 	 *
 	 * @return bool|int - success is post id
 	 */
@@ -802,7 +863,7 @@ class Forminator_Postdata extends Forminator_Field {
 		$force_default_author = self::get_property( 'default_author', $field, false );
 		$force_default_author = filter_var( $force_default_author, FILTER_VALIDATE_BOOLEAN );
 
-		// default behaviour
+		// default behavior.
 		if ( is_user_logged_in() ) {
 			$post_author = get_current_user_id();
 		} else {
@@ -812,7 +873,7 @@ class Forminator_Postdata extends Forminator_Field {
 			}
 		}
 
-		// force to selected author
+		// force to selected author.
 		if ( $force_default_author ) {
 			$post_author = self::get_property( 'select_author', $field, 1 );
 		}
@@ -824,7 +885,7 @@ class Forminator_Postdata extends Forminator_Field {
 		$image       = isset( $data['post-image'] ) ? $data['post-image'] : '';
 		$post_meta   = isset( $data['post-custom'] ) ? $data['post-custom'] : '';
 
-		$post          = array(
+		$post = array(
 			'post_author'  => $post_author,
 			'post_content' => wp_kses_post( $content ),
 			'post_excerpt' => $excerpt,
@@ -853,7 +914,7 @@ class Forminator_Postdata extends Forminator_Field {
 
 		$post = apply_filters( 'forminator_post_data_post_info', $post, $field, $data );
 
-		//trigger wp_error for is_wp_error to be correctly identified
+		// trigger wp_error for is_wp_error to be correctly identified.
 		$post_id = wp_insert_post( $post, true );
 		if ( ! is_wp_error( $post_id ) ) {
 			$category_list = forminator_post_categories( $post_type );
@@ -898,7 +959,7 @@ class Forminator_Postdata extends Forminator_Field {
 		} else {
 			$userdata = array(
 				'user_login'    => 'anonymous_user',
-				// Set different user_nicename and display_name for security
+				// Set different user_nicename and display_name for security.
 				'user_nicename' => 'anonymous',
 				'display_name'  => 'Anonymous',
 				'role'          => 'author',
@@ -919,7 +980,7 @@ class Forminator_Postdata extends Forminator_Field {
 	 * @since 1.0.2
 	 *
 	 * @param array        $field
-	 * @param array|string $data - the data to be sanitized
+	 * @param array|string $data - the data to be sanitized.
 	 *
 	 * @return array|string $data - the data after sanitization
 	 */
@@ -928,25 +989,25 @@ class Forminator_Postdata extends Forminator_Field {
 		$image         = '';
 		$content       = '';
 
-		// Do not sanitize image URL
+		// Do not sanitize image URL.
 		if ( isset( $data['post-image'] ) ) {
 			$image = $data['post-image'];
 		}
 
-		// Do not sanitize post content
+		// Do not sanitize post content.
 		if ( isset( $data['post-content'] ) ) {
-			$content = $data['post-content'];
+			$content = wp_kses_post( $data['post-content'] );
 		}
 
-		// Sanitize
-		$data = forminator_sanitize_field( $data );
+		// Sanitize.
+		$data = forminator_sanitize_array_field( $data );
 
-		// Return image url original value
+		// Return image url original value.
 		if ( isset( $data['post-image'] ) ) {
 			$data['post-image'] = $image;
 		}
 
-		// Return post content original value
+		// Return post content original value.
 		if ( isset( $data['post-content'] ) ) {
 			$data['post-content'] = $content;
 		}
@@ -970,7 +1031,7 @@ class Forminator_Postdata extends Forminator_Field {
 		$post_image_enabled = ! empty( $post_image );
 		$rules              = '';
 
-		if ( $is_required && $post_image_enabled ) {
+		if ( $post_image_enabled ) {
 			$rules .= '"' . $this->get_id( $field ) . '-post-image": {';
 			if ( $is_required ) {
 				$rules .= '"required": true,';
@@ -1095,6 +1156,11 @@ class Forminator_Postdata extends Forminator_Field {
 					}
 				}
 			}
+		}
+		if ( $post_image_enabled ) {
+			$messages .= '"' . $id . '-post-image": {' . "\n";
+			$messages .= '"extension": "' . forminator_addcslashes( __( 'Uploaded file\'s extension is not allowed.', 'forminator' ) ) . '",' . "\n";
+			$messages .= '},' . "\n";
 		}
 
 		return $messages;

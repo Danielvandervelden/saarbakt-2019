@@ -39,7 +39,7 @@ function forminator_addon_googlesheet_google_api_client_autoload( $class_name ) 
 	}
 }
 
-// only enable autoload when needed to avoid further conflicts
+// only enable autoload when needed to avoid further conflicts.
 //spl_autoload_register( 'forminator_addon_googlesheet_google_api_client_autoload' );
 
 require_once dirname( __FILE__ ) . '/class-forminator-addon-googlesheet.php';

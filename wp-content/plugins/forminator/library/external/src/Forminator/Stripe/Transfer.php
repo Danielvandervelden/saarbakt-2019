@@ -1,6 +1,6 @@
 <?php
 
-// File generated from our OpenAPI spec
+// File generated from our OpenAPI spec.
 
 namespace Forminator\Stripe;
 
@@ -71,7 +71,7 @@ class Transfer extends ApiResource
     const PATH_REVERSALS = '/reversals';
 
     /**
-     * @param string $id the ID of the transfer on which to retrieve the transfer reversals
+     * @param string $id the ID of the transfer on which to retrieve the transfer reversals.
      * @param null|array $params
      * @param null|array|string $opts
      *
@@ -85,7 +85,7 @@ class Transfer extends ApiResource
     }
 
     /**
-     * @param string $id the ID of the transfer on which to create the transfer reversal
+     * @param string $id the ID of the transfer on which to create the transfer reversal.
      * @param null|array $params
      * @param null|array|string $opts
      *
@@ -99,8 +99,8 @@ class Transfer extends ApiResource
     }
 
     /**
-     * @param string $id the ID of the transfer to which the transfer reversal belongs
-     * @param string $reversalId the ID of the transfer reversal to retrieve
+     * @param string $id the ID of the transfer to which the transfer reversal belongs.
+     * @param string $reversalId the ID of the transfer reversal to retrieve.
      * @param null|array $params
      * @param null|array|string $opts
      *
@@ -114,8 +114,8 @@ class Transfer extends ApiResource
     }
 
     /**
-     * @param string $id the ID of the transfer to which the transfer reversal belongs
-     * @param string $reversalId the ID of the transfer reversal to update
+     * @param string $id the ID of the transfer to which the transfer reversal belongs.
+     * @param string $reversalId the ID of the transfer reversal to update.
      * @param null|array $params
      * @param null|array|string $opts
      *

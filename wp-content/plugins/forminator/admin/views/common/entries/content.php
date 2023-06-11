@@ -1,22 +1,21 @@
 <?php
 $count = Forminator_Form_Entry_Model::count_all_entries();
-?>
 
-<?php if ( $count > 0 ) { ?>
+if ( $count > 0 ) {
+	$markup = $this->render_entries();
 
-	<?php
-        $markup = $this->render_entries();
-    
-        if ( ! empty( $_GET[ 'form_type' ] ) ) {
-            update_option( 'forminator_submissions_form_type', sanitize_text_field( $_GET[ 'form_type' ] ) );
-        }
-        if ( ! empty( $_GET[ 'form_id' ] ) ) {
-            update_option( 'forminator_submissions_form_id', sanitize_text_field( $_GET[ 'form_id' ] ) );
-        }
+	$form_type = Forminator_Core::sanitize_text_field( 'form_type' );
+	if ( $form_type ) {
+		update_option( 'forminator_submissions_form_type', $form_type );
+	}
+	$form_id = filter_input( INPUT_GET, 'form_id', FILTER_VALIDATE_INT );
+	if ( $form_id ) {
+		update_option( 'forminator_submissions_form_id', $form_id );
+	}
 
-        $form_type = get_option( 'forminator_submissions_form_type' );
-        $form_id   = get_option( 'forminator_submissions_form_id' );
-    ?>
+	$form_type = get_option( 'forminator_submissions_form_type', 'forminator_forms' );
+	$form_id   = get_option( 'forminator_submissions_form_id' );
+	?>
 
 	<form method="get"
 		name="bulk-action-form"
@@ -31,16 +30,17 @@ $count = Forminator_Form_Entry_Model::count_all_entries();
 				<select
 					name="form_type"
 					onchange="submit()"
-					class="sui-select-sm"
+					class="sui-select sui-select-sm fui-bar-selectors__module"
+					data-placeholder="<?php esc_html_e( 'Type', 'forminator' ); ?>"
+					data-search="false"
 				>
-
-					<?php foreach ( $this->get_form_types() as $post_type => $name ) { // phpcs:ignore ?>
-						<option value="<?php echo esc_attr( $post_type ); ?>" <?php echo selected( $post_type, $form_type ); ?>><?php echo esc_html( $name ); ?></option>
+					<option></option>
+					<?php foreach ( $this->get_form_types() as $_post_type => $name ) { ?>
+						<option value="<?php echo esc_attr( $_post_type ); ?>" <?php echo selected( $_post_type, $form_type ); ?>><?php echo esc_html( $name ); ?></option>
 					<?php } ?>
-
 				</select>
 
-				<?php echo $this->render_form_switcher( $form_type, $form_id ); // phpcs:ignore ?>
+				<?php static::render_form_switcher( $form_type, $form_id ); ?>
 
 			</div>
 
@@ -56,7 +56,7 @@ $count = Forminator_Form_Entry_Model::count_all_entries();
 
 	<?php if ( $markup ) : ?>
 
-		<?php echo $markup; // phpcs:ignore ?>
+		<?php echo $markup; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>
 
 	<?php else : ?>
 
@@ -83,8 +83,5 @@ $count = Forminator_Form_Entry_Model::count_all_entries();
 
 	<?php
 } else {
-	$none_title = esc_html__( 'Submissions', 'forminator' );
-	$none_text  = esc_html__( 'You haven’t received any form, poll or quiz submissions yet. When you do, you’ll be able to view all the data here.', 'forminator' );
-
-	include_once forminator_plugin_dir() . 'admin/views/common/entries/content-none.php';
+	include forminator_plugin_dir() . 'admin/views/common/entries/content-none.php';
 }

@@ -17,10 +17,11 @@ class Forminator_Poll_New_Page extends Forminator_Admin_Page {
 	 * @return mixed
 	 */
 	public function getWizardTitle() {
-		if ( isset( $_REQUEST['id'] ) ) { // WPCS: CSRF OK
-			return __( "Edit Poll", 'forminator' );
+		$id = filter_input( INPUT_GET, 'id', FILTER_VALIDATE_INT );
+		if ( $id ) {
+			return __( 'Edit Poll', 'forminator' );
 		} else {
-			return __( "New Poll", 'forminator' );
+			return __( 'New Poll', 'forminator' );
 		}
 	}
 
@@ -32,10 +33,10 @@ class Forminator_Poll_New_Page extends Forminator_Admin_Page {
 	 * @param $hook
 	 */
 	public function enqueue_scripts( $hook ) {
-		// Load admin scripts
+		// Load admin scripts.
 		wp_register_script(
 			'forminator-admin',
-			forminator_plugin_url() . 'assets/js/poll-scripts.js',
+			forminator_plugin_url() . 'build/poll-scripts.js',
 			array(
 				'jquery',
 				'wp-color-picker',

@@ -10,7 +10,7 @@ namespace Forminator\Stripe\ApiOperations;
 trait Request
 {
     /**
-     * @param null|array|mixed $params The list of parameters to validate
+     * @param null|array|mixed $params The list of parameters to validate.
      *
      * @throws \Forminator\Stripe\Exception\InvalidArgumentException if $params exists and is not an array
      */
@@ -27,9 +27,9 @@ trait Request
     }
 
     /**
-     * @param string $method HTTP method ('get', 'post', etc.)
-     * @param string $url URL for the request
-     * @param array $params list of parameters for the request
+     * @param string $method HTTP method ('get', 'post', etc.).
+     * @param string $url URL for the request.
+     * @param array $params list of parameters for the request.
      * @param null|array|string $options
      *
      * @throws \Forminator\Stripe\Exception\ApiErrorException if the request fails
@@ -46,9 +46,9 @@ trait Request
     }
 
     /**
-     * @param string $method HTTP method ('get', 'post', etc.)
-     * @param string $url URL for the request
-     * @param array $params list of parameters for the request
+     * @param string $method HTTP method ('get', 'post', etc.).
+     * @param string $url URL for the request.
+     * @param array $params list of parameters for the request.
      * @param null|array|string $options
      *
      * @throws \Forminator\Stripe\Exception\ApiErrorException if the request fails

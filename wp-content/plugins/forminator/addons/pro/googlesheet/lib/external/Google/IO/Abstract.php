@@ -148,8 +148,8 @@ abstract class Forminator_Google_IO_Abstract
     $request->setResponseHttpCode($respHttpCode);
     $request->setResponseHeaders($responseHeaders);
     $request->setResponseBody($responseData);
-    // Store the request in cache (the function checks to see if the request
-    // can actually be cached)
+    // Store the request in cache (the function checks to see if the request.
+    // can actually be cached).
     $this->setCachedRequest($request);
     return $request;
   }
@@ -214,7 +214,7 @@ abstract class Forminator_Google_IO_Abstract
     if (Forminator_Google_Http_CacheParser::mustRevalidate($cached)) {
       $addHeaders = array();
       if ($cached->getResponseHeader('etag')) {
-        // [13.3.4] If an entity tag has been provided by the origin server,
+        // [13.3.4] If an entity tag has been provided by the origin server,.
         // we must use that entity tag in any cache-conditional request.
         $addHeaders['If-None-Match'] = $cached->getResponseHeader('etag');
       } elseif ($cached->getResponseHeader('date')) {
@@ -259,13 +259,13 @@ abstract class Forminator_Google_IO_Abstract
    */
   public function parseHttpResponse($respData, $headerSize)
   {
-    // check proxy header
+    // check proxy header.
     foreach (self::$CONNECTION_ESTABLISHED_HEADERS as $established_header) {
       if (stripos($respData, $established_header) !== false) {
-        // existed, remove it
+        // existed, remove it.
         $respData = str_ireplace($established_header, '', $respData);
-        // Subtract the proxy header size unless the cURL bug prior to 7.30.0
-        // is present which prevented the proxy header size from being taken into
+        // Subtract the proxy header size unless the cURL bug prior to 7.30.0.
+        // is present which prevented the proxy header size from being taken into.
         // account.
         if (!$this->needsQuirk()) {
           $headerSize -= strlen($established_header);

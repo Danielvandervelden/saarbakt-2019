@@ -15,9 +15,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @property mixed|void autofill_settings
  * @property mixed|void advanced_settings
  * @property mixed|void markup
- *
  */
 abstract class Forminator_Field {
+
+	/**
+	 * @var array
+	 */
+	public $field = array();
+
+	/**
+	 * @var array
+	 */
+	public $form_settings = array();
 
 	/**
 	 * @var string
@@ -38,6 +47,11 @@ abstract class Forminator_Field {
 	 * @var array
 	 */
 	public $settings = array();
+
+	/**
+	 * @var array
+	 */
+	public $autofill_settings = array();
 
 	/**
 	 * @var array
@@ -83,7 +97,6 @@ abstract class Forminator_Field {
 	 *
 	 * @since 1.0.5
 	 * @var Forminator_Autofill_Provider_Abstract[]
-	 *
 	 */
 	protected $activated_autofill_providers = array();
 
@@ -166,6 +179,27 @@ abstract class Forminator_Field {
 	}
 
 	/**
+	 * Create decimals pattern from decimals number
+	 *
+	 * @since 1.7
+	 * @param integer $decimals
+	 * @return mixed
+	 */
+	protected static function create_step_string( $decimals = 2 ) {
+		$step = 1;
+
+		if ( ! empty( $decimals ) ) {
+			for ( $i = 1; $i < $decimals; $i++ ) {
+				$step = '0' . $step;
+			}
+
+			$step = '0.' . $step;
+		}
+
+		return $step;
+	}
+
+	/**
 	 * Return field property
 	 *
 	 * @since 1.0
@@ -174,7 +208,7 @@ abstract class Forminator_Field {
 	 * @param string $property
 	 * @param array  $field
 	 * @param string $fallback
-	 * @param string $data_type data type to return
+	 * @param string $data_type data type to return.
 	 *
 	 * @return mixed
 	 */
@@ -202,14 +236,14 @@ abstract class Forminator_Field {
 	 * @since 1.0
 	 *
 	 * @param       $field
-	 * @param array $settings
+	 * @param Forminator_Render_Form $views_obj Forminator_Render_Form object.
 	 *
 	 * @return mixed
 	 */
 	public function markup(
 		/** @noinspection PhpUnusedParameterInspection */
 		$field,
-		$settings = array()
+		$views_obj
 	) {
 		return '';
 	}
@@ -232,21 +266,21 @@ abstract class Forminator_Field {
 	 * @return string
 	 */
 	public static function get_description( $description, $get_id = '' ) {
-		$html = '';
+		$html         = '';
 		$allowed_html = array();
-
+		$id = $get_id . '-description';
 		if ( ! empty( $description ) ) {
 			$allowed_html = apply_filters(
 				'forminator_field_description_allowed_html',
 				array(
-						'a'      => array(
-							'href'   => true,
-							'title'  => true,
-							'target' => true,
-							'rel'    => true,
-						),
-						'span'   => array(
-							'class' => true,
+					'a'      => array(
+						'href'   => true,
+						'title'  => true,
+						'target' => true,
+						'rel'    => true,
+					),
+					'span'   => array(
+						'class' => true,
 					),
 					'br'     => array(),
 					'em'     => array(),
@@ -257,9 +291,9 @@ abstract class Forminator_Field {
 			);
 
 			$html .= sprintf(
-				'<span class="forminator-description" aria-describedby="%s">%s</span>',
-				$get_id,
-                wp_kses( $description, $allowed_html )
+				'<span id="%s" class="forminator-description">%s</span>',
+				esc_attr( $get_id . '-description' ),
+				wp_kses( $description, $allowed_html )
 			);
 		}
 
@@ -291,7 +325,7 @@ abstract class Forminator_Field {
 
 		$html = '';
 
-		// Override value by the posted value
+		// Override value by the posted value.
 		$value = isset( $attr['value'] ) ? $attr['value'] : false;
 
 		if ( isset( $attr['name'] ) ) {
@@ -300,9 +334,13 @@ abstract class Forminator_Field {
 
 		$attr['value'] = $value;
 
+		if ( ! empty( $description ) || '' !== $description ) {
+			$attr['aria-describedby'] = $attr['id'] . '-description';
+		}
+
 		$markup = self::implode_attr( $attr );
 
-		// Get field id
+		// Get field id.
 		$get_id = $attr['id'];
 
 		if ( $label ) {
@@ -310,8 +348,9 @@ abstract class Forminator_Field {
 			if ( $required ) {
 
 				$html .= sprintf(
-					'<label for="%s" class="forminator-label">%s %s</label>',
+					'<label for="%s" class="forminator-label" id="%s">%s %s</label>',
 					$get_id,
+					$get_id . '-label',
 					esc_html( $label ),
 					forminator_get_required_icon()
 				);
@@ -319,8 +358,9 @@ abstract class Forminator_Field {
 			} else {
 
 				$html .= sprintf(
-					'<label for="%s" class="forminator-label">%s</label>',
+					'<label for="%s" class="forminator-label" id="%s">%s</label>',
 					$get_id,
+					$get_id . '-label',
 					esc_html( $label )
 				);
 
@@ -378,6 +418,10 @@ abstract class Forminator_Field {
 
 		unset( $attr['content'] );
 
+		if ( ! empty( $description ) || '' !== $description ) {
+			$attr['aria-describedby'] = $attr['id'] . '-description';
+		}
+
 		$markup = self::implode_attr( $attr );
 
 		if ( $label ) {
@@ -385,8 +429,9 @@ abstract class Forminator_Field {
 			if ( $required ) {
 
 				$html .= sprintf(
-					'<label for="%s" class="forminator-label">%s %s</label>',
+					'<label for="%s" id="%s" class="forminator-label">%s %s</label>',
 					$attr['id'],
+					$attr['id'] . '-label',
 					esc_html( $label ),
 					forminator_get_required_icon()
 				);
@@ -394,18 +439,19 @@ abstract class Forminator_Field {
 			} else {
 
 				$html .= sprintf(
-					'<label for="%s" class="forminator-label">%s</label>',
+					'<label for="%s" id="%s" class="forminator-label">%s</label>',
 					$attr['id'],
+					$attr['id'] . '-label',
 					esc_html( $label )
 				);
 
 			}
 		}
 
-		$html .= sprintf( '<textarea %s >%s</textarea>', $markup, $content );
+		$html .= sprintf( '<textarea %s >%s</textarea>', $markup, wp_kses_post( $content ) );
 
 		if ( ! empty( $description ) ) {
-			$html .= self::get_description( $description );
+			$html .= self::get_description( $description, $attr['id'] );
 		}
 
 		return apply_filters( 'forminator_field_create_textarea', $html, $attr, $label, $description );
@@ -424,7 +470,7 @@ abstract class Forminator_Field {
 	 *
 	 * @return mixed
 	 */
-	public static function create_wp_editor( $attr = array(), $label = '', $description = '', $required = false ) {
+	public static function create_wp_editor( $attr = array(), $label = '', $description = '', $required = false, $default_height = '140', $limit = 0 ) {
 		$html = '';
 
 		$content = isset( $attr['content'] ) ? $attr['content'] : '';
@@ -452,9 +498,12 @@ abstract class Forminator_Field {
 		}
 
 		$wp_editor_class = isset( $attr['class'] ) ? $attr['class'] : '';
+
 		if ( $required ) {
-			add_action( 'the_editor', array( __CLASS__, 'add_required_wp_editor' ) );
+			apply_filters( 'the_editor', array( __CLASS__, 'add_required_wp_editor' ) );
 			$wp_editor_class .= ' do-validate forminator-wp-editor-required';
+		} elseif ( ! empty( $limit ) ) {
+			$wp_editor_class .= ' do-validate';
 		}
 
 		ob_start();
@@ -465,9 +514,10 @@ abstract class Forminator_Field {
 				'textarea_name' => isset( $attr['name'] ) ? $attr['name'] : '',
 				'media_buttons' => false,
 				'editor_class'  => $wp_editor_class,
-				//'tinymce'     => array(
-				//	'content_css' => '/forminator-{theme}-editor.min.css'
-				//),
+				'editor_height' => $default_height,
+				// 'tinymce'     => array(
+				// 'content_css' => '/forminator-{theme}-editor.min.css'
+				// ),
 			)
 		);
 
@@ -491,7 +541,7 @@ abstract class Forminator_Field {
 	 */
 	public static function add_required_wp_editor( $editor_markup ) {
 		if ( stripos( $editor_markup, 'forminator-wp-editor-required' ) !== false ) {
-			// mark required
+			// mark required.
 			$editor_markup = str_replace( '<textarea', '<textarea required="true"', $editor_markup );
 		}
 
@@ -517,6 +567,10 @@ abstract class Forminator_Field {
 
 		$html = '';
 
+		if ( ! empty( $description ) || '' !== $description ) {
+			$attr['aria-describedby'] = $attr['id'] . '-description';
+		}
+
 		$markup = self::implode_attr( $attr );
 
 		if ( isset( $attr['id'] ) ) {
@@ -524,6 +578,12 @@ abstract class Forminator_Field {
 		} else {
 			$get_id = uniqid( 'forminator-select-' );
 		}
+
+		! empty( $label ) ? $attr['aria-labelledby'] = $get_id . '-label' : '';
+
+		! empty( $description ) ? $attr['aria-describedby'] = $get_id . '-description' : '';
+
+		$markup = self::implode_attr( $attr );
 
 		if ( self::get_post_data( $attr['name'], false ) ) {
 			$value = self::get_post_data( $attr['name'] );
@@ -534,8 +594,9 @@ abstract class Forminator_Field {
 			if ( $required ) {
 
 				$html .= sprintf(
-					'<label for="%s" class="forminator-label">%s %s</label>',
+					'<label for="%s" id="%s" class="forminator-label">%s %s</label>',
 					$get_id,
+					$get_id . '-label',
 					esc_html( $label ),
 					forminator_get_required_icon()
 				);
@@ -543,8 +604,9 @@ abstract class Forminator_Field {
 			} else {
 
 				$html .= sprintf(
-					'<label for="%s" class="forminator-label">%s</label>',
+					'<label for="%s" id="%s" class="forminator-label">%s</label>',
 					$get_id,
+					$get_id . '-label',
 					esc_html( $label )
 				);
 
@@ -584,6 +646,11 @@ abstract class Forminator_Field {
 		_deprecated_function( 'create_simple_select', '1.6.1', 'create_select' );
 
 		$html   = '';
+
+		$get_id = uniqid( 'forminator-select-' );
+
+		! empty( $description ) ? $attr['aria-describedby'] = $get_id . '-description' : '';
+
 		$markup = self::implode_attr( $attr );
 
 		if ( self::get_post_data( $attr['name'], false ) ) {
@@ -597,7 +664,7 @@ abstract class Forminator_Field {
 		$html .= '</select>';
 
 		if ( ! empty( $description ) ) {
-			$html .= self::get_description( $description );
+			$html .= self::get_description( $description, $get_id );
 		}
 
 		return apply_filters( 'forminator_field_create_simple_select', $html, $attr, $options, $value, $description );
@@ -609,7 +676,7 @@ abstract class Forminator_Field {
 	 * @since 1.5.2
 	 *
 	 * @param        $options
-	 * @param string $selected_value
+	 * @param string  $selected_value
 	 *
 	 * @return string
 	 */
@@ -620,10 +687,10 @@ abstract class Forminator_Field {
 
 			if ( isset( $option['value'] ) && is_array( $option['value'] ) ) {
 				$populated_optgroup_options = self::populate_options_for_select( $option['value'], $selected_value );
-				$html                      .= sprintf( '<optgroup label="%s">%s</optgroup>', $option['label'], $populated_optgroup_options );
+				$html                      .= sprintf( '<optgroup label="%s">%s</optgroup>', esc_attr( $option['label'] ), $populated_optgroup_options );
 			} else {
 				if ( '' === $selected_value && '' === $option['value']
-						|| '' !== $selected_value && $option['value'] == $selected_value // phpcs:ignore -- loose comparison ok : possible compare '01' and '1'.
+						|| '' !== $selected_value && $option['value'] == $selected_value
 						|| ! empty( $option['selected'] ) ) {
 					$selected = 'selected="selected"';
 				}
@@ -639,10 +706,10 @@ abstract class Forminator_Field {
 	 *
 	 * @since 1.0
 	 *
-	 * @param string $id
-	 * @param string $name
+	 * @param string      $id
+	 * @param string      $name
 	 * @param        $description
-	 * @param bool   $required
+	 * @param bool        $required
 	 *
 	 * @param        $design
 	 * @param        $file_type
@@ -653,13 +720,14 @@ abstract class Forminator_Field {
 	 */
 	public static function create_file_upload( $id, $name, $description, $required, $design, $file_type = 'single', $form_id = 0, $upload_attr = array() ) {
 
-		$html        = '';
-		$style       = '';
-		$field_id    = $id;
-		$id          = 'forminator-field-' . $field_id;
-		$button_id   = 'forminator-field-' . $field_id . '_button';
-		$mainclass   = 'forminator-file-upload';
-		$class       = 'forminator-input-file';
+		$html             = '';
+		$style            = '';
+		$field_id         = $id;
+		$id               = 'forminator-field-' . $field_id;
+		$button_id        = 'forminator-field-' . $field_id . '_button';
+		$mainclass        = 'forminator-file-upload';
+		$class            = 'forminator-input-file';
+		$aria_describedby = esc_attr( $id . '-description' );
 
 		if ( $required ) {
 			$class .= '-required do-validate';
@@ -667,49 +735,50 @@ abstract class Forminator_Field {
 
 		if ( 'multiple' === $file_type ) {
 			$mainclass = 'forminator-multi-upload';
-			$class     .= ' ' . $id . '-' . $form_id;
+			$class    .= ' ' . $id . '-' . $form_id;
 
 		}
+
 		$upload_data = self::implode_attr( $upload_attr );
 
-		$html .= sprintf( '<div class="%s %s" data-element="%s">', $mainclass, $style, $field_id );
+		$html .= sprintf( '<div class="%s %s" data-element="%s" aria-describedby="%s">', $mainclass, $style, $field_id, $aria_describedby );
 
 			$html .= sprintf( '<input type="file" name="%s" id="%s" class="%s" %s>', $name, $id, $class, $upload_data );
 
-			if ( 'none' === $design ) {
+		if ( 'none' === $design ) {
 
-				$html .= sprintf( '<button class="forminator-upload--remove" style="display: none;">%s</button>', __( 'Remove', 'forminator' ) );
+			$html .= sprintf( '<button class="forminator-upload--remove" style="display: none;">%s</button>', __( 'Remove', 'forminator' ) );
+
+		} else {
+
+			if ( 'multiple' === $file_type ) {
+
+				$html .= '<div class="forminator-multi-upload-message" aria-hidden="true">';
+
+					$html .= '<span class="forminator-icon-upload" aria-hidden="true"></span>';
+
+					$html     .= '<p>';
+						$html .= sprintf( esc_html__( 'Drag and Drop (or) %1$sChoose Files%2$s', 'forminator' ), '<a class="forminator-upload-file--' . $id . '" href="javascript:void(0)">', '</a>' );
+					$html     .= '</p>';
+
+				$html .= '</div>';
 
 			} else {
 
-				if ( 'multiple' === $file_type ) {
+				$html .= sprintf( '<button id="%s" class="forminator-button forminator-button-upload" data-id="%s">', $button_id, $id );
 
-					$html .= '<div class="forminator-multi-upload-message" aria-hidden="true">';
+				if ( 'material' === $design ) {
 
-						$html .= '<span class="forminator-icon-upload" aria-hidden="true"></span>';
+					$html .= sprintf(
+						'<span>%s</span>',
+						__( 'Choose File', 'forminator' )
+					);
 
-						$html .= '<p>';
-							$html .= sprintf( esc_html__( 'Drag and Drop (or) %1$sChoose Files%2$s', 'forminator' ), '<a class="forminator-upload-file--' . $id . '" href="javascript:void(0)">', '</a>' );
-						$html .= '</p>';
-
-					$html .= '</div>';
+					$html .= '<span aria-hidden="true"></span>';
 
 				} else {
-
-					$html .= sprintf( '<button id="%s" class="forminator-button forminator-button-upload" data-id="%s">', $button_id, $id );
-
-						if ( 'material' === $design ) {
-
-							$html .= sprintf(
-								'<span>%s</span>',
-								__( 'Choose File', 'forminator' )
-							);
-
-							$html .= '<span aria-hidden="true"></span>';
-
-						} else {
-							$html .= __( 'Choose File', 'forminator' );
-						}
+					$html .= __( 'Choose File', 'forminator' );
+				}
 
 					$html .= '</button>';
 
@@ -719,20 +788,25 @@ abstract class Forminator_Field {
 						__( 'No file chosen', 'forminator' )
 					);
 
-					$html .= '<button class="forminator-button-delete" style="display: none;">';
+				$html .= '<button class="forminator-button-delete" style="display: none;">';
 
-						$html .= '<i class="forminator-icon-close" aria-hidden="true"></i>';
+					$html .= '<i class="forminator-icon-close" aria-hidden="true"></i>';
 
-						$html .= sprintf(
-							'<span class="forminator-screen-reader-only">%s</span>',
-							__( 'Delete uploaded file', 'forminator' )
-						);
+					$html .= sprintf(
+						'<span class="forminator-screen-reader-only">%s</span>',
+						__( 'Delete uploaded file', 'forminator' )
+					);
 
-					$html .= '</button>';
-				}
+				$html .= '</button>';
 			}
+		}
 
 		$html .= '</div>';
+
+		// Check if description is not empty and append it.
+		if ( ! empty( $description ) ) {
+			$html .= self::get_description( $description, $id );
+		}
 
 		return apply_filters( 'forminator_field_create_file_upload', $html, $id, $name, $required );
 
@@ -751,7 +825,7 @@ abstract class Forminator_Field {
 		$data = array();
 
 		foreach ( $args as $key => $value ) {
-			$data[] = $key . '="' . $value . '"';
+			$data[] = $key . '="' . esc_attr( $value ) . '"';
 		}
 
 		return implode( ' ', $data );
@@ -763,10 +837,31 @@ abstract class Forminator_Field {
 	 * @since 1.0
 	 *
 	 * @param array        $field
-	 * @param array|string $data - the data to be validated
-	 * @param array        $post_data
+	 * @param array|string $data - the data to be validated.
 	 */
-	public function validate( $field, $data, $post_data = array() ) {
+	public function validate( $field, $data ) {
+	}
+
+	/**
+	 * Validate field data
+	 *
+	 * @param array        $field_array Field settings.
+	 * @param array|string $field_data - the data to be validated.
+	 * @return array       validated field data.
+	 */
+	public function validate_entry( $field_array, $field_data ) {
+		// Validate data when its available.
+		if ( $this->is_available( $field_array ) ) {
+
+			/**
+			 * @since 1.0.5
+			 * Mayble re autofill, when autofill not editable, it should return autofill value
+			 */
+			$field_data = $this->maybe_autofill( $field_array, $field_data, Forminator_CForm_Front_Action::$module_settings );
+			$this->validate( $field_array, $field_data );
+		}
+
+		return $field_data;
 	}
 
 	/**
@@ -778,6 +873,9 @@ abstract class Forminator_Field {
 	public function is_valid_entry() {
 		$this->is_valid = empty( $this->validation_message );
 		if ( ! $this->is_valid ) {
+			foreach ( $this->validation_message as $field_name => $error ) {
+				Forminator_CForm_Front_Action::$submit_errors[][ $field_name ] = $error;
+			}
 			return $this->validation_message;
 		}
 
@@ -821,110 +919,141 @@ abstract class Forminator_Field {
 	 * Check if Field is hidden based on conditions property and POST-ed data
 	 *
 	 * @since 1.0
-	 * @since 1.7 add $pseudo_submitted_data to get value of calculation and stripe etc
 	 *
 	 * @param $field
-	 * @param $form_data
-	 * @param $pseudo_submitted_data
+	 * @param $extra_conditions payment plan conditions.
 	 *
 	 * @return bool
 	 */
-	public function is_hidden( $field, $form_data, $pseudo_submitted_data, $form_object = false, $hidden_fields = array() ) {
-		$conditions = self::get_property( 'conditions', $field, array() );
+	public static function is_hidden( $field, $extra_conditions = array() ) {
+		$conditions       = isset( $extra_conditions['conditions'] ) ? $extra_conditions['conditions'] : self::get_property( 'conditions', $field, array() );
+		$condition_rule   = isset( $extra_conditions['condition_rule'] ) ? $extra_conditions['condition_rule'] : self::get_property( 'condition_rule', $field, 'all' );
+		$condition_action = isset( $extra_conditions['condition_action'] ) ? $extra_conditions['condition_action'] : self::get_property( 'condition_action', $field, 'show' );
 
-		// empty conditions
+		// empty conditions.
 		if ( empty( $conditions ) ) {
 			return false;
 		}
-
-		$condition_action = self::get_property( 'condition_action', $field, 'show' );
-		$condition_rule   = self::get_property( 'condition_rule', $field, 'all' );
 
 		$condition_fulfilled = 0;
 		$conditions_count    = 0;
 
 		foreach ( $conditions as $condition ) {
+			$element_id = $condition['element_id'];
+			// Increase conditions count.
+			$conditions_count ++;
 
-			$element_id  = $condition['element_id'];
-			$field_value = isset( $form_data[ $element_id ] ) ? $form_data[ $element_id ] : '';
-			if ( stripos( $element_id, 'upload-' ) !== false && ! isset( $form_data[ $element_id ] ) && isset( $form_data['forminator-multifile-hidden'] ) ) {
-				$form_upload_data = json_decode( stripslashes( $form_data['forminator-multifile-hidden'] ), true );
-				if ( $form_upload_data && isset( $form_upload_data[ $element_id ] ) ) {
-					$field_value = $form_upload_data[ $element_id ];
-				}
-			}
-
-			if ( stripos( $element_id, 'signature-' ) !== false ) {
-				// We have signature field
-				$is_condition_fulfilled = false;
-				$signature_id = 'field-' . $element_id;
-
-				if ( isset( $form_data[ $signature_id ] ) ) {
- 					$signature_data = 'ctlSignature' . $form_data[ $signature_id ] . '_data';
-
-					if ( isset( $form_data[ $signature_data ] ) ) {
-						$is_condition_fulfilled = self::is_condition_fulfilled( $form_data[ $signature_data ], $condition );
-					}
-				}
-			} elseif ( stripos( $element_id, 'date-' ) !== false ) {
-				$date_value   = preg_replace( "/(\d+)\D+(\d+)\D+(\d+)/","$1/$2/$3", $form_data[ $element_id ] );
-				$is_condition_fulfilled = self::is_condition_fulfilled( $date_value, $condition, $form_data['form_id'] );
-			} elseif ( stripos( $element_id, 'calculation-' ) !== false || stripos( $element_id, 'stripe-' ) !== false ) {
-				$is_condition_fulfilled = false;
-				if ( isset( $pseudo_submitted_data[ $element_id ] ) ) {
-					//Condition's value is saved as a string value
-					$is_condition_fulfilled = self::is_condition_fulfilled( (string) $pseudo_submitted_data[ $element_id ], $condition );
-				}
-			} elseif ( stripos( $element_id, 'checkbox-' ) !== false || stripos( $element_id, 'radio-' ) !== false ) {
-				$is_condition_fulfilled = self::is_condition_fulfilled( $field_value, $condition );
+			if ( in_array( $element_id, Forminator_CForm_Front_Action::$hidden_fields, true ) ) {
+				$current_is_hidden      = true;
+				$is_condition_fulfilled = isset( $condition['rule'] ) && 'is_not' === $condition['rule']
+					&& isset( $condition['value'] ) && ! is_null( $condition['value'] ) && '' !== $condition['value'];
 			} else {
-				$is_condition_fulfilled = self::is_condition_fulfilled( $field_value, $condition, $form_data['form_id'] );
-			}
-
-			if ( in_array( $element_id, $hidden_fields ) ) {
-				$is_condition_fulfilled = false;
+				$current_is_hidden      = false;
+				$is_condition_fulfilled = self::is_condition_matched( $condition );
 			}
 
 			if ( $is_condition_fulfilled ) {
 				$condition_fulfilled ++;
+			} elseif ( 'all' === $condition_rule ) {
+				// if condition rule is ALL and at least one condition isn't matched - we don't need to check others.
+				break;
 			}
 
-			// Increase conditions count
-			$conditions_count ++;
+			// Check parent conditions only if the current condition is matched.
+			if ( $is_condition_fulfilled && ! $current_is_hidden && Forminator_Front_Action::$module_object ) {
+				$parent_field  = Forminator_Front_Action::$module_object->get_field( $element_id );
+				$parent_hidden = self::is_hidden( $parent_field );
 
-			// Check for parent conditions
-			if ( $form_object ) {
-				$parent_field      = $form_object->get_field( $element_id );
-				$parent_conditions = self::get_property( 'conditions', $parent_field, array() );
-
-				if ( ! empty( $parent_conditions ) && 'any' !== $condition_rule ) {
-					// Increase conditions count
-					$conditions_count ++;
-					$parent_hidden = self::is_hidden( $parent_field, $form_data, $pseudo_submitted_data, $form_object, $hidden_fields );
-
-					// If parent not hidden increase fulfilled conditions
-					if ( ! $parent_hidden && 'show' === $condition_action ) {
-						$condition_fulfilled ++;
+				if ( $parent_hidden ) {
+					$condition_fulfilled--;
+					if ( 'all' === $condition_rule ) {
+						break;
 					}
 				}
 			}
+			// There is no sense to continue checking if at least 1 condition is matched for ANY condition rule.
+			if ( 'any' === $condition_rule && $condition_fulfilled ) {
+				break;
+			}
 		}
 
-		//initialized as hidden
+		$all_matched = ( $condition_fulfilled > 0 && 'any' === $condition_rule ) || ( $conditions_count === $condition_fulfilled && 'all' === $condition_rule );
+
+		// initialized as hidden
 		if ( 'show' === $condition_action ) {
-			if ( ( $condition_fulfilled > 0 && 'any' === $condition_rule ) || ( $conditions_count === $condition_fulfilled && 'all' === $condition_rule ) ) {
-				return false;
-			}
-
-			return true;
+			return ! $all_matched;
 		} else {
-			//initialized as shown
-			if ( ( $condition_fulfilled > 0 && 'any' === $condition_rule ) || ( $conditions_count === $condition_fulfilled && 'all' === $condition_rule ) ) {
-				return true;
-			}
+			// initialized as shown
+			return $all_matched;
+		}
+	}
 
+	/**
+	 * Check if passed condition is matched
+	 *
+	 * @param array $condition Current condition.
+	 * @return bool
+	 */
+	public static function is_condition_matched( $condition ) {
+		$form_data = Forminator_CForm_Front_Action::$prepared_data;
+
+		$form_id = $form_data['form_id'];
+
+		// empty conditions.
+		if ( empty( $condition ) ) {
 			return false;
 		}
+
+		$element_id  = $condition['element_id'];
+		$field_value = isset( $form_data[ $element_id ] ) ? $form_data[ $element_id ] : '';
+
+		if ( stripos( $element_id, 'upload-' ) !== false && ! isset( $form_data[ $element_id ] ) && isset( $form_data['forminator-multifile-hidden'] ) ) {
+			$form_upload_data = $form_data['forminator-multifile-hidden'];
+			if ( $form_upload_data && isset( $form_upload_data[ $element_id ] ) ) {
+				$field_value = $form_upload_data[ $element_id ];
+			}
+		}
+
+		// If date field is dropdown type
+		if (
+			stripos( $element_id, 'date-' ) !== false &&
+			isset( $form_data[ $element_id . '-month' ] ) &&
+			isset( $form_data[ $element_id . '-day' ] ) &&
+			isset( $form_data[ $element_id . '-year' ] )
+		) {
+			$field_value       = $form_data[ $element_id . '-year' ] . '-' . $form_data[ $element_id . '-month' ] . '-' . $form_data[ $element_id . '-day' ];
+			$date_format       = Forminator_API::get_form_field( $form_id, $element_id, false )->date_format;
+			$normalized_format = new Forminator_Date();
+			$normalized_format = $normalized_format->normalize_date_format( $date_format );
+			$date              = date_create_from_format( 'Y-m-d', $field_value );
+			$field_value       = false !== $date ? date_format( $date, $normalized_format ) : '';
+		}
+
+		if ( stripos( $element_id, 'signature-' ) !== false ) {
+			// We have signature field.
+			$is_condition_fulfilled = false;
+			$signature_id           = 'field-' . $element_id;
+
+			if ( isset( $form_data[ $signature_id ] ) ) {
+				$signature_data = 'ctlSignature' . $form_data[ $signature_id ] . '_data';
+
+				if ( isset( $form_data[ $signature_data ] ) ) {
+					$is_condition_fulfilled = self::is_condition_fulfilled( $form_data[ $signature_data ], $condition );
+				}
+			}
+		} elseif ( stripos( $element_id, 'calculation-' ) !== false || stripos( $element_id, 'stripe-' ) !== false ) {
+			$is_condition_fulfilled = false;
+			if ( isset( Forminator_CForm_Front_Action::$prepared_data[ $element_id ] ) ) {
+				// Condition's value is saved as a string value.
+				$is_condition_fulfilled = self::is_condition_fulfilled( (string) Forminator_CForm_Front_Action::$prepared_data[ $element_id ], $condition );
+			}
+		} elseif ( stripos( $element_id, 'checkbox-' ) !== false || stripos( $element_id, 'radio-' ) !== false ) {
+			$is_condition_fulfilled = self::is_condition_fulfilled( $field_value, $condition );
+		} else {
+			$is_condition_fulfilled = self::is_condition_fulfilled( $field_value, $condition, $form_id );
+		}
+
+		return $is_condition_fulfilled;
 	}
 
 	/**
@@ -938,129 +1067,155 @@ abstract class Forminator_Field {
 	 *
 	 * @return bool
 	 */
-	public static function is_condition_fulfilled( $form_field_value, $condition, $form_id = NULL ) {
+	public static function is_condition_fulfilled( $form_field_value, $condition, $form_id = null ) {
+		if ( is_array( $form_field_value ) ) {
+			$form_field_value = forminator_trim_array( $form_field_value );
+		} else {
+			$form_field_value = strtolower( trim( $form_field_value ) );
+		}
 
 		$form_field_value = wp_unslash( $form_field_value );
+		$condition_value  = trim( $condition['value'] );
+
+		// Remove lines below coz strtolower is already applied using forminator_trim_array
+		// if ( is_array( $form_field_value ) ) {
+		// $form_field_value = array_map( 'strtolower', $form_field_value );
+		// } else if ( is_string( $form_field_value ) ) {
+		// $form_field_value = strtolower( $form_field_value );
+		// }
+
+		if ( is_string( $condition_value ) ) {
+			$condition_value = strtolower( $condition_value );
+		}
 
 		switch ( $condition['rule'] ) {
 			case 'is':
 				if ( is_array( $form_field_value ) ) {
 					// possible input is "1" to be compared with 1
-					return in_array( $condition['value'], $form_field_value ); //phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
+					return in_array( $condition_value, $form_field_value ); //phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
 				}
-				if ( is_numeric( $condition['value'] ) ) {
-					return ( ( int ) $form_field_value === ( int ) $condition['value'] );
+				if ( is_numeric( $condition_value ) ) {
+					return ( (int) $form_field_value === (int) $condition_value );
 				}
 
-				return ( $form_field_value === $condition['value'] );
+				return ( $form_field_value === $condition_value );
 			case 'is_not':
 				if ( is_array( $form_field_value ) ) {
 					// possible input is "1" to be compared with 1
-					return ! in_array( $condition['value'], $form_field_value ); //phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
+					return ! in_array( $condition_value, $form_field_value ); //phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
 				}
 
-				return ( $form_field_value !== $condition['value'] );
+				return ( $form_field_value !== $condition_value );
 			case 'is_great':
-				if ( ! is_numeric( $condition['value'] ) ) {
+				if ( ! is_numeric( $condition_value ) ) {
 					return false;
 				}
 				if ( ! is_numeric( $form_field_value ) ) {
 					return false;
 				}
 
-				return $form_field_value > $condition['value'];
+				return $form_field_value > $condition_value;
 			case 'is_less':
-				if ( ! is_numeric( $condition['value'] ) ) {
+				if ( ! is_numeric( $condition_value ) ) {
 					return false;
 				}
 				if ( ! is_numeric( $form_field_value ) ) {
 					return false;
 				}
 
-				return $form_field_value < $condition['value'];
+				return $form_field_value < $condition_value;
 			case 'contains':
-				return ( stripos( $form_field_value, $condition['value'] ) === false ? false : true );
+				return ( stripos( $form_field_value, $condition_value ) === false ? false : true );
 			case 'starts':
-				return ( stripos( $form_field_value, $condition['value'] ) === 0 ? true : false );
+				return ( stripos( $form_field_value, $condition_value ) === 0 ? true : false );
 			case 'ends':
-				return ( stripos( $form_field_value, $condition['value'] ) === ( strlen( $form_field_value ) - 1 ) ? true : false );
+				return ( substr( $form_field_value, - strlen( $condition_value ) ) === $condition_value );
 
 			case 'day_is':
-                if ( NULL !== $form_id && ! empty( $form_field_value ) ) {
-                    $day = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'D' );
-				    return $day === $condition['value'];
-                }
+				if ( null !== $form_id && ! empty( $form_field_value ) ) {
+					$day = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'D' );
+					return strtolower( $day ) === $condition_value;
+				}
 
-                return false;
+				return false;
 			case 'day_is_not':
-                if ( NULL !== $form_id && ! empty( $form_field_value ) ) {
-                    $day = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'D' );
-				    return $day !== $condition['value'];
-                }
+				if ( null !== $form_id && ! empty( $form_field_value ) ) {
+					$day = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'D' );
+					return strtolower( $day ) !== $condition_value;
+				}
 
-                return false;
+				return false;
 			case 'month_is':
-                if ( NULL !== $form_id && ! empty( $form_field_value ) ) {
-                    $month = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'M' );
-				    return $month === $condition['value'];
-                }
+				if ( null !== $form_id && ! empty( $form_field_value ) ) {
+					$month = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'M' );
+					return strtolower( $month ) === $condition_value;
+				}
 
-                return false;
+				return false;
 			case 'month_is_not':
-                if ( NULL !== $form_id && ! empty( $form_field_value ) ) {
-                    $month = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'M' );
-				    return $month !== $condition['value'];
-                }
+				if ( null !== $form_id && ! empty( $form_field_value ) ) {
+					$month = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'M' );
+					return strtolower( $month ) !== $condition_value;
+				}
 
-                return false;
+				return false;
 			case 'is_before':
-                if ( NULL !== $form_id && ! empty( $form_field_value ) ) {
-                    $date = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'j F Y' );
-                    return strtotime( $date ) < strtotime( $condition['value'] );
-                }
+				if ( null !== $form_id && ! empty( $form_field_value ) ) {
+					$date = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'j F Y' );
+					return strtotime( $date ) < strtotime( $condition_value );
+				}
 
-                return false;
+				return false;
 			case 'is_after':
-                if ( NULL !== $form_id && ! empty( $form_field_value ) ) {
-                    $date = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'j F Y' );
-                    return strtotime( $date ) > strtotime( $condition['value'] );
-                }
+				if ( null !== $form_id && ! empty( $form_field_value ) ) {
+					$date = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'j F Y' );
+					return strtotime( $date ) > strtotime( $condition_value );
+				}
 
-                return false;
+				return false;
 			case 'is_before_n_or_more_days':
-                if ( NULL !== $form_id && ! empty( $form_field_value ) ) {
-                    $date = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'Y-m-d' );
-                    return strtotime( $date ) <= strtotime( '-' . $condition['value'] . ' days' );
-                }
+				if ( null !== $form_id && ! empty( $form_field_value ) ) {
+					$date = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'Y-m-d' );
+					return strtotime( $date ) <= strtotime( '-' . $condition_value . ' days' );
+				}
 
-                return false;
-            // date_is_less_than_n_days_before_current_date
+				return false;
+			// date_is_less_than_n_days_before_current_date.
 			case 'is_before_less_than_n_days':
-                if ( NULL !== $form_id && ! empty( $form_field_value ) ) {
-                    $date         = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'Y-m-d' );
-                    $rule_date    = strtotime( '-' . $condition['value'] . ' days' );
-                    $current_date = strtotime( 'today' );
-                    return $rule_date < strtotime( $date ) && strtotime( $date ) < $current_date;
-                }
+				if ( null !== $form_id && ! empty( $form_field_value ) ) {
+					$date         = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'Y-m-d' );
+					$rule_date    = strtotime( '-' . $condition_value . ' days' );
+					$current_date = strtotime( 'today' );
+					return $rule_date < strtotime( $date ) && strtotime( $date ) <= $current_date;
+				}
 
-                return false;
+				return false;
 			case 'is_after_n_or_more_days':
-                if ( NULL !== $form_id && ! empty( $form_field_value ) ) {
-                    $date = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'Y-m-d' );
-                    return strtotime( $date ) >= strtotime( '+' . $condition['value'] . ' days' );
-                }
+				if ( null !== $form_id && ! empty( $form_field_value ) ) {
+					$date = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'Y-m-d' );
+					return strtotime( $date ) >= strtotime( '+' . $condition_value . ' days' );
+				}
 
-                return false;
-            // date_is_less_than_n_days_after_current_date
+				return false;
+			// date_is_less_than_n_days_after_current_date.
 			case 'is_after_less_than_n_days':
-                if ( NULL !== $form_id && ! empty( $form_field_value ) ) {
-                    $date         = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'Y-m-d' );
-                    $rule_date    = strtotime( '+' . $condition['value'] . ' days' );
-                    $current_date = strtotime( 'today' );
-                    return $rule_date > strtotime( $date ) && strtotime( $date ) > $current_date;
-                }
+				if ( null !== $form_id && ! empty( $form_field_value ) ) {
+					$date         = self::get_day_or_month( $form_field_value, $condition['element_id'], $form_id, 'Y-m-d' );
+					$rule_date    = strtotime( '+' . $condition_value . ' days' );
+					$current_date = strtotime( 'today' );
+					return $rule_date > strtotime( $date ) && strtotime( $date ) >= $current_date;
+				}
 
-                return false;
+				return false;
+
+			case 'is_correct':
+				return $form_field_value ? true : false;
+			case 'is_incorrect':
+				return ! $form_field_value ? true : false;
+			case 'is_final_result':
+				return $form_field_value === $condition['element_id'];
+			case 'is_not_final_result':
+				return $form_field_value !== $condition['element_id'];
 			default:
 				return false;
 		}
@@ -1078,27 +1233,47 @@ abstract class Forminator_Field {
 	 *
 	 * @return string|bool
 	 */
-    public static function get_day_or_month( $form_field_value, $element_id, $form_id, $format ) {
+	public static function get_day_or_month( $form_field_value, $element_id, $form_id, $format ) {
 
-        if ( empty( $form_field_value ) ) {
-            return false;
-        }
-        $date_format        = Forminator_API::get_form_field( $form_id, $element_id, false )->date_format;
-        $normalized_format  = new Forminator_Date();
-        $normalized_format  = $normalized_format->normalize_date_format( $date_format );
-        $date               = date_create_from_format( $normalized_format, $form_field_value );
+		if ( empty( $form_field_value ) ) {
+			return false;
+		}
+		$date_format       = Forminator_API::get_form_field( $form_id, $element_id, false )->date_format;
+		$normalized_format = new Forminator_Date();
+		$normalized_format = $normalized_format->normalize_date_format( $date_format );
+		$date              = date_create_from_format( $normalized_format, $form_field_value );
 
 		if ( false === $date ) {
 			$date = date_create_from_format( 'Y/m/d', $form_field_value );
 		}
 
-	     if ( 'D' === $format ) {
-	         // Day format is based on fields' visibility day format.
-	         return substr( date_format( $date, $format ), 0, -1 );
-	     } else {
-	         return date_format( $date, $format );
-	     }
-	 }
+		if ( 'D' === $format ) {
+			// Day format is based on fields' visibility day format.
+			return substr( date_format( $date, $format ), 0, -1 );
+		} else {
+			return date_format( $date, $format );
+		}
+	}
+
+	/**
+	 * Get subfield id.
+	 *
+	 * @param string $id Field ID.
+	 * @param string $prefix Field prefix.
+	 * @return string
+	 */
+	protected static function get_subfield_id( $id, $prefix ) {
+		$parts    = explode( '-', $id );
+		$real_id  = implode( '-', array_slice( $parts, 0, 2 ) );
+		$group_id = implode( '-', array_slice( $parts, 2 ) );
+
+		$subfield_id = $real_id . $prefix;
+		if ( $group_id ) {
+			$subfield_id .= '-' . $group_id;
+		}
+
+		return $subfield_id;
+	}
 
 	/**
 	 * Return field ID
@@ -1140,7 +1315,7 @@ abstract class Forminator_Field {
 	 * @since 1.0.2
 	 *
 	 * @param array        $field
-	 * @param array|string $data - the data to be sanitized
+	 * @param array|string $data - the data to be sanitized.
 	 *
 	 * @return array|string $data - the data after sanitization
 	 */
@@ -1204,8 +1379,11 @@ abstract class Forminator_Field {
 	 * @return mixed value of $_POST[$id] or $fallback when unavailable
 	 */
 	public static function get_post_data( $id, $fallback = '' ) {
-		if ( isset( $_POST[ $id ] ) ) { // phpcs:ignore
-			return self::get_post_data_sanitize( $_POST[ $id ], $fallback ); // phpcs:ignore
+		if ( isset( $_POST[ $id ] ) ) {
+			$post_data = Forminator_Core::sanitize_array( $_POST[ $id ], $id );
+		}
+		if ( ! empty( $post_data ) ) {
+			return self::get_post_data_sanitize( $post_data, $fallback );
 		}
 
 		return $fallback;
@@ -1248,50 +1426,6 @@ abstract class Forminator_Field {
 		return $settings;
 	}
 
-
-	/**
-	 * Init available autofill providers
-	 * It will only init provider that ACTIVATED by user form on `fields-autofill` not all of the AVAILABLE
-	 * Call it just when it needed
-	 *
-	 * @since 1.0.5
-	 *
-	 * @example
-	 * @see   Forminator_Field::markup() : when its rendering
-	 * @see   Forminator_CForm_Front_Action::handle_form() : when form submitted
-	 *
-	 * @since 1.0.5
-	 *
-	 * @param $settings
-	 */
-	public function init_autofill( $settings ) {
-
-		// Lazy init providers
-		if ( self::is_autofill_enabled( $settings )
-			&& isset( $settings['fields-autofill'] )
-			&& ! empty( $settings['fields-autofill'] ) ) {
-
-			foreach ( $settings['fields-autofill'] as $fields_autofill ) {
-				if ( ! isset( $fields_autofill['provider'] ) || empty( $fields_autofill['provider'] ) ) {
-					continue;
-				}
-
-				$provider       = $fields_autofill['provider'];
-				$provider_parts = explode( '.', $provider );
-				if ( ! isset( $provider_parts[0] ) || empty( $provider_parts[0] ) ) {
-					continue;
-				}
-
-				$provider_slug     = $provider_parts[0];
-				$provider_instance = forminator_autofill_init_provider( $provider_slug );
-
-				if ( $provider_instance ) {
-					$this->activated_autofill_providers[ $provider ] = $provider_instance;
-				}
-			}
-		}
-	}
-
 	/**
 	 * Get Autofill setting as paired ['element_id' => $setting]
 	 *
@@ -1308,7 +1442,7 @@ abstract class Forminator_Field {
 			return array();
 		}
 
-		if ( isset( $settings['fields-autofill'] ) && ! empty( $settings['fields-autofill'] ) ) {
+		if ( ! empty( $settings['fields-autofill'] ) ) {
 			// build to array key
 			$fields_autofill      = $settings['fields-autofill'];
 			$fields_autofill_pair = array();
@@ -1317,7 +1451,7 @@ abstract class Forminator_Field {
 			}
 
 			foreach ( $fields_autofill as $field_autofill ) {
-				if ( ! isset( $field_autofill['element_id'] ) || empty( $field_autofill['element_id'] ) ) {
+				if ( empty( $field_autofill['element_id'] ) ) {
 					continue;
 				}
 				$fields_autofill_pair[ $field_autofill['element_id'] ] = $field_autofill;
@@ -1354,14 +1488,20 @@ abstract class Forminator_Field {
 	 *
 	 * @return array|mixed|string
 	 */
-	public function maybe_re_autofill( $field_array, $field_data, $settings ) {
-		$autofill_settings = self::get_autofill_setting( $settings );
-
-		if ( empty( $autofill_settings ) ) {
+	public function maybe_autofill( $field_array, $field_data, $settings ) {
+		if (
+			(
+				isset( $settings['form-type'] ) &&
+				in_array( $settings['form-type'], array( 'registration', 'login' ), true )
+			) ||
+			! is_user_logged_in()
+		) {
 			return $field_data;
 		}
 
-		if ( ! self::is_autofill_enabled( $settings ) ) {
+		$autofill_settings = self::get_autofill_setting( $settings );
+
+		if ( empty( $autofill_settings ) ) {
 			return $field_data;
 		}
 
@@ -1371,24 +1511,16 @@ abstract class Forminator_Field {
 				$element_id                = $element_id . '-' . $element_id_suffix;
 				$element_autofill_settings = self::get_element_autofill_settings( $element_id, $autofill_settings );
 				if ( ! self::element_autofill_is_editable( $element_autofill_settings ) ) {
-					// refill with autofill provider
-					$autofill_value = $this->maybe_get_element_autofill_value( $field_datum, $element_autofill_settings );
-					// only assign autofill value if autofill_value is not empty
-					if ( ! empty( $autofill_value ) ) {
-						$field_data[ $element_id_suffix ] = $autofill_value;
-					}
+					// refill with autofill provider.
+					$field_data[ $element_id_suffix ] = $this->maybe_replace_to_autofill_value( $field_datum, $element_autofill_settings );
 				}
 			}
 		} else {
 			$element_autofill_settings = self::get_element_autofill_settings( $element_id, $autofill_settings );
 
 			if ( ! self::element_autofill_is_editable( $element_autofill_settings ) ) {
-				// refill with autofill provider
-				$autofill_value = $this->maybe_get_element_autofill_value( $field_data, $element_autofill_settings );
-				// only assign autofill value if autofill_value is not empty
-				if ( ! empty( $autofill_value ) ) {
-					$field_data = $autofill_value;
-				}
+				// refill with autofill provider.
+				$field_data = $this->maybe_replace_to_autofill_value( $field_data, $element_autofill_settings );
 			}
 		}
 
@@ -1402,16 +1534,16 @@ abstract class Forminator_Field {
 	 * @since   1.0.5
 	 *
 	 * @example {
-	 *  'value' => [] // VALUE
+	 *  'value' => [] // VALUE.
 	 *   'readonly' => 'readonly'
 	 * }
 	 *
 	 * @param       $element_id
-	 * @param       $settings
 	 *
 	 * @return array
 	 */
-	public function get_element_autofill_markup_attr( $element_id, $settings ) {
+	public function get_element_autofill_markup_attr( $element_id ) {
+		$settings = $this->form_settings;
 		if ( ! self::is_autofill_enabled( $settings ) ) {
 			return array();
 		}
@@ -1423,14 +1555,14 @@ abstract class Forminator_Field {
 		}
 
 		$element_autofill_settings = self::get_element_autofill_settings( $element_id, $autofill_settings );
-		$value                     = $this->maybe_get_element_autofill_value( '', $element_autofill_settings );
+		$value                     = $this->maybe_replace_to_autofill_value( '', $element_autofill_settings );
 
-		// only return value when its autofilled
+		// only return value when its autofilled.
 		if ( ! empty( $value ) ) {
 			$markup_attr = array(
 				'value' => $value,
 			);
-			//only disable if value is not empty
+			// only disable if value is not empty.
 			if ( ! self::element_autofill_is_editable( $element_autofill_settings ) ) {
 				$markup_attr['readonly'] = 'readonly';
 			}
@@ -1450,32 +1582,20 @@ abstract class Forminator_Field {
 	 *
 	 * @return mixed|string
 	 */
-	public function maybe_get_element_autofill_value( $element_value, $element_autofill_settings ) {
-		if ( isset( $element_autofill_settings['provider'] ) && ! empty( $element_autofill_settings['provider'] ) ) {
+	public function maybe_replace_to_autofill_value( $element_value, $element_autofill_settings ) {
+		if ( ! empty( $element_autofill_settings['provider'] ) ) {
 			$attribute_provider = $element_autofill_settings['provider'];
-			if ( isset( $this->activated_autofill_providers[ $attribute_provider ] ) ) {
-				$attribute_provider_parts = explode( '.', $attribute_provider );
-				if ( isset( $attribute_provider_parts[1] ) && ! empty( $attribute_provider_parts[1] ) ) {
-					$element_value = $this->activated_autofill_providers[ $attribute_provider ]->fill( $attribute_provider_parts[1] );
+			$provider_parts     = explode( '.', $attribute_provider );
+			if ( ! empty( $provider_parts[1] ) ) {
+				$provider_slug     = $provider_parts[0];
+				$provider_instance = forminator_autofill_init_provider( $provider_slug );
+				if ( $provider_instance ) {
+					$element_value = $provider_instance->fill( $provider_parts[1] );
 				}
 			}
 		}
 
 		return $element_value;
-	}
-
-	/**
-	 * Check if element has autofill
-	 *
-	 * @since 1.0.5
-	 *
-	 * @param $element_id
-	 * @param $autofill_settings
-	 *
-	 * @return bool
-	 */
-	public static function element_has_autofill( $element_id, $autofill_settings ) {
-		return in_array( $element_id, array_keys( $autofill_settings ), true );
 	}
 
 	/**
@@ -1490,9 +1610,6 @@ abstract class Forminator_Field {
 	 */
 	public static function get_element_autofill_settings( $element_id, $autofill_settings ) {
 		$autofill_element_settings = array();
-		if ( ! self::element_has_autofill( $element_id, $autofill_settings ) ) {
-			return array();
-		}
 
 		if ( isset( $autofill_settings[ $element_id ] ) && is_array( $autofill_settings[ $element_id ] ) ) {
 			$autofill_element_settings = $autofill_settings[ $element_id ];
@@ -1528,9 +1645,9 @@ abstract class Forminator_Field {
 	 * @return string
 	 */
 	protected function get_field_multiple_required_message( $id, $field, $property, $slug, $fallback ) {
-		// backward compat *_required_message
+		// backward compat *_required_message.
 		$required_message = self::get_property( $property, $field, self::FIELD_PROPERTY_VALUE_NOT_EXIST, 'string' );
-		if ( self::FIELD_PROPERTY_VALUE_NOT_EXIST === $required_message ) {
+		if ( self::FIELD_PROPERTY_VALUE_NOT_EXIST === $required_message || empty( $required_message ) ) {
 			$required_message = $fallback;
 		}
 
@@ -1542,50 +1659,18 @@ abstract class Forminator_Field {
 	}
 
 	/**
-	 * Get dummy value for parsing formula
-	 *
-	 * @since 1.7
-	 *
-	 * @param array $field_settings
-	 *
-	 * @return float|string
-	 */
-	public function get_dummy_calculable_value( $field_settings = array() ) {
-		$dummy_value = 1.0;
-		$field_slug  = $this->slug;
-
-		if ( ! $this->is_calculable ) {
-			$dummy_value = self::FIELD_NOT_CALCULABLE;
-		}
-
-		/**
-		 * Filter Dummy calculable value
-		 *
-		 * @since 1.7
-		 *
-		 * @param float $dummy_value
-		 * @param array $field_settings
-		 *
-		 * @return float|int
-		 */
-		$dummy_value = apply_filters( "forminator_field_{$field_slug}_dummy_calculable_value", $dummy_value, $field_settings );
-
-		return $dummy_value;
-	}
-
-	/**
 	 * Get calculable value
 	 *
 	 * @since 1.7
 	 *
-	 * @param array|mixed $submitted_data
+	 * @param array|mixed $submitted_field_data
 	 * @param array       $field_settings
 	 *
 	 * @return float|string
 	 */
-	public function get_calculable_value( $submitted_data, $field_settings ) {
-		$field_slug       = $this->slug;
-		$calculable_value = 0.0;
+	public static function get_calculable_value( $submitted_field_data, $field_settings ) {
+		$field_slug       = $field_settings['type'];
+		$calculable_value = self::FIELD_NOT_CALCULABLE;
 
 		/**
 		 * Filter formula being used on calculable value on abstract level
@@ -1594,12 +1679,12 @@ abstract class Forminator_Field {
 		 * @since 1.7
 		 *
 		 * @param float $calculable_value
-		 * @param array $submitted_data
+		 * @param array $submitted_field_data
 		 * @param array $field_settings
 		 *
 		 * @return string|int|float formula, or hardcoded value
 		 */
-		$calculable_value = apply_filters( "forminator_field_{$field_slug}_calculable_value", $calculable_value, $submitted_data, $field_settings );
+		$calculable_value = apply_filters( "forminator_field_{$field_slug}_calculable_value", $calculable_value, $submitted_field_data, $field_settings );
 
 		return $calculable_value;
 	}
@@ -1610,20 +1695,16 @@ abstract class Forminator_Field {
 	 *
 	 * @since 1.7
 	 *
-	 * @param $submitted_data
 	 * @param $field_settings
 	 *
 	 * @return int
 	 */
-	public function get_calculable_precision( $submitted_data, $field_settings ) {
-		$field_slug = $this->slug;
-		$precision  = 2;
+	public static function get_calculable_precision( $field_settings ) {
+		$precision = self::get_property( 'precision', $field_settings, 2, 'num' );
 
 		/**
 		 * Filter formula being used on calculable value on abstract level
 		 * this hook can be used on un-implemented calculation field
-		 *
-		 * @since 1.7
 		 *
 		 * @param int   $precision
 		 * @param array $submitted_data
@@ -1631,7 +1712,7 @@ abstract class Forminator_Field {
 		 *
 		 * @return string|int|float formula, or hardcoded value
 		 */
-		$precision = apply_filters( "forminator_field_{$field_slug}_calculable_precision", $precision, $submitted_data, $field_settings );
+		$precision = apply_filters( 'forminator_field_calculable_precision', $precision, Forminator_CForm_Front_Action::$prepared_data, $field_settings );
 
 		return $precision;
 	}
@@ -1674,8 +1755,16 @@ abstract class Forminator_Field {
 
 		$prefill = self::get_property( $prefix . 'prefill', $field, false );
 
-		if ( ! empty( $_REQUEST[ $prefill ] ) ) {  // WPCS: CSRF ok.
-			return sanitize_text_field( urldecode( $_REQUEST[ $prefill ] ) );
+		if ( isset( $_REQUEST[ $prefill ] ) ) {
+			if ( 'textarea' === $field['type'] ) {
+				$return = rawurldecode( wp_kses_post( wp_unslash( $_REQUEST[ $prefill ] ) ) );
+			} else {
+				$return = rawurldecode( esc_html( wp_unslash( $_REQUEST[ $prefill ] ) ) );
+			}
+
+			if ( $return ) {
+				return $return;
+			}
 		}
 
 		return $default;
@@ -1689,12 +1778,12 @@ abstract class Forminator_Field {
 	 * @param $field
 	 * @param $attributes
 	 * @param $prefix
-	 * @param bool $default
+	 * @param bool       $default
 	 * @return mixed
 	 */
 	public function replace_from_prefill( $field, $attributes, $prefix, $default = false ) {
-		if( $this->has_prefill( $field, $prefix ) ) {
-			// We have pre-fill parameter, use its value or $value
+		if ( $this->has_prefill( $field, $prefix ) ) {
+			// We have pre-fill parameter, use its value or $value.
 			$value = $this->get_prefill( $field, $default, $prefix );
 
 			$attributes['value'] = esc_html( $value );
@@ -1742,7 +1831,8 @@ abstract class Forminator_Field {
 				paste_webkit_styles : 'font-weight font-style color',
 				preview_styles      : 'font-family font-size font-weight font-style text-decoration text-transform',
 				tabfocus_elements   : ':prev,:next',
-				plugins    : 'charmap,hr,media,paste,tabfocus,textcolor,fullscreen,wptextpattern,lists,wordpress,wpeditimage,wpgallery,link,wplink,wpdialogs,wpview',
+                plugins    : 'charmap,hr,media,paste,tabfocus,textcolor,fullscreen,wptextpattern,lists,wordpress,wpeditimage,wpgallery,link,wplink,wpdialogs,wpview'," // phpcs:ignore WordPress.WP.CapitalPDangit.Misspelled
+				. "
 				resize     : 'vertical',
 				menubar    : false,
 				indent     : false,
@@ -1763,11 +1853,222 @@ abstract class Forminator_Field {
 		 *
 		 * @since 1.1
 		 *
-		 * @param string $args TinyMCE arguments
-		 * @param string $id   Editor ID
+		 * @param string $args TinyMCE arguments.
+		 * @param string $id   Editor ID.
 		 */
 		$args = apply_filters( 'forminator_tinymce_args', $args, $id );
 
 		return $args;
+	}
+
+	/**
+	 * Number separators
+	 *
+	 * @param $separator
+	 * @param $field
+	 *
+	 * @return array
+	 */
+	public static function forminator_separators( $separator, $field ) {
+
+		$separators = array(
+			'blank'       => array(
+				'point'     => '.',
+				'separator' => '',
+			),
+			'comma_dot'   => array(
+				'point'     => '.',
+				'separator' => ',',
+			),
+			'dot_comma'   => array(
+				'point'     => ',',
+				'separator' => '.',
+			),
+			'space_comma' => array(
+				'point'     => ',',
+				'separator' => ' ',
+			),
+		);
+		if ( 'custom' === $separator ) {
+			$data_point     = self::get_property( 'decimal-separators', $field, '.' );
+			$data_separator = self::get_property( 'thousand-separators', $field, ',' );
+		} else {
+			$data_point     = $separators[ $separator ]['point'];
+			$data_separator = $separators[ $separator ]['separator'];
+		}
+
+		return array(
+			'separator' => $data_separator,
+			'point'     => $data_point,
+		);
+	}
+
+	/**
+	 * Number formatting
+	 *
+	 * @param $field
+	 * @param $number
+	 *
+	 * @return string
+	 */
+	public static function forminator_number_formatting( $field, $number ) {
+		$default_precision = 2;
+		if ( isset( $field['type'] ) && 'number' === $field['type'] ) {
+			$default_precision = 0;
+		}
+		$precision  = self::get_property( 'precision', $field, $default_precision, 'num' );
+		$separator  = self::get_property( 'separators', $field, 'blank' );
+		$separators = self::forminator_separators( $separator, $field );
+		$data_value = (float) str_replace( $separators['point'], '.', $number );
+		$formatted  = number_format( $data_value, $precision, $separators['point'], $separators['separator'] );
+
+		if ( ! empty( $field['prefix'] ) || ! empty( $field['suffix'] ) ) {
+			// Prefix.
+			$formatted = ( ! empty( $field['prefix'] ) ? $field['prefix'] . ' ' : '' ) . $formatted;
+			// Suffix.
+			$formatted = $formatted . ( ! empty( $field['suffix'] ) ? ' ' . $field['suffix'] : '' );
+		} elseif ( ! empty( $field['currency'] ) ) {
+			$formatted .= ' ' . $field['currency'];
+		}
+
+		return $formatted;
+	}
+
+	/**
+	 * Replace number formatting
+	 *
+	 * @param $field
+	 * @param $number
+	 *
+	 * @return string
+	 */
+	public static function forminator_replace_number( $field, $number ) {
+		$separator  = self::get_property( 'separators', $field, 'blank' );
+		$separators = self::forminator_separators( $separator, $field );
+
+		return str_replace( $separators['point'], '.', $number );
+	}
+
+	/**
+	 * Check index and htaccess files inside root directory. And create them if need it.
+	 */
+	public static function check_upload_root_index_file() {
+		$upload_root = forminator_upload_root();
+		// Make sure it was not called before WP init.
+		if ( ! file_exists( $upload_root . 'index.php' ) && function_exists( 'insert_with_markers' ) ) {
+			self::add_index_file( $upload_root );
+			self::add_htaccess_file();
+		}
+	}
+
+	/**
+	 * Create index file
+	 *
+	 * @param $dir
+	 *
+	 * @return void
+	 */
+	public static function add_index_file( $dir ) {
+		$dir = untrailingslashit( $dir );
+		if ( ! is_dir( $dir ) || ! wp_is_writable( $dir ) || is_link( $dir ) ) {
+			return;
+		}
+		if ( ! ( $dp = opendir( $dir ) ) ) {
+			return;
+		}
+		// creates an empty index.php file
+		$index_file_path = $dir . '/index.php';
+		if ( $f = fopen( $index_file_path, 'w' ) ) {
+			fclose( $f );
+		}
+		// restores error handler
+		restore_error_handler();
+		while ( ( false !== $file = readdir( $dp ) ) ) {
+			if ( is_dir( "$dir/$file" ) && $file != '.' && $file != '..' ) {
+				self::add_index_file( "$dir/$file" );
+			}
+		}
+		closedir( $dp );
+	}
+
+	/**
+	 * Add index file
+	 *
+	 * @param $form_id
+	 * @param $path
+	 *
+	 * @return void
+	 */
+	public static function forminator_upload_index_file( $form_id, $path = '' ) {
+
+		$form_id     = absint( $form_id );
+		$upload_root = forminator_upload_root();
+
+		if ( ! is_dir( $upload_root ) ) {
+			return;
+		}
+
+		self::check_upload_root_index_file();
+		if ( ! file_exists( forminator_get_upload_path( $form_id ) . 'index.php' ) ) {
+			self::add_index_file( forminator_get_upload_path( $form_id ) );
+		}
+		if ( ! file_exists( $path . 'index.php' ) ) {
+			self::add_index_file( $path );
+		}
+	}
+
+	/**
+	 * Add htaccess file
+	 *
+	 * @return void
+	 */
+	public static function add_htaccess_file() {
+		global $wp_locale_switcher;
+
+		// Return if $wp_locale_switcher is not ready.
+		if ( ! $wp_locale_switcher ) {
+			return false;
+		}
+
+		$upload_root = forminator_upload_root();
+
+		if ( ! is_dir( $upload_root ) ) {
+			return;
+		}
+
+		if ( ! wp_is_writable( $upload_root ) ) {
+			return;
+		}
+
+		$htaccess_file = $upload_root . '.htaccess';
+		if ( file_exists( $htaccess_file ) ) {
+			@unlink( $htaccess_file );
+		}
+		$rules = '# Disable parsing of PHP for some server configurations.
+<Files *>
+  SetHandler none
+  SetHandler default-handler
+  Options -ExecCGI
+  Options -Indexes
+  RemoveHandler .cgi .php .php3 .php4 .php5 .phtml .pl .py .pyc .pyo
+</Files>
+<IfModule mod_php5.c>
+  php_flag engine off
+</IfModule>
+<IfModule headers_module>
+  Header set X-Robots-Tag "noindex"
+</IfModule>';
+
+		/**
+		 * A filter to allow the modification/disabling of parsing certain PHP
+		 *
+		 * @since 1.23.1
+		 *
+		 * @param mixed $rules The Rules of what to parse or not to parse
+		 */
+		$rules = apply_filters( 'forminator_upload_root_htaccess_rules', $rules );
+		if ( ! empty( $rules ) ) {
+			insert_with_markers( $htaccess_file, 'Forminator', $rules );
+		}
 	}
 }

@@ -11,15 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Forminator_Entries_Page extends Forminator_Admin_Page {
 
 	/**
-	 * Available Modules
-	 *
-	 * @since 1.0.5
-	 * @var array
-	 */
-	private $modules = array();
-
-	/**
-	 * Merged default parameter with $_REQUEST
+	 * Merged default parameter with superglobal REQUEST
 	 *
 	 * @since 1.0.5
 	 * @var array
@@ -43,39 +35,15 @@ class Forminator_Entries_Page extends Forminator_Admin_Page {
 	private $form_model = null;
 
 	/**
-	 * Populating Modules that available on Plugin
-	 *
-	 * @since 1.0.5
-	 */
-	public function populate_modules() {
-		$modules[] = array(
-			'name'  => __( 'Forms', 'forminator' ),
-			'model' => Forminator_Form_Model::model(),
-		);
-		$modules[] = array(
-			'name'  => __( 'Polls', 'forminator' ),
-			'model' => Forminator_Poll_Model::model(),
-		);
-		$modules[] = array(
-			'name'  => __( 'Quizzes', 'forminator' ),
-			'model' => Forminator_Quiz_Model::model(),
-		);
-
-		$this->modules = apply_filters( 'forminator_entries_page_modules', $modules );
-	}
-
-	/**
 	 * Populating Current Page Parameters
 	 *
 	 * @since 1.0.5
 	 */
 	public function populate_screen_params() {
-		$screen_params = array(
-			'form_type' => 'forminator_forms',
-			'form_id'   => 0,
+		$this->screen_params = array(
+			'form_type' => Forminator_Core::sanitize_text_field( 'form_type', 'forminator_forms' ),
+			'form_id'   => Forminator_Core::sanitize_text_field( 'form_id', 0 ),
 		);
-
-		$this->screen_params = array_merge( $screen_params, $_REQUEST );//phpcs:ignore -- data without nonce verification
 	}
 
 	/**
@@ -85,7 +53,6 @@ class Forminator_Entries_Page extends Forminator_Admin_Page {
 	 */
 	public function before_render() {
 		$this->populate_screen_params();
-		$this->populate_modules();
 		$this->prepare_entries_page();
 		$this->enqueue_entries_scripts();
 	}
@@ -98,14 +65,7 @@ class Forminator_Entries_Page extends Forminator_Admin_Page {
 	 * @return mixed
 	 */
 	public function get_form_types() {
-		$form_types = array();
-		foreach ( $this->modules as $module ) {
-			/** @var Forminator_Base_Form_Model $model */
-			$model = $module['model'];
-			$name  = $module['name'];
-
-			$form_types[ $model->get_post_type() ] = $name;
-		}
+		$form_types = $this->modules_form_type();
 
 		return apply_filters( 'forminator_entries_page_modules', $form_types );
 	}
@@ -117,9 +77,9 @@ class Forminator_Entries_Page extends Forminator_Admin_Page {
 	 */
 	private function prepare_entries_page() {
 		$this->form_model = $this->get_form_model();
-		// Form not found
+		// Form not found.
 		if ( ! $this->form_model instanceof Forminator_Base_Form_Model ) {
-			// if form_id available remove it from request, and redirect
+			// if form_id available remove it from request, and redirect.
 			if ( $this->get_current_form_id() ) {
 				$url = remove_query_arg( 'form_id' );
 				if ( wp_safe_redirect( $url ) ) {
@@ -144,34 +104,11 @@ class Forminator_Entries_Page extends Forminator_Admin_Page {
 
 			if ( $entries_renderer instanceof Forminator_Admin_Page ) {
 				ob_start();
-				// render the entries page
+				// render the entries page.
 				$entries_renderer->render_page_content();
 				$this->entries_page = ob_get_clean();
 			}
 		}
-	}
-
-	/**
-	 * Get Form Model if current requested form_id available and matched form_type
-	 *
-	 * @since 1.0.5
-	 *
-	 * @return bool|Forminator_Base_Form_Model|null
-	 */
-	private function get_form_model() {
-		if ( $this->get_current_form_id() ) {
-			$form_model = forminator_get_model_from_id( $this->get_current_form_id() );
-			if ( ! $form_model instanceof Forminator_Base_Form_Model ) {
-				return null;
-			}
-			if ( $form_model->get_post_type() !== $this->get_current_form_type() ) {
-				return null;
-			}
-
-			return $form_model;
-		}
-
-		return null;
 	}
 
 	/**
@@ -186,41 +123,44 @@ class Forminator_Entries_Page extends Forminator_Admin_Page {
 	}
 
 	/**
-	 * Render Form switcher / select based on current form_type
+	 *  Render Form switcher / select based on current form_type
 	 *
 	 * @since 1.0.5
-	 *
-	 * @return string
 	 */
-	public function render_form_switcher( $form_type = 'forminator_forms', $form_id = 0 ) {
-		$html = '<select name="form_id" data-allow-search="1" data-minimum-results-for-search="0" class="sui-select sui-select-sm sui-select-inline">';
+	public static function render_form_switcher( $form_type = 'forminator_forms', $form_id = 0 ) {
+		$classes = 'sui-select';
+		// Using this method for Create Appearance Preset.
+		if ( 0 !== $form_id ) {
+			$classes .= ' sui-select-sm sui-select-inline';
+		}
 
 		$empty_option = __( 'Choose Form', 'forminator' );
 		$method       = 'get_forms';
+		$model       = 'Forminator_Form_Model';
 
 		if ( $form_type === Forminator_Poll_Model::model()->get_post_type() ) {
 			$empty_option = __( 'Choose Poll', 'forminator' );
 			$method       = 'get_polls';
+			$model       = 'Forminator_Poll_Model';
 		} elseif ( $form_type === Forminator_Quiz_Model::model()->get_post_type() ) {
 			$empty_option = __( 'Choose Quiz', 'forminator' );
 			$method       = 'get_quizzes';
+			$model       = 'Forminator_Quiz_Model';
 		}
 
-		$html .= '<option value="" ' . selected( 0, $form_id, false ) . '>' . $empty_option . '</option>';
+		echo '<select name="form_id" data-allow-search="1" data-minimum-results-for-search="0" class="' . esc_attr( $classes ) . '" data-search="true" data-search="true" data-placeholder="' . esc_attr( $empty_option ) . '">';
+		echo '<option><option>';
 
-		$forms = Forminator_API::$method( null, 1, 999 );
-
-		apply_filters( 'forminator_entries_get_forms', $forms, $form_type );
+		$forms = Forminator_API::$method( null, 1, 999, $model::STATUS_PUBLISH );
+		$forms = apply_filters( 'forminator_entries_get_forms', $forms, $form_type );
 
 		foreach ( $forms as $form ) {
 			/**@var Forminator_Base_Form_Model $form */
 			$title = ! empty( $form->settings['formName'] ) ? $form->settings['formName'] : $form->raw->post_title;
-			$html .= '<option value="' . $form->id . '" ' . selected( $form->id, $form_id, false ) . '>' . $title . '</option>';
+			echo '<option value="' . esc_attr( $form->id ) . '" ' . selected( $form->id, $form_id, false ) . '>' . esc_html( $title ) . '</option>';
 		}
 
-		$html .= '</select>';
-
-		return $html;
+		echo '</select>';
 	}
 
 	/**
@@ -252,21 +192,38 @@ class Forminator_Entries_Page extends Forminator_Admin_Page {
 	 */
 	public function enqueue_entries_scripts() {
 		wp_enqueue_script(
-			'forminator-entries-moment',
-			forminator_plugin_url() . 'assets/js/library/moment.min.js',
-			array( 'jquery' ),
-			'2.22.2',
-			true
-		);
-		wp_enqueue_script(
 			'forminator-entries-datepicker-range',
 			forminator_plugin_url() . 'assets/js/library/daterangepicker.min.js',
-			array( 'forminator-entries-moment' ),
+			array( 'moment' ),
 			'3.0.3',
 			true
 		);
 
-		// use inline script to allow hooking into this
+		wp_enqueue_script(
+			'forminator-inputmask',
+			forminator_plugin_url() . 'assets/js/library/inputmask.min.js',
+			array( 'jquery' ),
+			FORMINATOR_VERSION,
+			false
+		); // inputmask.
+
+		wp_enqueue_script(
+			'forminator-jquery-inputmask',
+			forminator_plugin_url() . 'assets/js/library/jquery.inputmask.min.js',
+			array( 'jquery' ),
+			FORMINATOR_VERSION,
+			false
+		); // jquery inputmask.
+
+		wp_enqueue_script(
+			'forminator-inputmask-binding',
+			forminator_plugin_url() . 'assets/js/library/inputmask.binding.js',
+			array( 'jquery' ),
+			FORMINATOR_VERSION,
+			false
+		); // inputmask binding.
+
+		// use inline script to allow hooking into this.
 		$daterangepicker_ranges
 			= sprintf(
 				"

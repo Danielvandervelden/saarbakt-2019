@@ -12,6 +12,7 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 
 	/**
 	 * Plugin instance
+	 *
 	 * @since  1.11
 	 * @access private
 	 * @var null
@@ -35,7 +36,6 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 	/**
 	 * Get label text from CF7 form HTML
 	 *
-	 *
 	 * @since 1.11
 	 * @return string field label
 	 */
@@ -51,7 +51,7 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 			}
 			$form   = preg_replace( $regex, '', $form );
 			$is_tag = strpos( $label_html, '[' );
-			//get label from form html
+			// get label from form html.
 
 			if ( isset( $label_html ) && ! empty( $label_html ) && false === $is_tag ) {
 				return trim( rtrim( $label_html ) );
@@ -110,7 +110,7 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 		$submit_class      = '';
 		$autofill          = array();
 
-		// fields import
+		// fields import.
 		if ( is_plugin_active( 'cf7-conditional-fields/contact-form-7-conditional-fields.php' ) && in_array( 'conditional', $cf7_addons, true ) ) {
 			$wpcf7cf_entries = CF7CF::getConditions( $id );
 		}
@@ -137,14 +137,14 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 			if ( 'submit' === $field['type'] ) {
 				$submit_label = $field->labels[0];
 				if ( isset( $field['options'] ) ) {
-					$classes = preg_grep( "/^class:/", $field['options'] );
+					$classes = preg_grep( '/^class:/', $field['options'] );
 
 					if ( ! empty( $classes ) ) {
 						foreach ( $classes as $class_value ) {
-							$exploded = explode( ":", $class_value );
+							$exploded = explode( ':', $class_value );
 
 							if ( isset( $exploded[1] ) ) {
-								$submit_class .= $exploded[1] . " ";
+								$submit_class .= $exploded[1] . ' ';
 							}
 						}
 					}
@@ -161,8 +161,8 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 					$after_pipes = array();
 
 					if ( isset( $field['options'] ) ) {
-						$has_blank  = preg_grep( "/^include_blank/", $field['options'] );
-						$has_values = preg_grep( "/^default:/", $field['options'] );
+						$has_blank  = preg_grep( '/^include_blank/', $field['options'] );
+						$has_values = preg_grep( '/^default:/', $field['options'] );
 
 						if ( ! empty( $has_values ) ) {
 							$keys            = array_keys( $has_values );
@@ -181,7 +181,7 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 							'label'   => '---',
 							'value'   => '',
 							'limit'   => '',
-							'default' => ''
+							'default' => '',
 						);
 					}
 					foreach ( $field->labels as $key => $label ) {
@@ -189,7 +189,7 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 							'label'   => esc_html( $label ),
 							'value'   => isset( $after_pipes[ $key ] ) ? esc_html( $after_pipes[ $key ] ) : esc_html( $field->values[ $key ] ),
 							'limit'   => '',
-							'default' => in_array( $key + 1, $checked )
+							'default' => in_array( $key + 1, $checked ),
 						);
 					}
 					$options = array_merge( $blank_options, $options );
@@ -200,21 +200,21 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 				}
 
 				if ( isset( $field['options'] ) ) {
-					$classes = preg_grep( "/^class:/", $field['options'] );
+					$classes = preg_grep( '/^class:/', $field['options'] );
 
 					if ( ! empty( $classes ) ) {
 						foreach ( $classes as $class_value ) {
-							$exploded = explode( ":", $class_value );
+							$exploded = explode( ':', $class_value );
 
 							if ( isset( $exploded[1] ) ) {
-								$custom_class .= $exploded[1] . " ";
+								$custom_class .= $exploded[1] . ' ';
 							}
 						}
 					}
 				}
 
 				if ( isset( $field['options'] ) ) {
-					$placeholder = preg_grep( "/^placeholder/", $field['options'] );
+					$placeholder = preg_grep( '/^placeholder/', $field['options'] );
 					$field_value = ( isset( $field['values'] ) && isset( $field['values'][0] ) ) ? $field['values'][0] : '';
 
 					if ( ! empty( $placeholder ) ) {
@@ -253,10 +253,10 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 					'default'       => esc_html( $default_value ),
 					'default_value' => esc_html( $default_value ),
 					'custom-class'  => trim( $custom_class ),
-					'conditions'    => $condition
+					'conditions'    => $condition,
 				);
 
-				// Handle specific field options
+				// Handle specific field options.
 				switch ( $field['basetype'] ) {
 					case 'select':
 						$new_fields[ $mkey ] = $this->handle_select_field( $field, $new_fields[ $mkey ], $messages );
@@ -298,11 +298,11 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 						break;
 				}
 
-				$tag_key            = $field['name'];
-				$tags["[$tag_key]"] = '{' . $new_fields[ $mkey ]['element_id'] . '}';
+				$tag_key              = $field['name'];
+				$tags[ "[$tag_key]" ] = '{' . $new_fields[ $mkey ]['element_id'] . '}';
 
 				if ( isset( $field['options'] ) ) {
-					$has_default_values = preg_grep( "/^default:/", $field['options'] );
+					$has_default_values = preg_grep( '/^default:/', $field['options'] );
 					if ( ! empty( $has_default_values ) ) {
 						$has_default_values    = array_values( $has_default_values );
 						$explode_default_value = explode( ':', $has_default_values[0] );
@@ -318,10 +318,9 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 					}
 				}
 			}
-
 		}//endforeach fields
 
-		//admin mail import
+		// admin mail import.
 		$settings['use-admin-email'] = false;
 
 		if ( isset( $mail['active'] ) && true === $mail['active'] ) {
@@ -357,10 +356,10 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 				}
 			}
 
-			$settings['admin-email-recipients'] = explode( " ", $this->replace_invalid_tags( $mail['recipient'], $tags ) );
+			$settings['admin-email-recipients'] = explode( ' ', $this->replace_invalid_tags( $mail['recipient'], $tags ) );
 		}
 
-		//autoresponder import
+		// autoresponder import.
 		$settings['use-user-email'] = false;
 
 		if ( isset( $mail_2['active'] ) && true === $mail_2['active'] ) {
@@ -396,9 +395,9 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 				}
 			}
 
-			$settings['user-email-recipients'] = explode( " ", $this->replace_invalid_tags( $mail_2['recipient'], $tags ) );
+			$settings['user-email-recipients'] = explode( ' ', $this->replace_invalid_tags( $mail_2['recipient'], $tags ) );
 		}
-		//form settings basic import
+		// form settings basic import.
 		$settings['formName']                    = esc_html( get_the_title( $id ) );
 		$settings['thankyou-message']            = $messages['mail_sent_ok'];
 		$settings['custom-invalid-form-message'] = $messages['validation_error'];
@@ -412,7 +411,7 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 			$settings['fields-autofill'] = array_values( $autofill );
 		}
 
-		// form submit data settings
+		// form submit data settings.
 		$settings['submitData']['custom-submit-text'] = $submit_label;
 		$settings['submitData']['custom-class']       = $submit_class;
 
@@ -439,7 +438,7 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 				$settings['newtab']               = 'on' === $redirect_meta['open_in_new_tab'] ? 'newtab_thankyou' : 'sametab';
 			}
 		}
-		//for basics generation
+		// for basics generation.
 		$data['status']           = get_post_status( $id );
 		$data['version']          = FORMINATOR_VERSION;
 		$data['type']             = 'form';
@@ -482,10 +481,10 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 	 * @return mixed
 	 */
 	public function handle_select_field( $field, $options, $messages ) {
-		// Check if select field has any options
+		// Check if select field has any options.
 		$options['value_type'] = 'single';
 		if ( isset( $field['options'] ) ) {
-			// Check if multiple option enabled
+			// Check if multiple option enabled.
 			if ( in_array( 'multiple', $field['options'], true ) ) {
 				$options['value_type'] = 'multiselect';
 			}
@@ -529,15 +528,15 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 	 */
 	public function handle_text_field( $field, $options, $messages ) {
 		if ( isset( $field['options'] ) ) {
-			$max_length = preg_grep( "/^maxlength:/", $field['options'] );
+			$max_length = preg_grep( '/^maxlength:/', $field['options'] );
 
 			if ( ! empty( $max_length ) ) {
 				foreach ( $max_length as $length ) {
-					$exploded = explode( ":", $length );
+					$exploded = explode( ':', $length );
 
 					if ( isset( $exploded[1] ) ) {
 						$options['limit']      = $exploded[1];
-						$options['limit_type'] = "characters";
+						$options['limit_type'] = 'characters';
 					}
 				}
 			}
@@ -563,12 +562,12 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 	 */
 	public function handle_number_field( $field, $options, $messages ) {
 		if ( isset( $field['options'] ) ) {
-			$min = preg_grep( "/^min:/", $field['options'] );
-			$max = preg_grep( "/^max:/", $field['options'] );
+			$min = preg_grep( '/^min:/', $field['options'] );
+			$max = preg_grep( '/^max:/', $field['options'] );
 
 			if ( ! empty( $min ) ) {
 				foreach ( $min as $length ) {
-					$exploded = explode( ":", $length );
+					$exploded = explode( ':', $length );
 
 					if ( isset( $exploded[1] ) ) {
 						$options['limit_min'] = $exploded[1];
@@ -578,14 +577,13 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 
 			if ( ! empty( $max ) ) {
 				foreach ( $max as $length ) {
-					$exploded = explode( ":", $length );
+					$exploded = explode( ':', $length );
 
 					if ( isset( $exploded[1] ) ) {
 						$options['limit_max'] = $exploded[1];
 					}
 				}
 			}
-
 		}
 		if ( ! empty( $messages['invalid_required'] ) ) {
 			$options['required_message'] = $messages['invalid_required'];
@@ -606,7 +604,7 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 	 * @return mixed
 	 */
 	public function handle_acceptance_field( $field, $options, $messages ) {
-		// Check if content exists
+		// Check if content exists.
 		if ( isset( $field['content'] ) ) {
 			$options['gdpr_description'] = $field['content'];
 		}
@@ -632,12 +630,12 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 	public function handle_date_field( $field, $options, $messages ) {
 		$field_value = ( isset( $field['values'] ) && isset( $field['values'][0] ) ) ? $field['values'][0] : '';
 		if ( isset( $field['options'] ) ) {
-			$min = preg_grep( "/^min:/", $field['options'] );
-			$max = preg_grep( "/^max:/", $field['options'] );
+			$min = preg_grep( '/^min:/', $field['options'] );
+			$max = preg_grep( '/^max:/', $field['options'] );
 
 			if ( ! empty( $min ) ) {
 				foreach ( $min as $length ) {
-					$exploded = explode( ":", $length );
+					$exploded = explode( ':', $length );
 
 					if ( isset( $exploded[1] ) ) {
 						$options['min_year'] = date( 'Y', strtotime( $exploded[1] ) );
@@ -647,7 +645,7 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 
 			if ( ! empty( $max ) ) {
 				foreach ( $max as $length ) {
-					$exploded = explode( ":", $length );
+					$exploded = explode( ':', $length );
 
 					if ( isset( $exploded[1] ) ) {
 						$options['max_year'] = date( 'Y', strtotime( $exploded[1] ) );
@@ -769,13 +767,13 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 	 */
 	public function handle_upload_field( $field, $options, $messages ) {
 		if ( isset( $field['options'] ) ) {
-			$limit_value = preg_grep( "/^limit:/", $field['options'] );
-			$types_value = preg_grep( "/^filetypes:/", $field['options'] );
+			$limit_value = preg_grep( '/^limit:/', $field['options'] );
+			$types_value = preg_grep( '/^filetypes:/', $field['options'] );
 
-			// Handle size limit options
+			// Handle size limit options.
 			if ( ! empty( $limit_value ) ) {
 				foreach ( $limit_value as $limit ) {
-					$exploded = explode( ":", $limit );
+					$exploded = explode( ':', $limit );
 
 					if ( isset( $exploded[1] ) ) {
 						$options['upload-limit'] = $this->convert_limit_to_mb( $exploded[1] );
@@ -783,13 +781,13 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 				}
 			}
 
-			// Handle file types
+			// Handle file types.
 			if ( ! empty( $types_value ) ) {
 				foreach ( $types_value as $types_values ) {
-					$exploded = explode( ":", $types_values );
+					$exploded = explode( ':', $types_values );
 
 					if ( isset( $exploded[1] ) ) {
-						$types    = explode( "|", $exploded[1] );
+						$types    = explode( '|', $exploded[1] );
 						$filtered = array();
 
 						foreach ( $types as $type ) {
@@ -817,14 +815,14 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 	 */
 	public function convert_limit_to_mb( $limit ) {
 		if ( strpos( $limit, 'mb' ) !== false ) {
-			// Limit is already in MB, return value
+			// Limit is already in MB, return value.
 			return mb_substr( $limit, 0, - 2 );
 		}
 
 		if ( strpos( $limit, 'kb' ) !== false ) {
 			$limit = mb_substr( $limit, 0, - 2 );
 
-			// Limit is in KB, we need to convert to MB
+			// Limit is in KB, we need to convert to MB.
 			return round( $limit / 1024, 2 );
 		}
 
@@ -843,34 +841,34 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 	public function filter_filetypes( $file ) {
 		switch ( $file ) {
 			case 'jpg':
-				$file = "jpg|jpeg|jpe";
+				$file = 'jpg|jpeg|jpe';
 				break;
 			case 'jpeg':
-				$file = "jpg|jpeg|jpe";
+				$file = 'jpg|jpeg|jpe';
 				break;
 			case 'mp3':
-				$file = "mp3|m4a|m4b";
+				$file = 'mp3|m4a|m4b';
 				break;
 			case '3gp':
-				$file = "3gp|3gpp";
+				$file = '3gp|3gpp';
 				break;
 			case 'mp4':
-				$file = "mp4|m4v";
+				$file = 'mp4|m4v';
 				break;
 			case 'mpeg':
-				$file = "mpeg|mpg|mpe";
+				$file = 'mpeg|mpg|mpe';
 				break;
 			case 'mpg':
-				$file = "mpeg|mpg|mpe";
+				$file = 'mpeg|mpg|mpe';
 				break;
 			case 'mov':
-				$file = "mov|qt";
+				$file = 'mov|qt';
 				break;
 			case 'tiff':
-				$file = "tiff|tif";
+				$file = 'tiff|tif';
 				break;
 			case 'tif':
-				$file = "tiff|tif";
+				$file = 'tiff|tif';
 				break;
 			default:
 				break;
@@ -893,10 +891,12 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 		if ( ! empty( $import ) && 'success' === $import['type'] ) {
 			$entry->form_id = $import['id'];
 			$slug           = get_post_field( 'post_name', $id );
-			$flamingo_data  = Flamingo_Inbound_Message::find( array(
-				'posts_per_page' => - 1,
-				'channel'        => $slug
-			) );
+			$flamingo_data  = Flamingo_Inbound_Message::find(
+				array(
+					'posts_per_page' => - 1,
+					'channel'        => $slug,
+				)
+			);
 			if ( ! empty( $flamingo_data ) ) {
 				foreach ( $flamingo_data as $flamingo ) {
 					$created_date = date_i18n( 'Y-m-d H:i:s', strtotime( str_replace( ' @', '', $flamingo->date ) ) );
@@ -907,10 +907,10 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 									if ( strpos( $meta[ $key ], 'upload' ) !== false ) {
 										$value = array(
 											'file' => array(
-												'success'   => true,
-												'file_url'  => $value,
+												'success'  => true,
+												'file_url' => $value,
 												'file_path' => '',
-											)
+											),
 										);
 									}
 									$field_data_array[] = array(
@@ -968,7 +968,7 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 											'success'   => true,
 											'file_url'  => $file_url,
 											'file_path' => '',
-										)
+										),
 									);
 								}
 
@@ -999,12 +999,14 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 
 		if ( ! empty( $import ) && 'success' === $import['type'] ) {
 			$entry->form_id   = $import['id'];
-			$submissions_data = get_posts( array(
-				'posts_per_page' => - 1,
-				'post_type'      => 'wpcf7s',
-				'meta_key'       => 'form_id',
-				'meta_value'     => (int) $id
-			) );
+			$submissions_data = get_posts(
+				array(
+					'posts_per_page' => - 1,
+					'post_type'      => 'wpcf7s',
+					'meta_key'       => 'form_id',
+					'meta_value'     => (int) $id,
+				)
+			);
 
 			if ( ! empty( $submissions_data ) ) {
 				foreach ( $submissions_data as $submissions ) {
@@ -1023,10 +1025,10 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 										$file_url                 = ! empty( $meta_value ) ? $wpcf7s_url . '/' . $submissions->ID . '/' . $meta_value : '';
 										$data_value               = array(
 											'file' => array(
-												'success'   => true,
-												'file_url'  => $file_url,
+												'success'  => true,
+												'file_url' => $file_url,
 												'file_path' => '',
-											)
+											),
 										);
 									}
 
@@ -1130,14 +1132,14 @@ class Forminator_Admin_Import_CF7 extends Forminator_Import_Mediator {
 									if ( strpos( $value, 'upload' ) !== false ) {
 										$data_value = array(
 											'file' => array(
-												'success'   => true,
-												'file_url'  => $submissions[ $key ],
+												'success'  => true,
+												'file_url' => $submissions[ $key ],
 												'file_path' => '',
-											)
+											),
 										);
 									}
 									if ( strpos( $value, 'checkbox' ) !== false ||
-									     strpos( $value, 'select' ) !== false ) {
+										 strpos( $value, 'select' ) !== false ) {
 										$data_value = explode( '<br />', nl2br( $submissions[ $key ] ) );
 										$data_value = array_map( 'trim', $data_value );
 									}

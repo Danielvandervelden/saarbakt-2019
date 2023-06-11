@@ -1,6 +1,6 @@
 <?php
 $preview_dialog = 'preview_' . forminator_get_prefix( static::$module_slug, 'c', false, true );
-$export_dialog  = 'export_' . forminator_get_prefix( static::$module_slug, 'c' );
+$export_dialog  = 'export_' . static::$module_slug;
 $post_type      = 'forminator_' . forminator_get_prefix( static::$module_slug, '', false, true );
 $soon           = 'quiz' === static::$module_slug;
 
@@ -13,9 +13,9 @@ if ( $count > 0 || $is_search ) {
 
 	?>
 
-	<div class="sui-box sui-summary sui-summary-sm <?php echo esc_attr( $this->get_box_summary_classes() ); ?>">
+	<div class="sui-box sui-summary <?php echo esc_attr( $this->get_box_summary_classes() ); ?>">
 
-		<div class="sui-summary-image-space" aria-hidden="true" style="<?php echo esc_attr( $this->get_box_summary_image_style() ); ?>"></div>
+		<div class="sui-summary-image-space" aria-hidden="true"></div>
 
 		<div class="sui-summary-segment">
 
@@ -23,10 +23,18 @@ if ( $count > 0 || $is_search ) {
 
 				<span class="sui-summary-large"><?php echo esc_html( $count_active ); ?></span>
 
-				<span class="sui-summary-sub"><?php echo esc_html( _n(
+				<span class="sui-summary-sub">
+				<?php
+				echo esc_html(
+					_n(
 						sprintf( 'Active %s', forminator_get_prefix( static::$module_slug, '', true ) ),
 						sprintf( 'Active %s', forminator_get_prefix( static::$module_slug, '', true, true ) ),
-						esc_html( $count_active ), 'forminator' ) ); ?></span>
+						esc_html( $count_active ),
+						'forminator'
+					)
+				);
+				?>
+											  </span>
 
 				<form id="forminator-search-modules" class="forminator-search-modules" data-searched="false">
 
@@ -38,7 +46,7 @@ if ( $count > 0 || $is_search ) {
 
 								<div class="sui-control-with-icon">
 									<button class="forminator-search-submit"><i class="sui-icon-magnifying-glass-search"></i></button>
-									<input type="text" name="search" value="<?php echo esc_attr( $search_keyword ); ?>" placeholder="<?php printf( esc_attr__( 'Search %s...', 'forminator' ), static::$module_slug ); ?>" id="forminator-module-search" class="sui-form-control">
+									<input type="text" name="search" value="<?php echo esc_attr( $search_keyword ); ?>" placeholder="<?php echo esc_attr( sprintf( __( 'Search %s...', 'forminator' ), static::$module_slug ) ); ?>" id="forminator-module-search" class="sui-form-control">
 								</div>
 								<button role="button" class="search-reset sui-button-icon" title="<?php esc_attr_e( 'Reset search', 'forminator' ); ?>">
 									<span class="sui-icon-cross-close" aria-hidden="true"></span>
@@ -60,7 +68,7 @@ if ( $count > 0 || $is_search ) {
 					<input type="hidden" name="export_dialog" value="<?php echo esc_attr( $export_dialog ); ?>" />
 					<input type="hidden" name="post_type" value="<?php echo esc_attr( $post_type ); ?>" />
 					<input type="hidden" name="soon" value="<?php echo esc_attr( $soon ); ?>" />
-					<input type="hidden" name="page" value="<?php echo filter_input( INPUT_GET, 'page', FILTER_SANITIZE_STRING ); ?>" />
+					<input type="hidden" name="page" value="<?php echo isset( $_GET['page'] ) ? Forminator_Core::sanitize_text_field( 'page' ) : ''; ?>" />
 					<?php
 						wp_nonce_field( $search_module_nonce, $search_module_nonce, false );
 					?>
@@ -89,7 +97,7 @@ if ( $count > 0 || $is_search ) {
 						<span class="sui-list-label"><?php esc_html_e( 'Most submissions', 'forminator' ); ?></span>
 						<span class="sui-list-detail">
 							<a href="<?php echo esc_url( admin_url( 'admin.php?page=' . $wizard_page . '&id=' . $most_entry->form_id ) ); ?>">
-								<?php echo forminator_get_form_name( $most_entry->form_id ); ?>
+								<?php echo esc_html( forminator_get_form_name( $most_entry->form_id ) ); ?>
 							</a>
 						</span>
 					</li>
@@ -100,7 +108,7 @@ if ( $count > 0 || $is_search ) {
 
 	</div>
 
-<?php
-// Call the css here to prevent search icon from flashing above the search form while the page is loading...
-$this->template( 'common/list/temp_css' );
+	<?php
+	// Call the css here to prevent search icon from flashing above the search form while the page is loading...
+	$this->template( 'common/list/temp_css' );
 }

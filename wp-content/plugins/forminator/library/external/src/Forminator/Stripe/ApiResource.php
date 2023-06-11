@@ -80,7 +80,7 @@ abstract class ApiResource extends StripeObject
      */
     public static function classUrl()
     {
-        // Replace dots with slashes for namespaced resources, e.g. if the object's name is
+        // Replace dots with slashes for namespaced resources, e.g. if the object's name is.
         // "foo.bar", then its URL will be "/v1/foo/bars".
         $base = \str_replace('.', '/', static::OBJECT_NAME);
 
@@ -88,7 +88,7 @@ abstract class ApiResource extends StripeObject
     }
 
     /**
-     * @param null|string $id the ID of the resource
+     * @param null|string $id the ID of the resource.
      *
      * @throws Exception\UnexpectedValueException if $id is null
      *

@@ -313,6 +313,10 @@ class Forminator_Google_Service_Drive extends Forminator_Google_Service
                   'location' => 'query',
                   'type' => 'boolean',
                 ),
+                'supportsAllDrives' => array(
+                  'location' => 'query',
+                  'type' => 'boolean',
+                ),
               ),
             ),'delete' => array(
               'path' => 'files/{fileId}',
@@ -366,6 +370,10 @@ class Forminator_Google_Service_Drive extends Forminator_Google_Service
                   'required' => true,
                 ),
                 'acknowledgeAbuse' => array(
+                  'location' => 'query',
+                  'type' => 'boolean',
+                ),
+                'supportsAllDrives' => array(
                   'location' => 'query',
                   'type' => 'boolean',
                 ),

@@ -1,6 +1,6 @@
 <?php
 
-// File generated from our OpenAPI spec
+// File generated from our OpenAPI spec.
 
 namespace Forminator\Stripe;
 
@@ -33,7 +33,7 @@ class SubscriptionItem extends ApiResource
     const PATH_USAGE_RECORDS = '/usage_records';
 
     /**
-     * @param null|string $id the ID of the subscription item on which to create the usage record
+     * @param null|string $id the ID of the subscription item on which to create the usage record.
      * @param null|array $params
      * @param null|array|string $opts
      *
@@ -69,7 +69,7 @@ class SubscriptionItem extends ApiResource
     const PATH_USAGE_RECORD_SUMMARIES = '/usage_record_summaries';
 
     /**
-     * @param string $id the ID of the subscription item on which to retrieve the usage record summaries
+     * @param string $id the ID of the subscription item on which to retrieve the usage record summaries.
      * @param null|array $params
      * @param null|array|string $opts
      *

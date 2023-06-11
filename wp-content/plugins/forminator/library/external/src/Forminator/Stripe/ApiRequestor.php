@@ -124,7 +124,7 @@ class ApiRequestor
     }
 
     /**
-     * @param string $rbody a JSON string
+     * @param string $rbody a JSON string.
      * @param int $rcode
      * @param array $rheaders
      * @param array $resp
@@ -175,8 +175,8 @@ class ApiRequestor
 
         switch ($rcode) {
             case 400:
-                // 'rate_limit' code is deprecated, but left here for backwards compatibility
-                // for API versions earlier than 2015-09-08
+                // 'rate_limit' code is deprecated, but left here for backwards compatibility.
+                // for API versions earlier than 2015-09-08.
                 if ('rate_limit' === $code) {
                     return Exception\RateLimitException::factory($msg, $rcode, $rbody, $resp, $rheaders, $code, $param);
                 }
@@ -184,7 +184,7 @@ class ApiRequestor
                     return Exception\IdempotencyException::factory($msg, $rcode, $rbody, $resp, $rheaders, $code);
                 }
 
-                // no break
+                // no break.
             case 404:
                 return Exception\InvalidRequestException::factory($msg, $rcode, $rbody, $resp, $rheaders, $code, $param);
 
@@ -271,8 +271,8 @@ class ApiRequestor
     /**
      * @static
      *
-     * @param string $disabledFunctionsOutput - String value of the 'disable_function' setting, as output by \ini_get('disable_functions')
-     * @param string $functionName - Name of the function we are interesting in seeing whether or not it is disabled
+     * @param string $disabledFunctionsOutput - String value of the 'disable_function' setting, as output by \ini_get('disable_functions').
+     * @param string $functionName - Name of the function we are interesting in seeing whether or not it is disabled.
      * @param mixed $disableFunctionsOutput
      *
      * @return bool
@@ -355,9 +355,9 @@ class ApiRequestor
             throw new Exception\AuthenticationException($msg);
         }
 
-        // Clients can supply arbitrary additional keys to be included in the
-        // X-Stripe-Client-User-Agent header via the optional getUserAgentInfo()
-        // method
+        // Clients can supply arbitrary additional keys to be included in the.
+        // X-Stripe-Client-User-Agent header via the optional getUserAgentInfo().
+        // method.
         $clientUAInfo = null;
         if (\method_exists($this->httpClient(), 'getUserAgentInfo')) {
             $clientUAInfo = $this->httpClient()->getUserAgentInfo();
@@ -460,7 +460,7 @@ class ApiRequestor
             );
         }
 
-        // We don't have the filename or mimetype, but the API doesn't care
+        // We don't have the filename or mimetype, but the API doesn't care.
         return new \CURLFile($metaData['uri']);
     }
 

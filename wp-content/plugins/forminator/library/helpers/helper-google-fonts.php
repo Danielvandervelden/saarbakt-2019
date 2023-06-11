@@ -40,7 +40,7 @@ function forminator_get_font_families( $is_object ) {
 		return $families;
 	}
 
-	// backwards compatibility
+	// backwards compatibility.
 	$families = wp_list_pluck( $families, 'family' );
 
 	return $families;

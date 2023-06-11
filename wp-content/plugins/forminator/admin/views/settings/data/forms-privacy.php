@@ -31,13 +31,16 @@
 			)
 		);
 
-		$form_submission_erasure_enabled = get_option( 'forminator_enable_erasure_request_erase_form_submissions', false ); ?>
+		$form_submission_erasure_enabled = get_option( 'forminator_enable_erasure_request_erase_form_submissions', false );
+		?>
 		<span class="sui-settings-label"><?php esc_html_e( 'Account Erasure Requests', 'forminator' ); ?></span>
 		<span class="sui-description">
 			<?php
-			/* translators: ... */
-			echo sprintf( __( 'When handling an <a href="%s" target="_blank">account erasure request</a> that contains an email associated with a submission, what do you want to do?', 'forminator' ),
-				esc_url( admin_url( 'erase-personal-data.php' ) )
+			printf(
+				/* translators: ... */
+				esc_html__( 'When handling an %1$saccount erasure request%2$s that contains an email associated with a submission, what do you want to do?', 'forminator' ),
+				'<a href="' . esc_url( admin_url( 'erase-personal-data.php' ) ) . '" target="_blank">',
+				'</a>'
 			);
 			?>
 		</span>

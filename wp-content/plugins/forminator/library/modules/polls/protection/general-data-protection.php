@@ -59,9 +59,9 @@ class Forminator_Polls_General_Data_Protection extends Forminator_General_Data_P
 	 */
 	public function anonymize_ip_votes() {
 
-		// todo : deprecate this, instead get all polls and read its settings
+		// todo : deprecate this, instead get all polls and read its settings.
 		$overridden_polls_privacy = get_option( 'forminator_poll_privacy_settings', array() );
-		// process overridden
+		// process overridden.
 		foreach ( $overridden_polls_privacy as $form_id => $retentions ) {
 			$retain_number = (int) $retentions['ip_address_retention_number'];
 			$retain_unit   = $retentions['ip_address_retention_unit'];
@@ -87,13 +87,13 @@ class Forminator_Polls_General_Data_Protection extends Forminator_General_Data_P
 			return false;
 		}
 
-		// todo : select only un-anonymized
+		// todo : select only un-anonymized.
 		$entry_ids = Forminator_Form_Entry_Model::get_older_entry_ids( $retain_time, 'poll' );
 
 		foreach ( $entry_ids as $entry_id ) {
 			$entry_model = new Forminator_Form_Entry_Model( $entry_id );
 			if ( in_array( $entry_model->form_id, array_keys( $overridden_polls_privacy ) ) ) { // phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
-				// use overridden
+				// use overridden.
 				continue;
 			}
 			$this->anonymize_entry_model( $entry_model );
@@ -112,11 +112,11 @@ class Forminator_Polls_General_Data_Protection extends Forminator_General_Data_P
 		/**
 		 * PROCESS OVERIDDEN POLL FIRST
 		 */
-		// get all ALL-Status poll
+		// get all ALL-Status poll.
 		$polls = Forminator_Poll_Model::model()->get_all_models( 'any' );
 
-		// find overidden
-		$overidden_poll_ids = array(); // will be used to filter out global settings retention later
+		// find overidden.
+		$overidden_poll_ids = array(); // will be used to filter out global settings retention later.
 		if ( isset( $polls['models'] ) && is_array( $polls['models'] ) ) {
 			foreach ( $polls['models'] as $poll ) {
 				/** @var Forminator_Poll_Model $poll */
@@ -163,7 +163,7 @@ class Forminator_Polls_General_Data_Protection extends Forminator_General_Data_P
 			$entry_model = new Forminator_Form_Entry_Model( $entry_id );
 			$poll_id     = (int) $entry_model->form_id;
 			if ( in_array( $poll_id, $overidden_poll_ids, true ) ) {
-				// handled by overidden
+				// handled by overidden.
 				continue;
 			}
 			$entry_model->delete();

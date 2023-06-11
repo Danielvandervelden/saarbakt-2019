@@ -64,8 +64,8 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 		 * @since 1.3
 		 *
 		 * @param array                                          $submitted_data
-		 * @param int                                            $quiz_id                current Quiz ID
-		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance
+		 * @param int                                            $quiz_id                current Quiz ID.
+		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance.
 		 */
 		$submitted_data = apply_filters(
 			'forminator_addon_campaignmonitor_quiz_submitted_data',
@@ -93,16 +93,16 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 		 *
 		 * @since 1.3
 		 *
-		 * @param int                                            $quiz_id                current Quiz ID
+		 * @param int                                            $quiz_id                current Quiz ID.
 		 * @param array                                          $submitted_data
-		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance
+		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance.
 		 */
 		do_action( 'forminator_addon_campaignmonitor_before_add_subscriber', $quiz_id, $submitted_data, $quiz_settings_instance );
 
 		foreach ( $addon_setting_values as $key => $addon_setting_value ) {
-			// save it on entry field, with name `status-$MULTI_ID`, and value is the return result on sending data to campaign monitor
+			// save it on entry field, with name `status-$MULTI_ID`, and value is the return result on sending data to campaign monitor.
 			if ( $quiz_settings_instance->is_multi_quiz_settings_complete( $key ) ) {
-				// exec only on completed connection
+				// exec only on completed connection.
 				$data[] = array(
 					'name'  => 'status-' . $key,
 					'value' => $this->get_status_on_add_subscriber( $key, $submitted_data, $addon_setting_value, $quiz_settings, $form_entry_fields ),
@@ -117,9 +117,9 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 		 * @since 1.3
 		 *
 		 * @param array                                          $entry_fields
-		 * @param int                                            $quiz_id                current Quiz ID
+		 * @param int                                            $quiz_id                current Quiz ID.
 		 * @param array                                          $submitted_data
-		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance
+		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance.
 		 */
 		$data = apply_filters(
 			'forminator_addon_campaignmonitor_entry_fields',
@@ -148,7 +148,7 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 	 * @return array `is_sent` true means its success send data to ampaign Monitor, false otherwise
 	 */
 	private function get_status_on_add_subscriber( $connection_id, $submitted_data, $connection_settings, $quiz_settings, $form_entry_fields = array() ) {
-		// initialize as null
+		// initialize as null.
 		$api = null;
 
 		$quiz_id                = $this->quiz_id;
@@ -160,7 +160,7 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 			$args = array();
 
 			if ( ! isset( $connection_settings['list_id'] ) ) {
-				throw new Forminator_Addon_Campaignmonitor_Exception( __( 'List ID not properly setup.', 'forminator' ) );
+				throw new Forminator_Addon_Campaignmonitor_Exception( __( 'List ID not properly set up.', 'forminator' ) );
 			}
 
 			$list_id = $connection_settings['list_id'];
@@ -176,7 +176,7 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 			$email = $submitted_data[ $email_element_id ];
 			$email = strtolower( trim( $email ) );
 
-			// processed
+			// processed.
 			unset( $fields_map['default_field_email'] );
 
 			$name_element_id = $connection_settings['fields_map']['default_field_name'];
@@ -192,11 +192,11 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 				$args['Name'] = $submitted_data[ $name_element_id ];
 			}
 
-			// processed
+			// processed.
 			unset( $fields_map['default_field_name'] );
 
 			$custom_fields = array();
-			// process rest extra fields if available
+			// process rest extra fields if available.
 			foreach ( $fields_map as $field_id => $element_id ) {
 				if ( ! empty( $element_id ) ) {
 					if ( isset( $submitted_data[ $element_id ] ) && ( ! empty( $submitted_data[ $element_id ] ) || 0 === (int) $submitted_data[ $element_id ] ) ) {
@@ -211,7 +211,7 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 							'Key'   => $field_id,
 							'Value' => $element_value,
 						);
-						unset( $element_value ); // unset for next loop
+						unset( $element_value ); // unset for next loop.
 					}
 				}
 			}
@@ -238,12 +238,12 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 			 * @since 1.3
 			 *
 			 * @param array                                          $args
-			 * @param int                                            $quiz_id                Current Quiz id
-			 * @param string                                         $connection_id          ID of current connection
+			 * @param int                                            $quiz_id                Current Quiz id.
+			 * @param string                                         $connection_id          ID of current connection.
 			 * @param array                                          $submitted_data
-			 * @param array                                          $connection_settings    current connection setting, contains options of like `name`, `list_id` etc
-			 * @param array                                          $quiz_settings          Displayed Quiz settings
-			 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance
+			 * @param array                                          $connection_settings    current connection setting, contains options of like `name`, `list_id` etc.
+			 * @param array                                          $quiz_settings          Displayed Quiz settings.
+			 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance.
 			 */
 			$args = apply_filters(
 				'forminator_addon_campaignmonitor_add_subscriber_args',
@@ -268,8 +268,8 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 				'data_sent'        => $api->get_last_data_sent(),
 				'data_received'    => $api->get_last_data_received(),
 				'url_request'      => $api->get_last_url_request(),
-				'subscriber_email' => $api->get_last_data_received(), // for delete reference
-				'list_id'          => $list_id, // for delete reference
+				'subscriber_email' => $api->get_last_data_received(), // for delete reference.
+				'list_id'          => $list_id, // for delete reference.
 			);
 
 		} catch ( Forminator_Addon_Campaignmonitor_Exception $e ) {
@@ -309,8 +309,8 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 		 * @since 1.3
 		 *
 		 * @param array                                          $addon_meta_data
-		 * @param int                                            $quiz_id                current Quiz ID
-		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance
+		 * @param int                                            $quiz_id                current Quiz ID.
+		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_campaignmonitor_metadata',
@@ -398,7 +398,7 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 		}
 
 		if ( Forminator_Addon_Campaignmonitor::is_show_full_log() ) {
-			// too long to be added on entry data enable this with `define('FORMINATOR_ADDON_CAMPAIGNMONITOR_SHOW_FULL_LOG', true)`
+			// too long to be added on entry data enable this with `define('FORMINATOR_ADDON_CAMPAIGNMONITOR_SHOW_FULL_LOG', true)`.
 			if ( isset( $status['url_request'] ) ) {
 				$sub_entries[] = array(
 					'label' => __( 'API URL', 'forminator' ),
@@ -423,7 +423,7 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 
 		$additional_entry_item['sub_entries'] = $sub_entries;
 
-		// return single array
+		// return single array.
 		return $additional_entry_item;
 	}
 
@@ -448,9 +448,9 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 		 *
 		 * @since 1.3
 		 *
-		 * @param array                                          $export_headers         headers to be displayed on export file
-		 * @param int                                            $quiz_id                current Quiz ID
-		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance
+		 * @param array                                          $export_headers         headers to be displayed on export file.
+		 * @param int                                            $quiz_id                current Quiz ID.
+		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance.
 		 */
 		$export_headers = apply_filters(
 			'forminator_addon_campaignmonitor_export_headers',
@@ -485,8 +485,8 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 		 * @since 1.3
 		 *
 		 * @param array                                          $addon_meta_data
-		 * @param int                                            $quiz_id                current Quiz ID
-		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance
+		 * @param int                                            $quiz_id                current Quiz ID.
+		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_campaignmonitor_metadata',
@@ -504,11 +504,11 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 		 *
 		 * @since 1.3
 		 *
-		 * @param array                                          $export_columns         column to be exported
-		 * @param int                                            $quiz_id                current Quiz ID
-		 * @param Forminator_Form_Entry_Model                    $entry_model            Form Entry Model
-		 * @param array                                          $addon_meta_data        meta data saved by addon on entry fields
-		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance
+		 * @param array                                          $export_columns         column to be exported.
+		 * @param int                                            $quiz_id                current Quiz ID.
+		 * @param Forminator_Form_Entry_Model                    $entry_model            Form Entry Model.
+		 * @param array                                          $addon_meta_data        meta data saved by addon on entry fields.
+		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance.
 		 */
 		$export_columns = apply_filters(
 			'forminator_addon_campaignmonitor_export_columns',
@@ -541,15 +541,15 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 
 		$addon_meta_data = $addon_meta_data[0];
 
-		// make sure its `status`, because we only add this
+		// make sure its `status`, because we only add this.
 		if ( 'status' !== $addon_meta_data['name'] ) {
 			if ( stripos( $addon_meta_data['name'], 'status-' ) === 0 ) {
 				$meta_data = array();
 				foreach ( $addon_meta_datas as $addon_meta_data ) {
-					// make it like single value so it will be processed like single meta data
+					// make it like single value so it will be processed like single meta data.
 					$addon_meta_data['name'] = 'status';
 
-					// add it on an array for next recursive process
+					// add it on an array for next recursive process.
 					$meta_data[] = $this->get_from_addon_meta_data( array( $addon_meta_data ), $key, $default );
 				}
 
@@ -589,7 +589,7 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 	 * @return bool
 	 */
 	public function on_before_delete_entry( Forminator_Form_Entry_Model $entry_model, $addon_meta_data ) {
-		// attach hook first
+		// attach hook first.
 		$quiz_id                = $this->quiz_id;
 		$quiz_settings_instance = $this->quiz_settings_instance;
 
@@ -600,9 +600,9 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 		 * @since 1.1
 		 *
 		 * @param array                                          $addon_meta_data
-		 * @param int                                            $quiz_id                current Quiz ID
-		 * @param Forminator_Form_Entry_Model                    $entry_model            Forminator Entry Model
-		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance
+		 * @param int                                            $quiz_id                current Quiz ID.
+		 * @param Forminator_Form_Entry_Model                    $entry_model            Forminator Entry Model.
+		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_campaignmonitor_metadata',
@@ -617,10 +617,10 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 		 *
 		 * @since 1.1
 		 *
-		 * @param int                                            $quiz_id                current Quiz ID
-		 * @param Forminator_Form_Entry_Model                    $entry_model            Forminator Entry Model
-		 * @param array                                          $addon_meta_data        addon meta data
-		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance
+		 * @param int                                            $quiz_id                current Quiz ID.
+		 * @param Forminator_Form_Entry_Model                    $entry_model            Forminator Entry Model.
+		 * @param array                                          $addon_meta_data        addon meta data.
+		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance.
 		 */
 		do_action(
 			'forminator_addon_campaignmonitor_on_before_delete_submission',
@@ -663,9 +663,9 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 			 * @since 1.3
 			 *
 			 * @param array                                          $subscriber_ids_to_delete
-			 * @param int                                            $quiz_id                current Quiz ID
-			 * @param array                                          $addon_meta_data        addon meta data
-			 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance
+			 * @param int                                            $quiz_id                current Quiz ID.
+			 * @param array                                          $addon_meta_data        addon meta data.
+			 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings $quiz_settings_instance Campaign Monitor Addon Quiz Settings instance.
 			 *
 			 */
 			$subscribers_to_delete = apply_filters(
@@ -689,11 +689,11 @@ class Forminator_Addon_Campaignmonitor_Quiz_Hooks extends Forminator_Addon_Quiz_
 			return true;
 
 		} catch ( Forminator_Addon_Campaignmonitor_Exception $e ) {
-			// handle all internal addon exceptions with `Forminator_Addon_Campaignmonitor_Exception`
+			// handle all internal addon exceptions with `Forminator_Addon_Campaignmonitor_Exception`.
 
-			// use wp_error, for future usage it can be returned to page entries
+			// use wp_error, for future usage it can be returned to page entries.
 			$wp_error = new WP_Error( 'forminator_addon_campaignmonitor_delete_subscriber', $e->getMessage() );
-			// handle this in addon by self, since page entries cant handle error messages on delete yet
+			// handle this in addon by self, since page entries cant handle error messages on delete yet.
 			wp_die(
 				esc_html( $wp_error->get_error_message() ),
 				esc_html( $this->addon->get_title() ),

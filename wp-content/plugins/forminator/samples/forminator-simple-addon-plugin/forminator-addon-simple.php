@@ -19,7 +19,7 @@ final class Forminator_Addon_Simple extends Forminator_Addon_Abstract {
 	protected $_image_x2               = '';
 
 	public function __construct() {
-		// late init to allow translation
+		// late init to allow translation.
 		$this->_description                = __( 'Make your form Simple-able', 'forminator' );
 		$this->_activation_error_message   = __( 'Sorry but we failed to activate Simple Integration, don\'t hesitate to contact us', 'forminator' );
 		$this->_deactivation_error_message = __( 'Sorry but we failed to deactivate Simple Integration, please try again', 'forminator' );

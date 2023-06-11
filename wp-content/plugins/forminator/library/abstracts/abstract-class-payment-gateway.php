@@ -39,10 +39,10 @@ abstract class Forminator_Payment_Gateway {
 	 * @since 1.0
 	 */
 	public function __construct() {
-		// Init settings
+		// Init settings.
 		$this->init_settings();
 
-		// Handle purchases
+		// Handle purchases.
 		if ( $this->_enabled ) {
 			add_filter( 'forminator_cform_process_purchase', array( $this, '_handle_purchase' ), 10, 5 );
 		}
@@ -60,12 +60,12 @@ abstract class Forminator_Payment_Gateway {
 	 *
 	 * @since 1.0
 	 *
-	 * @param array $response       - the response array
-	 * @param array $product_fields - the product fields
+	 * @param array            $response       - the response array.
+	 * @param array            $product_fields - the product fields.
 	 * @param       $field_data_array
-	 * @param int   $entry_id       - the entry id ( reference for callback)
-	 * @param int   $page_id        - the page id. Used to generate a return url
-	 * @param int   $shipping       - the shipping cost
+	 * @param int              $entry_id       - the entry id ( reference for callback).
+	 * @param int              $page_id        - the page id. Used to generate a return url.
+	 * @param int              $shipping       - the shipping cost.
 	 *
 	 * @return array $response
 	 */
@@ -78,11 +78,11 @@ abstract class Forminator_Payment_Gateway {
 	 * Implemented in child class
 	 *
 	 * @since 1.0
-	 * @param array $response - the response array
-	 * @param array $product_fields - the product fields
-	 * @param int $entry_id - the entry id ( reference for callback)
-	 * @param int $page_id - the page id. Used to generate a return url
-	 * @param int $shipping - the shipping cost
+	 * @param array $response - the response array.
+	 * @param array $product_fields - the product fields.
+	 * @param int   $entry_id - the entry id ( reference for callback).
+	 * @param int   $page_id - the page id. Used to generate a return url.
+	 * @param int   $shipping - the shipping cost.
 	 *
 	 * @return array $response
 	 */

@@ -4,7 +4,6 @@
  * Class Forminator_Addon_Hubspot_Form_Hooks
  *
  * @since 1.0 HubSpot Addon
- *
  */
 class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstract {
 
@@ -63,8 +62,8 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 		 * @since 1.4
 		 *
 		 * @param array $submitted_data
-		 * @param int $form_id current Form ID
-		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance
+		 * @param int $form_id current Form ID.
+		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance.
 		 */
 		$submitted_data = apply_filters(
 			'forminator_addon_hubspot_form_submitted_data',
@@ -82,16 +81,16 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 		 *
 		 * @since 1.4
 		 *
-		 * @param int $form_id current Form ID
+		 * @param int $form_id current Form ID.
 		 * @param array $submitted_data
-		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance
+		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance.
 		 */
 		do_action( 'forminator_addon_hubspot_before_send_message', $form_id, $submitted_data, $form_settings_instance );
 
 		foreach ( $addon_setting_values as $key => $addon_setting_value ) {
-			// save it on entry field, with name `status-$MULTI_ID`, and value is the return result on sending data to hubspot
+			// save it on entry field, with name `status-$MULTI_ID`, and value is the return result on sending data to hubspot.
 			if ( $form_settings_instance->is_multi_form_settings_complete( $key ) ) {
-				// exec only on completed connection
+				// exec only on completed connection.
 				$data[] = array(
 					'name'  => 'status-' . $key,
 					'value' => $this->get_status_on_contact_sync( $key, $submitted_data, $addon_setting_value, $form_entry_fields ),
@@ -106,9 +105,9 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 		 * @since 1.4
 		 *
 		 * @param array $entry_fields
-		 * @param int $form_id current Form ID
+		 * @param int $form_id current Form ID.
 		 * @param array $submitted_data
-		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance
+		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance.
 		 */
 		$data = apply_filters(
 			'forminator_addon_hubspot_entry_fields',
@@ -135,7 +134,7 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 	 * @return array `is_sent` true means its success send data to HubSpot, false otherwise
 	 */
 	private function get_status_on_contact_sync( $connection_id, $submitted_data, $connection_settings, $form_entry_fields ) {
-		// initialize as null
+		// initialize as null.
 		$api = null;
 
 		$form_id                = $this->form_id;
@@ -145,14 +144,14 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 		if ( empty( $connection_settings['name'] ) ) {
 			$connection_settings['name'] = __( 'HubSpot', 'forminator' );
 		}
-		//check required fields
+		// check required fields
 		try {
 			$api  = $this->addon->get_api();
 			$args = array();
 
 			$list_id = $connection_settings['list_id'];
 
-			$deafult_fields = $connection_settings['fields_map'];
+			$deafult_fields    = $connection_settings['fields_map'];
 			$custom_fields_map = array_filter( $connection_settings['custom_fields_map'] );
 
 			$fields_map = array_merge( $deafult_fields, $custom_fields_map );
@@ -166,65 +165,64 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 			$email         = strtolower( trim( $email ) );
 			$args['email'] = $email;
 
-			// processed
+			// processed.
 			unset( $fields_map['email'] );
 			$common_fields = array(
 				'firstname',
 				'lastname',
 				'jobtitle',
 			);
-			$extra_field = array();
+			$extra_field   = array();
 			if ( ! empty( $custom_fields_map ) ) {
-				foreach( $custom_fields_map as $custom => $custom_field ) {
-					if( ! empty( $custom ) ) {
+				foreach ( $custom_fields_map as $custom => $custom_field ) {
+					if ( ! empty( $custom ) ) {
 						$extra_field[] = $custom;
 					}
 				}
 			}
+
 			$common_fields = array_merge( $common_fields, $extra_field );
 			foreach ( $common_fields as $common_field ) {
-				// not setup
+				// not setup.
 				if ( ! isset( $fields_map[ $common_field ] ) ) {
 					continue;
 				}
 
 				if ( ! empty( $fields_map[ $common_field ] ) ) {
 					$element_id = $fields_map[ $common_field ];
+					if ( ! isset( $submitted_data[ $element_id ] ) ) {
+						continue;
+					}
+					$element_value = $submitted_data[ $element_id ];
+					if ( self::element_is_datepicker( $element_id ) ) {
+						$hs_field_type = $api->get_property( 'fieldType', $common_field, $args );
 
-					if ( self::element_is_calculation( $element_id ) ) {
-						$meta_value    = self::find_meta_value_from_entry_fields( $element_id, $form_entry_fields );
-						$element_value = Forminator_Form_Entry_Model::meta_value_to_string( 'calculation', $meta_value );
-					} elseif ( self::element_is_stripe( $element_id ) ) {
-						$meta_value    = self::find_meta_value_from_entry_fields( $element_id, $form_entry_fields );
-						$element_value = Forminator_Form_Entry_Model::meta_value_to_string( 'stripe', $meta_value );
-					} elseif ( isset( $submitted_data[ $element_id ] ) && ! empty( $submitted_data[ $element_id ] ) ) {
-						$element_value = $submitted_data[ $element_id ];
-						if ( is_array( $element_value ) ) {
-							$element_value = implode( ',', $element_value );
+						if ( 'date' === $hs_field_type && ! empty( $element_value ) ) {
+							$element_value = self::get_date_in_ms( $element_id, $submitted_data[ $element_id ], $form_id );
 						}
 					}
-					if ( isset( $element_value ) ) {
+					if ( ! is_null( $element_value ) ) {
 						$args[ $common_field ] = $element_value;
-						unset( $element_value ); // unset for next loop
 					}
 				}
-				// processed
+				// processed.
 				unset( $fields_map[ $common_field ] );
 			}
+
 			/**
 			 * Filter arguments to passed on to Contact Sync HubSpot API
 			 *
 			 * @since 1.2
 			 *
 			 * @param array $args
-			 * @param int $form_id Current Form id
-			 * @param string $connection_id ID of current connection
+			 * @param int $form_id Current Form id.
+			 * @param string $connection_id ID of current connection.
 			 * @param array $submitted_data
-			 * @param array $connection_settings current connection setting, contains options of like `name`, `list_id` etc
-			 * @param array $form_settings Displayed Form settings
-			 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance
+			 * @param array $connection_settings current connection setting, contains options of like `name`, `list_id` etc.
+			 * @param array $form_settings Displayed Form settings.
+			 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance.
 			 */
-			$args = apply_filters(
+			$args       = apply_filters(
 				'forminator_addon_hubspot_create_contact_args',
 				$args,
 				$form_id,
@@ -235,11 +233,14 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 				$form_settings_instance
 			);
 			$contact_id = $api->add_update_contact( $args );
-			// Add contact to contact list
+			// Add contact to contact list.
 			$toObjectId = null;
-			if ( ! empty( $list_id ) && ! empty( $contact_id ) && ! is_object( $contact_id ) && (int) $contact_id > 0 ) {
+			if ( ! empty( $contact_id ) && ! is_object( $contact_id ) && (int) $contact_id > 0 ) {
 				$toObjectId = $contact_id;
-				$api->add_to_contact_list( $contact_id, $args['email'], $list_id );
+
+				if ( ! empty( $list_id ) ) {
+					$api->add_to_contact_list( $contact_id, $args['email'], $list_id );
+				}
 			}
 
 			$create_ticket = isset( $connection_settings['create_ticket'] ) ? $connection_settings['create_ticket'] : '';
@@ -251,18 +252,7 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 				$ticket['ticket_name']        = $ticket_name;
 				$ticket_description           = forminator_addon_replace_custom_vars( $connection_settings['ticket_description'], $submitted_data, $this->custom_form, $form_entry_fields, false );
 				$ticket['ticket_description'] = $ticket_description;
-				$supported_file               = isset( $submitted_data[ $connection_settings['supported_file'] ] ) ? $submitted_data[ $connection_settings['supported_file'] ] : array();
-				$supported_file_url           = '';
-
-				if ( ! empty( $supported_file['file_url'] ) ) {
-					if ( is_array( $supported_file['file_url'] ) ) {
-						$supported_file_url = implode( ', ', $supported_file['file_url'] );
-					} else {
-						$supported_file_url = $supported_file['file_url'];
-					}
-				}
-
-				$ticket['supported_file'] = $supported_file_url;
+				$ticket['supported_file']     = isset( $submitted_data[ $connection_settings['supported_file'] ] ) ? $submitted_data[ $connection_settings['supported_file'] ] : '';
 
 				$object_id = $api->create_ticket( $ticket );
 
@@ -276,9 +266,14 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 
 			forminator_addon_maybe_log( __METHOD__, 'Success Send Data' );
 
+			$multi_global_ids = $this->addon->get_multi_global_ids();
+			$name_suffix      = ! empty( $this->addon->multi_global_id )
+					&& ! empty( $multi_global_ids[ $this->addon->multi_global_id ] )
+					? ' - ' . $multi_global_ids[ $this->addon->multi_global_id ] : '';
+
 			return array(
 				'is_sent'         => true,
-				'connection_name' => $connection_settings['name'],
+				'connection_name' => $connection_settings['name'] . $name_suffix,
 				'description'     => __( 'Successfully send data to HubSpot', 'forminator' ),
 				'data_sent'       => $api->get_last_data_sent(),
 				'data_received'   => $api->get_last_data_received(),
@@ -330,8 +325,8 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 		 * @since 1.4
 		 *
 		 * @param array $addon_meta_data
-		 * @param int $form_id current Form ID
-		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance
+		 * @param int $form_id current Form ID.
+		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_hubspot_metadata',
@@ -419,7 +414,7 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 		}
 
 		if ( Forminator_Addon_Hubspot::is_show_full_log() ) {
-			// too long to be added on entry data enable this with `define('FORMINATOR_ADDON_HUBSPOT_SHOW_FULL_LOG', true)`
+			// too long to be added on entry data enable this with `define('FORMINATOR_ADDON_HUBSPOT_SHOW_FULL_LOG', true)`.
 			if ( isset( $status['url_request'] ) ) {
 				$sub_entries[] = array(
 					'label' => __( 'API URL', 'forminator' ),
@@ -444,7 +439,7 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 
 		$additional_entry_item['sub_entries'] = $sub_entries;
 
-		// return single array
+		// return single array.
 		return $additional_entry_item;
 	}
 
@@ -469,9 +464,9 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 		 *
 		 * @since 1.2
 		 *
-		 * @param array $export_headers headers to be displayed on export file
-		 * @param int $form_id current Form ID
-		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance
+		 * @param array $export_headers headers to be displayed on export file.
+		 * @param int $form_id current Form ID.
+		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance.
 		 */
 		$export_headers = apply_filters(
 			'forminator_addon_hubspot_export_headers',
@@ -506,8 +501,8 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 		 * @since 1.4
 		 *
 		 * @param array $addon_meta_data
-		 * @param int $form_id current Form ID
-		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance
+		 * @param int $form_id current Form ID.
+		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_hubspot_metadata',
@@ -525,11 +520,11 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 		 *
 		 * @since 1.4
 		 *
-		 * @param array $export_columns column to be exported
-		 * @param int $form_id current Form ID
-		 * @param Forminator_Form_Entry_Model $entry_model Form Entry Model
-		 * @param array $addon_meta_data meta data saved by addon on entry fields
-		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance
+		 * @param array $export_columns column to be exported.
+		 * @param int $form_id current Form ID.
+		 * @param Forminator_Form_Entry_Model $entry_model Form Entry Model.
+		 * @param array $addon_meta_data meta data saved by addon on entry fields.
+		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance.
 		 */
 		$export_columns = apply_filters(
 			'forminator_addon_hubspot_export_columns',
@@ -550,7 +545,7 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 	 *
 	 * @param        $addon_meta_data
 	 * @param        $key
-	 * @param string $default
+	 * @param string          $default
 	 *
 	 * @return string
 	 */
@@ -562,15 +557,15 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 
 		$addon_meta_data = $addon_meta_data[0];
 
-		// make sure its `status`, because we only add this
+		// make sure its `status`, because we only add this.
 		if ( 'status' !== $addon_meta_data['name'] ) {
 			if ( stripos( $addon_meta_data['name'], 'status-' ) === 0 ) {
 				$meta_data = array();
 				foreach ( $addon_meta_datas as $addon_meta_data ) {
-					// make it like single value so it will be processed like single meta data
+					// make it like single value so it will be processed like single meta data.
 					$addon_meta_data['name'] = 'status';
 
-					// add it on an array for next recursive process
+					// add it on an array for next recursive process.
 					$meta_data[] = $this->get_from_addon_meta_data( array( $addon_meta_data ), $key, $default );
 				}
 
@@ -605,12 +600,12 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 	 * @since 1.0 HubSpot Addon
 	 *
 	 * @param Forminator_Form_Entry_Model $entry_model
-	 * @param  array $addon_meta_data
+	 * @param  array                       $addon_meta_data
 	 *
 	 * @return bool
 	 */
 	public function on_before_delete_entry( Forminator_Form_Entry_Model $entry_model, $addon_meta_data ) {
-		// attach hook first
+		// attach hook first.
 		$form_id                = $this->form_id;
 		$form_settings_instance = $this->form_settings_instance;
 
@@ -621,9 +616,9 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 		 * @since 1.4
 		 *
 		 * @param array $addon_meta_data
-		 * @param int $form_id current Form ID
-		 * @param Forminator_Form_Entry_Model $entry_model Forminator Entry Model
-		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance
+		 * @param int $form_id current Form ID.
+		 * @param Forminator_Form_Entry_Model $entry_model Forminator Entry Model.
+		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_hubspot_metadata',
@@ -638,10 +633,10 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 		 *
 		 * @since 1.1
 		 *
-		 * @param int $form_id current Form ID
-		 * @param Forminator_Form_Entry_Model $entry_model Forminator Entry Model
-		 * @param array $addon_meta_data addon meta data
-		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance
+		 * @param int $form_id current Form ID.
+		 * @param Forminator_Form_Entry_Model $entry_model Forminator Entry Model.
+		 * @param array $addon_meta_data addon meta data.
+		 * @param Forminator_Addon_Hubspot_Form_Settings $form_settings_instance HubSpot Addon Form Settings instance.
 		 */
 		do_action(
 			'forminator_addon_hubspot_on_before_delete_submission',
@@ -712,10 +707,10 @@ class Forminator_Addon_Hubspot_Form_Hooks extends Forminator_Addon_Form_Hooks_Ab
 			return true;
 
 		} catch ( Forminator_Addon_Hubspot_Exception $e ) {
-			// use wp_error, for future usage it can be returned to page entries
+			// use wp_error, for future usage it can be returned to page entries.
 			$wp_error
 				= new WP_Error( 'forminator_addon_hubspot_delete_contact', $e->getMessage() );
-			// handle this in addon by self, since page entries cant handle error messages on delete yet
+			// handle this in addon by self, since page entries cant handle error messages on delete yet.
 			wp_die(
 				esc_html( $wp_error->get_error_message() ),
 				esc_html( $this->addon->get_title() ),

@@ -52,16 +52,18 @@ class Forminator_Export_Result {
 	}
 
 	/**
-	 * Parsing filters from $_REQUEST
+	 * Parsing filters
 	 *
 	 * @since 1.5.4
 	 */
 	public function request_filters() {
-		$request_data = $_REQUEST;// WPCS CSRF ok.
-		$data_range   = isset( $request_data['date_range'] ) ? sanitize_text_field( $request_data['date_range'] ) : '';
-		$search       = isset( $request_data['search'] ) ? sanitize_text_field( $request_data['search'] ) : '';
-		$min_id       = isset( $request_data['min_id'] ) ? sanitize_text_field( $request_data['min_id'] ) : '';
-		$max_id       = isset( $request_data['max_id'] ) ? sanitize_text_field( $request_data['max_id'] ) : '';
+		$data_range = Forminator_Core::sanitize_text_field( 'date_range' );
+		$search     = Forminator_Core::sanitize_text_field( 'search' );
+		$min_id     = Forminator_Core::sanitize_text_field( 'min_id' );
+		$max_id     = Forminator_Core::sanitize_text_field( 'max_id' );
+		$order_by   = Forminator_Core::sanitize_text_field( 'order_by' );
+		$order      = Forminator_Core::sanitize_text_field( 'order' );
+		$user_stat  = Forminator_Core::sanitize_text_field( 'user_status' );
 
 		$filters = array();
 		if ( ! empty( $data_range ) ) {
@@ -91,12 +93,16 @@ class Forminator_Export_Result {
 				$filters['max_id'] = $max_id;
 			}
 		}
-		if ( isset( $request_data['order_by'] ) ) {
-			$filters['order_by'] = $request_data['order_by'];
+		if ( $order_by ) {
+			$filters['order_by'] = $order_by;
 		}
 
-		if ( isset( $request_data['order'] ) ) {
-			$filters['order'] = $request_data['order'];
+		if ( $order ) {
+			$filters['order'] = $order;
+		}
+
+		if ( ! empty( $user_stat ) ) {
+			$filters['user_status'] = $user_stat;
 		}
 
 		return $filters;

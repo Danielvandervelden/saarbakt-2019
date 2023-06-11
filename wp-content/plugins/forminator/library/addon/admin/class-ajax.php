@@ -102,6 +102,11 @@ class Forminator_Addon_Admin_Ajax {
 		$slug  = $data['slug'];
 		$addon = forminator_get_addon( $slug );
 
+		if ( ! empty( $data['global_id'] ) ) {
+			$addon->multi_global_id = $data['global_id'];
+			unset( $data['global_id'] );
+		}
+
 		forminator_maybe_attach_addon_hook( $addon );
 
 		$deactivated = Forminator_Addon_Loader::get_instance()->deactivate_addon( $slug );
@@ -127,7 +132,7 @@ class Forminator_Addon_Admin_Ajax {
 				),
 			)
 		);
-	}// @codeCoverageIgnore
+	}//end deactivate()
 
 	/**
 	 * Get / Save settings
@@ -151,6 +156,11 @@ class Forminator_Addon_Admin_Ajax {
 			$this->send_json_errors( __( 'This Addon does not have settings available', 'forminator' ) );
 		}
 
+		if ( isset( $sanitized_post_data['global_id'] ) ) {
+			$addon->multi_global_id = $sanitized_post_data['global_id'];
+			unset( $sanitized_post_data['global_id'] );
+		}
+
 		forminator_maybe_attach_addon_hook( $addon );
 
 		unset( $sanitized_post_data['slug'] );
@@ -164,7 +174,7 @@ class Forminator_Addon_Admin_Ajax {
 			$wizard
 		);
 
-	}// @codeCoverageIgnore
+	}//end settings()
 
 	/**
 	 * Disconnect module from addon
@@ -179,11 +189,14 @@ class Forminator_Addon_Admin_Ajax {
 		$module_type         = $sanitized_post_data['module_type'];
 
 		$addon = $this->validate_addon_from_slug( $slug );
+		if ( ! empty( $sanitized_post_data['global_id'] ) ) {
+			$addon->multi_global_id = $sanitized_post_data['global_id'];
+			unset( $sanitized_post_data['global_id'] );
+		}
 
 		forminator_maybe_attach_addon_hook( $addon );
 
-		$get_addon_settings = 'get_addon_' . $module_type . '_settings';
-		$settings           = $addon->$get_addon_settings( $module_id );
+		$settings = $addon->get_addon_settings( $module_id, $module_type );
 		if ( $settings instanceof Forminator_Addon_Settings_Abstract ) {
 			unset( $sanitized_post_data['slug'] );
 			unset( $sanitized_post_data['module_id'] );
@@ -191,7 +204,7 @@ class Forminator_Addon_Admin_Ajax {
 
 			$addon_title = $addon->get_title();
 
-			// handling multi_id
+			// handling multi_id.
 			if ( isset( $sanitized_post_data['multi_id'] ) ) {
 				$multi_id_label = '';
 				$multi_ids      = $settings->get_multi_ids();
@@ -297,7 +310,7 @@ class Forminator_Addon_Admin_Ajax {
 				'nonce'   => $this->_nonce,
 			)
 		);
-	}// @codeCoverageIgnore
+	}//end send_json_success()
 
 	/**
 	 * Send Json Error to client
@@ -317,7 +330,7 @@ class Forminator_Addon_Admin_Ajax {
 				'nonce'   => $this->_nonce,
 			)
 		);
-	}// @codeCoverageIgnore
+	}//end send_json_errors()
 
 
 	/**
@@ -330,10 +343,17 @@ class Forminator_Addon_Admin_Ajax {
 	 * @return mixed
 	 */
 	private function validate_and_sanitize_fields( $required_fields = array() ) {
-		$post_data = $_REQUEST['data']; // phpcs:ignore -- already validated
+		$post_data = isset( $_POST['data'] )
+			? ( is_string( $_POST['data'] )
+				? filter_input( INPUT_POST, 'data' )
+				: Forminator_Core::sanitize_array( $_POST['data'], 'data' ) )
+			: '';
+		if ( ! $post_data ) {
+			$post_data = filter_input( INPUT_GET, 'data' );
+		}
 
-		//for serialized data or form
-		if ( ! is_array( $post_data ) && is_string( $post_data ) ) {
+		// for serialized data or form.
+		if ( is_string( $post_data ) ) {
 			$post_string = $post_data;
 			$post_data   = array();
 			wp_parse_str( $post_string, $post_data );
@@ -352,10 +372,10 @@ class Forminator_Addon_Admin_Ajax {
 			$this->send_json_errors( __( 'Please check your form.', 'forminator' ), $errors );
 		}
 
-		// TODO: sanitize
+		// TODO: sanitize.
 		foreach ( $post_data as $key => $post_datum ) {
-			// sanitize here, every request will sanitized here,
-			// so we dont need to sanitize it again on other methods, unless need special treatment
+			// sanitize here, every request will sanitized here,.
+			// so we dont need to sanitize it again on other methods, unless need special treatment.
 			$post_data[ $key ] = $post_datum;
 		}
 
@@ -417,19 +437,24 @@ class Forminator_Addon_Admin_Ajax {
 	 */
 	public function refresh_email_lists() {
 		$this->validate_ajax();
-		$sanitized_post_data = $this->validate_and_sanitize_fields( array( 'slug' ) );
+		$sanitized_post_data = $this->validate_and_sanitize_fields( array( 'slug', 'global_id' ) );
 
 		$slug  = $sanitized_post_data['slug'];
 		$addon = $this->validate_addon_from_slug( $slug );
 		$lists = array();
+		if ( ! empty( $sanitized_post_data['global_id'] ) ) {
+			$addon->multi_global_id = $sanitized_post_data['global_id'];
+			unset( $sanitized_post_data['global_id'] );
+		}
 
 		if ( method_exists( $addon, 'get_api' ) ) {
 			$api = $addon->get_api();
 			if ( method_exists( $api, 'get_all_lists' ) ) {
 				$lists = $api->get_all_lists( true );
+				$lists = wp_list_pluck( $lists, 'name', 'id' );
 			}
 		}
-		$html = Forminator_Addon_Settings_Abstract::email_lists_options( $lists );
+		$html = Forminator_Addon_Settings_Abstract::get_select_html( $lists );
 
 		wp_send_json_success(
 			array(
@@ -485,11 +510,17 @@ class Forminator_Addon_Admin_Ajax {
 
 		forminator_maybe_attach_addon_hook( $addon );
 
+		if ( isset( $sanitized_post_data['global_id'] ) ) {
+			$addon->multi_global_id = $sanitized_post_data['global_id'];
+			unset( $sanitized_post_data['global_id'] );
+		}
+
 		unset( $sanitized_post_data['slug'] );
 		unset( $sanitized_post_data['current_step'] );
 		unset( $sanitized_post_data['step'] );
 		unset( $sanitized_post_data['module_id'] );
 		unset( $sanitized_post_data['module_type'] );
+		unset( $sanitized_post_data['is_submit'] );
 
 		$get_settings_wizard = 'get_' . $module_type . '_settings_wizard';
 
@@ -500,6 +531,6 @@ class Forminator_Addon_Admin_Ajax {
 			$wizard
 		);
 
-	}// @codeCoverageIgnore
+	}//end module_settings()
 
 }

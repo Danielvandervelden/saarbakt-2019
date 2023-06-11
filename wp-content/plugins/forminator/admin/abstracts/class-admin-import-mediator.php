@@ -46,10 +46,13 @@ abstract class Forminator_Import_Mediator {
 	public function replace_invalid_tags( $mayhavetags, $tags = array() ) {
 
 		if ( ! empty( $tags ) ) {
-			$tags = array_merge( $tags, array(
-				'{all_fields_table}' => '{all_fields}',
-				'{referer}'          => '{referer_url}'
-			) );
+			$tags = array_merge(
+				$tags,
+				array(
+					'{all_fields_table}' => '{all_fields}',
+					'{referer}'          => '{referer_url}',
+				)
+			);
 		}
 
 		$mayhavetags = strtr( $mayhavetags, $tags );
@@ -69,19 +72,19 @@ abstract class Forminator_Import_Mediator {
 		if ( ! empty( $tags ) ) {
 			switch ( $tags ) {
 				case 'user_login':
-					$value = "wp_user.login";
+					$value = 'wp_user.login';
 					break;
 				case 'user_email':
-					$value = "wp_user.email";
+					$value = 'wp_user.email';
 					break;
 				case 'user_first_name':
-					$value = "wp_user.first_name";
+					$value = 'wp_user.first_name';
 					break;
 				case 'user_last_name':
-					$value = "wp_user.last_name";
+					$value = 'wp_user.last_name';
 					break;
 				case 'user_display_name':
-					$value = "wp_user.display_name";
+					$value = 'wp_user.display_name';
 					break;
 				default:
 					break;
@@ -94,13 +97,12 @@ abstract class Forminator_Import_Mediator {
 	/**
 	 * Default form fields
 	 *
-	 *
 	 * @since 1.7
 	 *
 	 * @return array
 	 */
 	public static function default_fields() {
-		//todo: check if defaults are available
+		// todo: check if defaults are available.
 		$fields = array(
 			'name',
 			'email',
@@ -125,10 +127,11 @@ abstract class Forminator_Import_Mediator {
 			'pagination',
 			'stripe',
 			'currency',
+			'consent',
 			'gdprcheckbox',
 			'honeypot',
 			'captcha',
-			'submit'
+			'submit',
 		);
 
 		return apply_filters( 'forminator_default_fields', $fields );
@@ -137,13 +140,12 @@ abstract class Forminator_Import_Mediator {
 	/**
 	 * Return random number
 	 *
-	 *
 	 * @since 1.7
 	 * @return int random number
 	 */
 	public function random_wrapper_int() {
-		//get all forms
-		$int = intval( (float)rand()/(float)getrandmax() * 9999 );
+		// get all forms.
+		$int = intval( (float) rand() / (float) getrandmax() * 9999 );
 
 		return absint( $int );
 	}
@@ -167,7 +169,7 @@ abstract class Forminator_Import_Mediator {
 				$type = 'text';
 				break;
 			case 'acceptance':
-				$type = 'gdprcheckbox';
+				$type = 'consent';
 				break;
 			case 'honeypot':
 				$type = 'honeypot';
@@ -235,13 +237,12 @@ abstract class Forminator_Import_Mediator {
 			}
 
 			if ( ! isset( $import_data['type'] ) || 'form' !== $import_data['type'] ) {
-				throw new Exception( __( 'Oops, looks like we found an issue. Import text can not include whitespace or special characters.', 'forminator' ) );
+				throw new Exception( __( 'Oops, wrong module type. You can only import a module of the same type that you\'re currently viewing.', 'forminator' ) );
 			}
 
 			$import_data = $this->parse_import_data( $import_data );
 
 			$model = Forminator_Form_Model::create_from_import_data( $import_data );
-
 
 			if ( is_wp_error( $model ) ) {
 				throw new Exception( $model->get_error_message() );
@@ -256,13 +257,13 @@ abstract class Forminator_Import_Mediator {
 			return array(
 				'id'   => $model->id,
 				'url'  => $return_url,
-				'type' => 'success'
+				'type' => 'success',
 			);
 
 		} catch ( Exception $e ) {
 			return array(
 				'message' => $e->getMessage(),
-				'type'    => 'fail'
+				'type'    => 'fail',
 			);
 		}
 	}

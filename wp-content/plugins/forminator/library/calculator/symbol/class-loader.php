@@ -130,7 +130,7 @@ class Forminator_Calculator_Symbol_Loader {
 	 */
 	public function find( $identifier ) {
 
-		// allow strict compare with strtolower
+		// allow strict compare with strtolower.
 		$identifier = strtolower( $identifier );
 
 		foreach ( $this->symbols as $symbol ) {

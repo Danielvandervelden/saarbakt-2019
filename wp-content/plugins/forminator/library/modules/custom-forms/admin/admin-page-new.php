@@ -17,10 +17,11 @@ class Forminator_CForm_New_Page extends Forminator_Admin_Page {
 	 * @return mixed
 	 */
 	public function getWizardTitle() {
-		if ( isset( $_REQUEST['id'] ) ) { // WPCS: CSRF OK
-			return __( "Edit Form", 'forminator' );
+		$id = filter_input( INPUT_GET, 'id', FILTER_VALIDATE_INT );
+		if ( $id ) {
+			return __( 'Edit Form', 'forminator' );
 		} else {
-			return __( "New Form", 'forminator' );
+			return __( 'New Form', 'forminator' );
 		}
 	}
 
@@ -31,10 +32,10 @@ class Forminator_CForm_New_Page extends Forminator_Admin_Page {
 	 * @param $hook
 	 */
 	public function enqueue_scripts( $hook ) {
-		// Load admin scripts
+		// Load admin scripts.
 		wp_register_script(
 			'forminator-admin',
-			forminator_plugin_url() . 'assets/js/form-scripts.js',
+			forminator_plugin_url() . 'build/form-scripts.js',
 			array(
 				'jquery',
 				'wp-color-picker',
@@ -46,25 +47,46 @@ class Forminator_CForm_New_Page extends Forminator_Admin_Page {
 		);
 		forminator_common_admin_enqueue_scripts( true );
 
-		// for preview
+		// for preview.
 		$style_src     = forminator_plugin_url() . 'assets/css/intlTelInput.min.css';
-		$style_version = "4.0.3";
+		$style_version = '4.0.3';
 
 		$script_src     = forminator_plugin_url() . 'assets/js/library/intlTelInput.min.js';
+		$script_src_cleave     = forminator_plugin_url() . 'assets/js/library/cleave.min.js';
+		$script_src_cleave_phone     = forminator_plugin_url() . 'assets/js/library/cleave-phone.i18n.js';
 		$script_version = FORMINATOR_VERSION;
-		wp_enqueue_style( 'intlTelInput-forminator-css', $style_src, array(), $style_version ); // intlTelInput
-		wp_enqueue_script( 'forminator-intlTelInput', $script_src, array( 'jquery' ), $script_version, false ); // intlTelInput
+		wp_enqueue_style( 'intlTelInput-forminator-css', $style_src, array(), $style_version ); // intlTelInput.
+		wp_enqueue_script( 'forminator-intlTelInput', $script_src, array( 'jquery' ), $script_version, false ); // intlTelInput.
+		wp_enqueue_script( 'forminator-cleave', $script_src_cleave, array( 'jquery' ), $script_version, false ); // intlTelInput.
+		wp_enqueue_script( 'forminator-cleave-phone', $script_src_cleave_phone, array( 'jquery' ), $script_version, false ); // intlTelInput.
 
-		wp_enqueue_script( 'forminator-field-moment',
-			forminator_plugin_url() . 'assets/js/library/moment.min.js',
-			array( 'jquery' ),
-			'2.22.2',
-			true );
-
-        wp_enqueue_script( 'forminator-field-datepicker-range',
+		wp_enqueue_script(
+			'forminator-field-datepicker-range',
 			forminator_plugin_url() . 'assets/js/library/daterangepicker.min.js',
-			array('forminator-field-moment'),
+			array( 'moment' ),
 			'3.0.3',
-			true );
+			true
+		);
+		wp_enqueue_script(
+			'forminator-inputmask',
+			forminator_plugin_url() . 'assets/js/library/inputmask.min.js',
+			array( 'jquery' ),
+			FORMINATOR_VERSION,
+			true
+		); // inputmask.
+		wp_enqueue_script(
+			'forminator-jquery-inputmask',
+			forminator_plugin_url() . 'assets/js/library/jquery.inputmask.min.js',
+			array( 'jquery' ),
+			FORMINATOR_VERSION,
+			true
+		); // jquery inputmask.
+		wp_enqueue_script(
+			'forminator-inputmask-binding',
+			forminator_plugin_url() . 'assets/js/library/inputmask.binding.js',
+			array( 'jquery' ),
+			FORMINATOR_VERSION,
+			true
+		); // inputmask binding.
 	}
 }

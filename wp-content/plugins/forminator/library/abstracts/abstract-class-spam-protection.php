@@ -37,10 +37,10 @@ abstract class Forminator_Spam_Protection {
 	 * Handle spam protection
 	 *
 	 * @since 1.0
-	 * @param bool $is_spam - if the data is spam
-	 * @param array $posted_params - the posted parameters
-	 * @param int $form_id - the form id
-	 * @param string $form_type - the form type
+	 * @param bool   $is_spam - if the data is spam.
+	 * @param array  $posted_params - the posted parameters.
+	 * @param int    $form_id - the form id.
+	 * @param string $form_type - the form type.
 	 *
 	 * @return bool $is_spam
 	 */
@@ -54,10 +54,10 @@ abstract class Forminator_Spam_Protection {
 	 * @see _handle_spam_protection
 	 *
 	 * @since 1.0
-	 * @param bool $is_spam - if the data is spam
-	 * @param array $posted_params - the posted parameters
-	 * @param int $form_id - the form id
-	 * @param string $form_type - the form type
+	 * @param bool   $is_spam - if the data is spam.
+	 * @param array  $posted_params - the posted parameters.
+	 * @param int    $form_id - the form id.
+	 * @param string $form_type - the form type.
 	 *
 	 * @return bool $is_spam
 	 */

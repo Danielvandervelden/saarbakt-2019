@@ -1,5 +1,5 @@
 <?php
-$form_id = $_POST['id'];// phpcs:ignore -- varified on admin ajax
+$form_id = filter_input( INPUT_POST, 'id', FILTER_VALIDATE_INT );
 $slug    = $args['slug'];
 $_page   = 'forminator-' . forminator_get_prefix( $slug, 'c' );
 $nonce   = wp_create_nonce( 'forminator_' . $slug . '_request' );
@@ -19,21 +19,38 @@ $text_area_id = uniqid( 'export-text-' );
 		<span class="sui-description"><?php esc_html_e( 'Copy ALL text above, and paste to import dialog.', 'forminator' ); ?></span>
 	</div>
 
-	<div class="sui-notice sui-notice-info">
-		<p>
-			<?php
-			echo(
-			sprintf(
-				__( 'You can import this %1$s in Forminator %2$s%3$s%4$s or above. The %5$s may break on a version lower than your install.', 'forminator' ), //phpcs:ignore
-				$slug,//phpcs:ignore
-				'<strong>',
-				FORMINATOR_VERSION,//phpcs:ignore
-				'</strong>',
-				$slug
-			)
-			);
-			?>
-		</p>
+	<div
+		role="alert"
+		class="sui-notice sui-notice-blue sui-active"
+		style="display: block; text-align: left;"
+		aria-live="assertive"
+	>
+
+		<div class="sui-notice-content">
+
+			<div class="sui-notice-message">
+
+				<span class="sui-notice-icon sui-icon-info" aria-hidden="true"></span>
+
+				<p>
+					<?php
+					echo(
+					sprintf(
+						esc_html__( 'You can import this %1$s in Forminator %2$s%3$s%4$s or above. The %5$s may break on a version lower than your install.', 'forminator' ),
+						esc_html( $slug ),
+						'<strong>',
+						esc_html( FORMINATOR_VERSION ),
+						'</strong>',
+						esc_html( $slug )
+					)
+					);
+					?>
+				</p>
+
+			</div>
+
+		</div>
+
 	</div>
 
 </div>
@@ -55,7 +72,7 @@ $text_area_id = uniqid( 'export-text-' );
 
 </div>
 
-<?php // using jquery to avoid html escape on popup ajax load ?>
+<?php // using jquery to avoid html escape on popup ajax load. ?>
 <script type="text/javascript">
 	jQuery('#<?php echo esc_attr( $text_area_id ); ?>').val(JSON.stringify(<?php echo wp_json_encode( $exportable ); ?>));
 </script>

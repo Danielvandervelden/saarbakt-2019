@@ -32,19 +32,12 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 	protected $_quiz_hooks    = 'Forminator_Addon_Campaignmonitor_Quiz_Hooks';
 
 	/**
-	 * Campaign Monitor API
-	 *
-	 * @var Forminator_Addon_Campaignmonitor_Wp_Api|null
-	 */
-	private static $api = null;
-
-	/**
 	 * Forminator_Addon_Campaignmonitor constructor.
 	 *
 	 * @since 1.0 Campaignmonitor Addon
 	 */
 	public function __construct() {
-		// late init to allow translation
+		// late init to allow translation.
 		$this->_description                = __( 'Get awesome by your form.', 'forminator' );
 		$this->_activation_error_message   = __( 'Sorry but we failed to activate Campaign Monitor Integration, don\'t hesitate to contact us', 'forminator' );
 		$this->_deactivation_error_message = __( 'Sorry but we failed to deactivate Campaign Monitor Integration, please try again', 'forminator' );
@@ -58,6 +51,8 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 		$this->_icon_x2  = forminator_addon_campaignmonitor_assets_url() . 'icons/campaignmonitor@2x.png';
 		$this->_image    = forminator_addon_campaignmonitor_assets_url() . 'img/campaignmonitor.png';
 		$this->_image_x2 = forminator_addon_campaignmonitor_assets_url() . 'img/campaignmonitor@2x.png';
+
+		$this->is_multi_global = true;
 	}
 
 	/**
@@ -83,12 +78,12 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 	 */
 	public function is_connected() {
 		try {
-			// check if its active
+			// check if its active.
 			if ( ! $this->is_active() ) {
 				throw new Forminator_Addon_Campaignmonitor_Exception( __( 'Campaign Monitor is not active', 'forminator' ) );
 			}
 
-			// if user completed api setup
+			// if user completed api setup.
 			$is_connected = $this->is_api_completed();
 
 		} catch ( Forminator_Addon_Campaignmonitor_Exception $e ) {
@@ -123,12 +118,12 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 				throw new Forminator_Addon_Campaignmonitor_Exception( __( ' Campaign Monitor is not connected', 'forminator' ) );
 			}
 
-			$form_settings_instance = $this->get_addon_form_settings( $form_id );
+			$form_settings_instance = $this->get_addon_settings( $form_id, 'form' );
 			if ( ! $form_settings_instance instanceof Forminator_Addon_Campaignmonitor_Form_Settings ) {
 				throw new Forminator_Addon_Campaignmonitor_Exception( __( 'Invalid Form Settings of Campaign Monitor', 'forminator' ) );
 			}
 
-			// Mark as active when there is at least one active connection
+			// Mark as active when there is at least one active connection.
 			if ( false === $form_settings_instance->find_one_active_connection() ) {
 				throw new Forminator_Addon_Campaignmonitor_Exception( __( 'No active Campaign Monitor connection found in this form', 'forminator' ) );
 			}
@@ -146,8 +141,8 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 		 * @since 1.3
 		 *
 		 * @param bool                                                $is_form_connected
-		 * @param int                                                 $form_id                Current Form ID
-		 * @param Forminator_Addon_Campaignmonitor_Form_Settings|null $form_settings_instance Instance of form settings, or null when unavailable
+		 * @param int                                                 $form_id                Current Form ID.
+		 * @param Forminator_Addon_Campaignmonitor_Form_Settings|null $form_settings_instance Instance of form settings, or null when unavailable.
 		 *
 		 */
 		$is_form_connected = apply_filters( 'forminator_addon_campaignmonitor_is_form_connected', $is_form_connected, $form_id, $form_settings_instance );
@@ -256,6 +251,7 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 		$template_success = forminator_addon_campaignmonitor_dir() . 'views/settings/setup-api-success.php';
 
 		$template_params = array(
+			'identifier'      => '',
 			'error_message'   => '',
 			'api_key'         => '',
 			'client_id'       => '',
@@ -279,6 +275,7 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 		if ( $is_submit ) {
 			$api_key   = isset( $submitted_data['api_key'] ) ? $submitted_data['api_key'] : '';
 			$client_id = isset( $submitted_data['client_id'] ) ? $submitted_data['client_id'] : '';
+			$identifier = isset( $submitted_data['identifier'] ) ? $submitted_data['identifier'] : '';
 
 			try {
 				$api_key = $this->validate_api_key( $api_key );
@@ -288,7 +285,7 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 			}
 
 			if ( ! $has_errors ) {
-				// validate api
+				// validate api.
 				try {
 
 					$this->validate_api( $api_key );
@@ -327,13 +324,14 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 					}
 
 					$settings_values = array(
+						'identifier'  => $identifier,
 						'api_key'     => $api_key,
 						'client_id'   => $client_id,
 						'client_name' => $client_name,
 					);
 					$this->save_settings_values( $settings_values );
 
-					// no form_id its on global settings
+					// no form_id its on global settings.
 					if ( empty( $form_id ) ) {
 						$show_success = true;
 					}
@@ -352,7 +350,7 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 
 		if ( $show_success ) {
 			$buttons['close'] = array(
-				'markup' => self::get_button_markup( esc_html__( 'Close', 'forminator' ), 'sui-button-ghost forminator-addon-close' ),
+				'markup' => self::get_button_markup( esc_html__( 'Close', 'forminator' ), 'sui-button-ghost forminator-addon-close forminator-integration-popup__close' ),
 			);
 		} else {
 			if ( $this->is_connected() ) {
@@ -390,7 +388,7 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 	public function is_api_completed() {
 		$setting_values = $this->get_settings_values();
 
-		// check api_key set up
+		// check api_key set up.
 		return ( isset( $setting_values['api_key'] ) && ! empty( $setting_values['api_key'] ) );
 	}
 
@@ -405,19 +403,15 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 	 * @throws Forminator_Addon_Campaignmonitor_Wp_Api_Exception
 	 */
 	public function get_api( $api_key = null ) {
-		if ( is_null( self::$api ) ) {
-			if ( is_null( $api_key ) ) {
-				$setting_values = $this->get_settings_values();
-				$api_key        = '';
-				if ( isset( $setting_values['api_key'] ) ) {
-					$api_key = $setting_values['api_key'];
-				}
+		if ( is_null( $api_key ) ) {
+			$setting_values = $this->get_settings_values();
+			$api_key        = '';
+			if ( isset( $setting_values['api_key'] ) ) {
+				$api_key = $setting_values['api_key'];
 			}
-			$api       = Forminator_Addon_Campaignmonitor_Wp_Api::get_instance( $api_key );
-			self::$api = $api;
 		}
-
-		return self::$api;
+		$api = Forminator_Addon_Campaignmonitor_Wp_Api::get_instance( $api_key );
+		return $api;
 	}
 
 	/**
@@ -449,9 +443,7 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 	 * @throws Forminator_Addon_Campaignmonitor_Exception
 	 */
 	public function validate_api( $api_key ) {
-		self::$api = null;
-		$api       = $this->get_api( $api_key );
-
+		$api         = $this->get_api( $api_key );
 		$system_date = $api->get_system_date();
 
 		if ( ! isset( $system_date->SystemDate ) || empty( $system_date->SystemDate ) ) { //phpcs:ignore WordPress.NamingConventions.ValidVariableName.NotSnakeCaseMemberVar
@@ -473,9 +465,7 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 	 * @throws Forminator_Addon_Campaignmonitor_Wp_Api_Not_Found_Exception
 	 */
 	public function validate_client( $api_key, $client_id ) {
-		self::$api = null;
-		$api       = $this->get_api( $api_key );
-
+		$api            = $this->get_api( $api_key );
 		$client_details = $api->get_client( $client_id );
 
 		return $client_details;
@@ -538,12 +528,12 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 				throw new Forminator_Addon_Campaignmonitor_Exception( __( ' Campaign Monitor is not connected', 'forminator' ) );
 			}
 
-			$quiz_settings_instance = $this->get_addon_quiz_settings( $quiz_id );
+			$quiz_settings_instance = $this->get_addon_settings( $quiz_id, 'quiz' );
 			if ( ! $quiz_settings_instance instanceof Forminator_Addon_Campaignmonitor_Quiz_Settings ) {
 				throw new Forminator_Addon_Campaignmonitor_Exception( __( 'Invalid Quiz Settings of Campaign Monitor', 'forminator' ) );
 			}
 
-			// Mark as active when there is at least one active connection
+			// Mark as active when there is at least one active connection.
 			if ( false === $quiz_settings_instance->find_one_active_connection() ) {
 				throw new Forminator_Addon_Campaignmonitor_Exception( __( 'No active Campaign Monitor connection found in this quiz', 'forminator' ) );
 			}
@@ -561,8 +551,8 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 		 * @since 1.3
 		 *
 		 * @param bool $is_quiz_connected
-		 * @param int $quiz_id Current Quiz ID
-		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings|null $quiz_settings_instance Instance of quiz settings, or null when unavailable
+		 * @param int $quiz_id Current Quiz ID.
+		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings|null $quiz_settings_instance Instance of quiz settings, or null when unavailable.
 		 *
 		 */
 		$is_quiz_connected = apply_filters( 'forminator_addon_campaignmonitor_is_quiz_connected', $is_quiz_connected, $quiz_id, $quiz_settings_instance );
@@ -583,13 +573,13 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 	public function is_quiz_lead_connected( $quiz_id ) {
 
 		try {
-			// initialize with null
+			// initialize with null.
 			$quiz_settings_instance = null;
 			if ( ! $this->is_connected() ) {
 				throw new Forminator_Addon_Campaignmonitor_Exception( __( ' Campaign Monitor is not connected', 'forminator' ) );
 			}
 
-			$quiz_settings_instance = $this->get_addon_quiz_settings( $quiz_id );
+			$quiz_settings_instance = $this->get_addon_settings( $quiz_id, 'quiz' );
 			if ( ! $quiz_settings_instance instanceof Forminator_Addon_Campaignmonitor_Quiz_Settings ) {
 				throw new Forminator_Addon_Campaignmonitor_Exception( __( 'Invalid Quiz Settings of Campaign Monitor', 'forminator' ) );
 			}
@@ -613,8 +603,8 @@ final class Forminator_Addon_Campaignmonitor extends Forminator_Addon_Abstract {
 		 * @since 1.1
 		 *
 		 * @param bool $is_quiz_connected
-		 * @param int $quiz_id Current Form ID
-		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings|null $quiz_settings_instance Instance of quiz settings, or null when unavailable
+		 * @param int $quiz_id Current Form ID.
+		 * @param Forminator_Addon_Campaignmonitor_Quiz_Settings|null $quiz_settings_instance Instance of quiz settings, or null when unavailable.
 		 *
 		 */
 		$is_quiz_connected = apply_filters( 'forminator_addon_campaignmonitor_is_quiz_lead_connected', $is_quiz_connected, $quiz_id, $quiz_settings_instance );

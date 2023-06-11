@@ -1,10 +1,10 @@
 <?php
-$entries          = $this->get_table();
+$entries          = $this->get_entries();
 $form_type        = $this->get_form_type();
 $count            = $this->get_total_entries();
 $entries_per_page = $this->get_per_page();
-$first_item  = $count;
-$page_number = $this->get_paged();
+$first_item       = $count;
+$page_number      = $this->get_paged();
 
 if ( $page_number > 1 ) {
 	$first_item = $count - ( ( $page_number - 1 ) * $entries_per_page );
@@ -13,28 +13,28 @@ if ( $page_number > 1 ) {
 
 <?php foreach ( $entries as $entry ) : ?>
 
-    <tr class="sui-accordion-item">
+	<tr class="sui-accordion-item">
 
-        <td>
-            <label class="sui-checkbox">
-                <input name="ids[]" value="<?php echo esc_attr( $entry->entry_id ); ?>" type="checkbox" id="quiz-answer-<?php echo esc_attr( $entry->entry_id ); ?>">
-                <span></span>
-                <div class="sui-description"><?php echo esc_attr( $first_item ); ?></div>
-            </label>
-        </td>
+		<td>
+			<label class="sui-checkbox">
+				<input name="ids[]" value="<?php echo esc_attr( $entry->entry_id ); ?>" type="checkbox" id="quiz-answer-<?php echo esc_attr( $entry->entry_id ); ?>">
+				<span></span>
+				<div class="sui-description"><?php echo esc_attr( $first_item ); ?></div>
+			</label>
+		</td>
 
-        <td colspan="5">
-			<?php echo date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $entry->date_created_sql ) ); // phpcs:ignore ?>
-            <span class="sui-accordion-open-indicator">
+		<td colspan="5">
+			<?php echo esc_html( date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $entry->date_created_sql ) ) ); ?>
+			<span class="sui-accordion-open-indicator">
 							<i class="sui-icon-chevron-down"></i>
 						</span>
-        </td>
+		</td>
 
-    </tr>
+	</tr>
 
-    <tr class="sui-accordion-item-content">
+	<tr class="sui-accordion-item-content">
 
-        <td colspan="6">
+		<td colspan="6">
 
 			<div class="sui-box">
 
@@ -45,7 +45,7 @@ if ( $page_number > 1 ) {
 
 						<h2 class="fui-entries-title"><?php echo '#' . esc_attr( $first_item ); ?></h2>
 
-						<p class="sui-description"><?php echo date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $entry->date_created_sql ) ); // phpcs:ignore ?></p>
+						<p class="sui-description"><?php echo esc_html( date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), strtotime( $entry->date_created_sql ) ) ); ?></p>
 
 					</div>
 
@@ -60,12 +60,12 @@ if ( $page_number > 1 ) {
 
 								<tbody>
 
-									<?php foreach( $entry->meta_data['lead_entry']['value'] as $lead_entry ) { ?>
+									<?php foreach ( $entry->meta_data['lead_entry']['value'] as $lead_entry ) { ?>
 
 										<tr>
 
-											<td><?php echo $lead_entry['name']; // phpcs:ignore ?></td>
-											<td><?php echo $lead_entry['value']; // phpcs:ignore ?></td>
+											<td><?php echo esc_html( $lead_entry['name'] ); ?></td>
+											<td><?php echo wp_kses_post( $lead_entry['value'] ); ?></td>
 
 										</tr>
 
@@ -91,14 +91,14 @@ if ( $page_number > 1 ) {
 							$total = count( $meta );
 							$right = 0;
 
-                            foreach( $meta as $key => $val ) {
-                                if ( isset( $val['isCorrect'] ) && boolval( $val['isCorrect'] ) ) {
-                                    $right ++;
-                                }
-                            }
+							foreach ( $meta as $key => $val ) {
+								if ( isset( $val['isCorrect'] ) && boolval( $val['isCorrect'] ) ) {
+									$right ++;
+								}
+							}
 							?>
 
-							<p class="sui-description"><?php echo sprintf( __( 'You got %s/%s correct answers.', 'forminator' ), $right, $total ); // phpcs:ignore ?></p>
+							<p class="sui-description"><?php echo sprintf( esc_html__( 'You got %1$s/%2$s correct answers.', 'forminator' ), intval( $right ), intval( $total ) ); ?></p>
 
 							<table class="fui-entries-table">
 
@@ -122,36 +122,36 @@ if ( $page_number > 1 ) {
 											$right ++;
 										}
 
-                                        if ( isset( $answer['answer'] ) ) {
-                                            $user_answer = $answer['answer'];
-                                        } else {
-                                            $user_answer = $answer['answers'];
-                                        }
+										if ( isset( $answer['answer'] ) ) {
+											$user_answer = $answer['answer'];
+										} else {
+											$user_answer = $answer['answers'];
+										}
 										?>
 
 										<tr>
 											<td><strong><?php echo esc_html( $answer['question'] ); ?></strong></td>
 											<td>
 												<?php
-                                                    if ( is_array( $user_answer ) ) {
-                                                        foreach( $user_answer as $val ) {
-                                                            if ( $answer['isCorrect'] ) {
-                                                                echo '<span class="sui-tag sui-tag-success">' . esc_html( $val ) . '</span>';
-                                                            } else {
-                                                                echo '<span class="sui-tag sui-tag-error">' . esc_html( $val ) . '</span>';
-                                                            }
-                                                        }
-                                                    } else {
-                                                        if ( $answer['isCorrect'] ) {
-                                                            echo '<span class="sui-tag sui-tag-success">' . esc_html( $user_answer ) . '</span>';
-                                                        } else {
-                                                            echo '<span class="sui-tag sui-tag-error">' . esc_html( $user_answer ) . '</span>';
-                                                        }
-                                                    }
-                                                ?>
+												if ( is_array( $user_answer ) ) {
+													foreach ( $user_answer as $val ) {
+														if ( $answer['isCorrect'] ) {
+															echo '<span class="sui-tag sui-tag-success">' . esc_html( $val ) . '</span>';
+														} else {
+															echo '<span class="sui-tag sui-tag-error">' . esc_html( $val ) . '</span>';
+														}
+													}
+												} else {
+													if ( $answer['isCorrect'] ) {
+														echo '<span class="sui-tag sui-tag-success">' . esc_html( $user_answer ) . '</span>';
+													} else {
+														echo '<span class="sui-tag sui-tag-error">' . esc_html( $user_answer ) . '</span>';
+													}
+												}
+												?>
 											</td>
 										</tr>
-                                    
+
 									<?php endforeach; ?>
 
 								</tbody>
@@ -212,7 +212,7 @@ if ( $page_number > 1 ) {
 
 										<tr>
 
-											<td colspan="2"><?php printf( __( '<strong>Quiz Result:</strong> %s', 'forminator' ), $meta['result']['title'] ); // phpcs:ignore ?></td>
+											<td colspan="2"><?php echo wp_kses_post( sprintf( __( '<strong>Quiz Result:</strong> %s', 'forminator' ), $meta['result']['title'] ) ); ?></td>
 
 										</tr>
 
@@ -230,9 +230,9 @@ if ( $page_number > 1 ) {
 
 			</div>
 
-        </td>
+		</td>
 
-    </tr>
+	</tr>
 
 	<?php
 	$first_item --;

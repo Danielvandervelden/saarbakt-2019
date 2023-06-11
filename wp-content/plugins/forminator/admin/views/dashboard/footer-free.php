@@ -65,7 +65,7 @@
 	</a>
 
 	<img class="sui-image"
-		src="<?php echo forminator_plugin_url(); // phpcs:ignore ?>assets/images/dev-team.png"
-		srcset="<?php echo forminator_plugin_url(); // phpcs:ignore ?>assets/images/dev-team@2x.png 2x"
+		src="<?php echo esc_url( forminator_plugin_url() ); ?>assets/images/dev-team.png"
+		srcset="<?php echo esc_url( forminator_plugin_url() ); ?>assets/images/dev-team@2x.png 2x"
 		alt="<?php esc_html_e( 'Try pro features for free!', 'forminator' ); ?>">
 </div>

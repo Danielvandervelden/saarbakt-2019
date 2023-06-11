@@ -41,7 +41,7 @@ class Forminator_Autofill_Simple extends Forminator_Autofill_Provider_Abstract {
 
 		$this->attributes_map = $attributes_map;
 
-		// Call this to Start attaching your autofill provider to Forminator field
+		// Call this to Start attaching your autofill provider to Forminator field.
 		$this->hook_to_fields();
 
 	}
@@ -67,13 +67,13 @@ class Forminator_Autofill_Simple extends Forminator_Autofill_Provider_Abstract {
 	public function get_attribute_to_hook() {
 		return array(
 			'text'   => array(
-				// you can add multiple here
-				// or you can add other provider too! simply by knowing its slug and attribute key
+				// you can add multiple here.
+				// or you can add other provider too! simply by knowing its slug and attribute key.
 				'simple.simple_attribute_text',
 				'simple.simple_attribute_number',
 			),
 			'number' => array(
-				// you can add multiple here
+				// you can add multiple here.
 				'simple.simple_attribute_number',
 			),
 

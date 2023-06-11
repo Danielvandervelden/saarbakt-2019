@@ -22,7 +22,7 @@ class Forminator_Assets_Enqueue_Poll extends Forminator_Assets_Enqueue {
 		$this->load_base_styles();
 
 		$form_settings = $this->get_settings();
-		$form_design = 'default';
+		$form_design   = 'default';
 
 		if ( isset( $form_settings['forminator-poll-design'] ) ) {
 
@@ -31,8 +31,8 @@ class Forminator_Assets_Enqueue_Poll extends Forminator_Assets_Enqueue {
 			}
 		}
 
-		$results_behav     = isset( $form_settings['results-behav'] ) ? $form_settings['results-behav'] : 'not_show';
-		$results_style     = isset( $form_settings['results-style'] ) ? $form_settings['results-style'] : 'bar';
+		$results_behav = isset( $form_settings['results-behav'] ) ? $form_settings['results-behav'] : 'not_show';
+		$results_style = isset( $form_settings['results-style'] ) ? $form_settings['results-style'] : 'bar';
 
 		$has_custom_answer = $this->has_custom_answer( $render_obj->get_fields() ); // Check if any of the answers has "custom input" enabled.
 		$has_chart_enabled = false; // Check if "Results Display" has "link on poll" or "show after voted" options enabled.
@@ -97,16 +97,16 @@ class Forminator_Assets_Enqueue_Poll extends Forminator_Assets_Enqueue {
 		// Load form base scripts.
 		$this->load_base_scripts();
 
-		// LOAD: ChartJS
+		// LOAD: ChartJS.
 		wp_enqueue_script(
 			'forminator-chartjs',
 			forminator_plugin_url() . 'assets/js/front/Chart.min.js',
 			array( 'jquery' ),
-			'2.8.0',
+			'2.9.4',
 			false
 		);
 
-		// LOAD: Datalabels plugin for ChartJS
+		// LOAD: Datalabels plugin for ChartJS.
 		wp_enqueue_script(
 			'chartjs-plugin-datalabels',
 			forminator_plugin_url() . 'assets/js/front/chartjs-plugin-datalabels.min.js',

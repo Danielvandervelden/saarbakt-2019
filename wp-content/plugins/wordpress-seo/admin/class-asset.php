@@ -142,10 +142,11 @@ class WPSEO_Admin_Asset {
 	 */
 	private $defaults = [
 		'deps'      => [],
-		'version'   => WPSEO_VERSION,
 		'in_footer' => true,
 		'rtl'       => true,
 		'media'     => 'all',
+		'version'   => '',
+		'suffix'    => '',
 	];
 
 	/**
@@ -173,7 +174,7 @@ class WPSEO_Admin_Asset {
 		$this->media     = $args['media'];
 		$this->in_footer = $args['in_footer'];
 		$this->rtl       = $args['rtl'];
-		$this->suffix    = isset( $args['suffix'] ) ? $args['suffix'] : '';
+		$this->suffix    = $args['suffix'];
 	}
 
 	/**
@@ -206,10 +207,14 @@ class WPSEO_Admin_Asset {
 	/**
 	 * Returns the asset version.
 	 *
-	 * @return string
+	 * @return string|null
 	 */
 	public function get_version() {
-		return $this->version;
+		if ( ! empty( $this->version ) ) {
+			return $this->version;
+		}
+
+		return null;
 	}
 
 	/**
@@ -224,7 +229,7 @@ class WPSEO_Admin_Asset {
 	/**
 	 * Returns whether a script asset should be loaded in the footer of the page.
 	 *
-	 * @return boolean
+	 * @return bool
 	 */
 	public function is_in_footer() {
 		return $this->in_footer;
@@ -233,7 +238,7 @@ class WPSEO_Admin_Asset {
 	/**
 	 * Returns whether this CSS has a RTL counterpart.
 	 *
-	 * @return boolean
+	 * @return bool
 	 */
 	public function has_rtl() {
 		return $this->rtl;

@@ -4,9 +4,9 @@ $default_array = array();
 
 for ( $h = 30; $h >= 0; $h-- ) {
 	$time                   = strtotime( '-' . $h . ' days' );
-	$date                   = date( 'Y-m-d', $time );//phpcs:ignore
+	$date                   = date( 'Y-m-d', $time );
 	$default_array[ $date ] = 0;
-	$days_array[]           = date( 'M j, Y', $time );//phpcs:ignore
+	$days_array[]           = date( 'M j, Y', $time );
 }
 
 foreach ( $this->getModules() as $module ) {
@@ -19,17 +19,17 @@ foreach ( $this->getModules() as $module ) {
 		$submissions_data  = array_merge( $default_array, array_intersect_key( $submissions_array, $default_array ) );
 	}
 
-	// Get highest value
+	// Get highest value.
 	$highest_submission = max( $submissions_data );
 
-	// Calculate canvas top spacing
+	// Calculate canvas top spacing.
 	$canvas_top_spacing = $highest_submission + 8;
 	?>
 	<script>
 
-		var ctx = document.getElementById( 'forminator-module-<?php echo $module['id']; // phpcs:ignore ?>-stats' );
-		var monthDays = [ '<?php echo implode( "', '", $days_array ); // phpcs:ignore ?>' ],
-			submissions = [ <?php echo implode( ', ', $submissions_data );  // phpcs:ignore ?> ];
+		var ctx = document.getElementById( 'forminator-module-<?php echo esc_attr( $module['id'] ); ?>-stats' );
+		var monthDays = [ '<?php echo wp_kses_post( implode( "', '", $days_array ) ); ?>' ],
+			submissions = [ <?php echo esc_attr( implode( ', ', $submissions_data ) ); ?> ];
 
 		var chartData = {
 			labels: monthDays,
@@ -87,7 +87,7 @@ foreach ( $this->getModules() as $module ) {
 			tooltips: {
 				custom: function( tooltip ) {
 					if ( ! tooltip ) return;
-					// disable displaying the color box;
+					// disable displaying the color box;.
 					tooltip.displayColors = false;
 				},
 				callbacks: {
@@ -97,7 +97,7 @@ foreach ( $this->getModules() as $module ) {
 					label: function( tooltipItem, data ) {
 						return tooltipItem.xLabel;
 					},
-					// Set label text color
+					// Set label text color.
 					labelTextColor:function( tooltipItem, chart ) {
 						return '#AAAAAA';
 					}
@@ -143,10 +143,10 @@ foreach ( $this->getModules() as $module ) {
 		$canvas_top_spacing = $highest_submission + 8;
 		?>
 		<script>
-			var ctx = document.getElementById( 'forminator-module-<?php echo $module['leads_id']; // phpcs:ignore ?>-stats' );
+			var ctx = document.getElementById( 'forminator-module-<?php echo esc_attr( $module['leads_id'] ); ?>-stats' );
 
-			var monthDays = [ '<?php echo implode( "', '", $days_array ); // phpcs:ignore ?>' ],
-				submissions = [ <?php echo implode( ', ', $submissions_data );  // phpcs:ignore ?> ];
+			var monthDays = [ '<?php echo wp_kses_post( implode( "', '", $days_array ) ); ?>' ],
+				submissions = [ <?php echo esc_attr( implode( ', ', $submissions_data ) ); ?> ];
 
 			var chartData = {
 				labels: monthDays,
@@ -204,7 +204,7 @@ foreach ( $this->getModules() as $module ) {
 				tooltips: {
 					custom: function( tooltip ) {
 						if ( ! tooltip ) return;
-						// disable displaying the color box;
+						// disable displaying the color box;.
 						tooltip.displayColors = false;
 					},
 					callbacks: {
@@ -214,7 +214,7 @@ foreach ( $this->getModules() as $module ) {
 						label: function( tooltipItem, data ) {
 							return tooltipItem.xLabel;
 						},
-						// Set label text color
+						// Set label text color.
 						labelTextColor:function( tooltipItem, chart ) {
 							return '#AAAAAA';
 						}

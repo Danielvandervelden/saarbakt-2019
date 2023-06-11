@@ -47,9 +47,9 @@ class Forminator_Form_Views_Model {
 	 * Save conversion
 	 *
 	 * @since 1.0
-	 * @param int $form_id - the form id
-	 * @param int $page_id - the page id
-	 * @param string $ip - the ip
+	 * @param int    $form_id - the form id.
+	 * @param int    $page_id - the page id.
+	 * @param string $ip - the ip.
 	 */
 	public function save_view( $form_id, $page_id, $ip ) {
 		global $wpdb;
@@ -63,7 +63,7 @@ class Forminator_Form_Views_Model {
 			$ip_query = ' AND `ip` IS NULL';
 		}
 
-		$sql = "SELECT `view_id` FROM {$this->get_table_name()} WHERE `form_id` = %d AND `page_id` = %d {$ip_query} AND `date_created` BETWEEN DATE_SUB(utc_timestamp(), INTERVAL 1 DAY) AND utc_timestamp()";
+		$sql = "SELECT `view_id` FROM {$this->get_table_name()} WHERE `form_id` = %d AND `page_id` = %d {$ip_query} AND DATE(`date_created`) = CURDATE()";
 
 		if ( ! is_null( $ip ) ) {
 			$prepared_sql = $wpdb->prepare( $sql, $form_id, $page_id, $ip ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
@@ -82,10 +82,10 @@ class Forminator_Form_Views_Model {
 	/**
 	 * Save Data to database
 	 *
-	 * @param int $form_id - the form id
-	 * @param int $page_id - the page id
-	 * @param string $ip - the user ip
-	 * @param bool|object $db - the wp db object
+	 * @param int         $form_id - the form id.
+	 * @param int         $page_id - the page id.
+	 * @param string      $ip - the user ip.
+	 * @param bool|object $db - the wp db object.
 	 */
 	private function _save( $form_id, $page_id, $ip, $db = false ) {
 		if ( ! $db ) {
@@ -108,9 +108,8 @@ class Forminator_Form_Views_Model {
 	 * Update view
 	 *
 	 * @since 1.0
-	 * @param int $id - entry id
-	 * @param bool|object $db - the wp db object
-	 *
+	 * @param int         $id - entry id.
+	 * @param bool|object $db - the wp db object.
 	 */
 	private function _update( $id, $db = false ) {
 		if ( ! $db ) {
@@ -124,9 +123,9 @@ class Forminator_Form_Views_Model {
 	 * Count views
 	 *
 	 * @since 1.0
-	 * @param int $form_id - the form id
-	 * @param string $starting_date - the start date (dd-mm-yyy)
-	 * @param string $ending_date - the end date (dd-mm-yyy)
+	 * @param int    $form_id - the form id.
+	 * @param string $starting_date - the start date (dd-mm-yyy).
+	 * @param string $ending_date - the end date (dd-mm-yyy).
 	 *
 	 * @return int - totol views based on parameters
 	 */
@@ -138,7 +137,7 @@ class Forminator_Form_Views_Model {
 	 * Delete views by form
 	 *
 	 * @since 1.0
-	 * @param int $form_id - the form id
+	 * @param int $form_id - the form id.
 	 */
 	public function delete_by_form( $form_id ) {
 		global $wpdb;
@@ -150,9 +149,9 @@ class Forminator_Form_Views_Model {
 	 * Get the top converting form
 	 *
 	 * @since 1.0
-	 * @param string $form_type - the form type (Forminator_Base_Form_Model - post_type)
-	 * @param string $starting_date - the start date (dd-mm-yyy)
-	 * @param string $ending_date - the end date (dd-mm-yyy)
+	 * @param string $form_type - the form type (Forminator_Base_Form_Model - post_type).
+	 * @param string $starting_date - the start date (dd-mm-yyy).
+	 * @param string $ending_date - the end date (dd-mm-yyy).
 	 *
 	 * @see _get_top_converting
 	 *
@@ -166,9 +165,9 @@ class Forminator_Form_Views_Model {
 	 * Get the most popular form
 	 *
 	 * @since 1.0
-	 * @param string $form_type - the form type (Forminator_Base_Form_Model - post_type)
-	 * @param string $starting_date - the start date (dd-mm-yyy)
-	 * @param string $ending_date - the end date (dd-mm-yyy)
+	 * @param string $form_type - the form type (Forminator_Base_Form_Model - post_type).
+	 * @param string $starting_date - the start date (dd-mm-yyy).
+	 * @param string $ending_date - the end date (dd-mm-yyy).
 	 *
 	 * @see _get_top_converting
 	 *
@@ -182,16 +181,16 @@ class Forminator_Form_Views_Model {
 	 * Count data
 	 *
 	 * @since 1.0
-	 * @param int $form_id - the form id
-	 * @param string $starting_date - the start date (dd-mm-yyy)
-	 * @param string $ending_date - the end date (dd-mm-yyy)
+	 * @param int    $form_id - the form id.
+	 * @param string $starting_date - the start date (dd-mm-yyy).
+	 * @param string $ending_date - the end date (dd-mm-yyy).
 	 *
 	 * @return int - totol counts based on parameters
 	 */
 	private function _count( $form_id, $starting_date = null, $ending_date = null ) {
 		global $wpdb;
 		$date_query = $this->_generate_date_query( $wpdb, $starting_date, $ending_date );
-		$sql        = "SELECT SUM(`count`) FROM {$this->get_table_name()} WHERE `form_id` = %d $date_query";
+		$sql        = "SELECT SUM(`count`) FROM {$this->get_table_name()} WHERE `form_id` = %d $date_query";    
 		$counts     = $wpdb->get_var( $wpdb->prepare( $sql, $form_id ) ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 
 		if ( $counts ) {
@@ -205,22 +204,22 @@ class Forminator_Form_Views_Model {
 	 * Generate the date query
 	 *
 	 * @since 1.0
-	 * @param object $wpdb - the WordPress database object
-	 * @param string $starting_date - the start date (dd-mm-yyy)
-	 * @param string $ending_date - the end date (dd-mm-yyy)
+	 * @param object $wpdb - the WordPress database object.
+	 * @param string $starting_date - the start date (dd-mm-yyy).
+	 * @param string $ending_date - the end date (dd-mm-yyy).
 	 *
 	 * @return string $date_query
 	 */
 	private function _generate_date_query( $wpdb, $starting_date = null, $ending_date = null, $prefix = '', $clause = 'AND' ) {
 		$date_query  = '';
-		$date_format = '%d-%m-%Y';
 		if ( ! is_null( $starting_date ) && ! is_null( $ending_date ) && ! empty( $starting_date ) && ! empty( $ending_date ) ) {
-			$date_query = $wpdb->prepare( "$clause DATE_FORMAT($prefix`date_created`, '$date_format') >= %s AND DATE_FORMAT($prefix`date_created`, '$date_format') <= %s", $starting_date, $ending_date ); // phpcs:ignore
+			$ending_date = $ending_date . ' 23:59:00';
+			$date_query  = $wpdb->prepare( "$clause date_created >= %s AND date_created <= %s", $starting_date, $ending_date );
 		} else {
 			if ( ! is_null( $starting_date ) && ! empty( $starting_date ) ) {
-				$date_query = $wpdb->prepare( "$clause DATE_FORMAT($prefix`date_created`, '$date_format') >= %s", $starting_date ); // phpcs:ignore
+				$date_query = $wpdb->prepare( "$clause date_created >= %s", $starting_date );
 			} elseif ( ! is_null( $ending_date ) && ! empty( $ending_date ) ) {
-				$date_query = $wpdb->prepare( "$clause DATE_FORMAT($prefix`date_created`, '$date_format') <= %s", $starting_date ); // phpcs:ignore
+				$date_query = $wpdb->prepare( "$clause date_created <= %s", $starting_date );
 			}
 		}
 
@@ -231,9 +230,9 @@ class Forminator_Form_Views_Model {
 	 * Get top converting form by type
 	 *
 	 * @since 1.0
-	 * @param string $form_type - the form type
-	 * @param string $starting_date - the start date (dd-mm-yyy)
-	 * @param string $ending_date - the end date (dd-mm-yyy)
+	 * @param string $form_type - the form type.
+	 * @param string $starting_date - the start date (dd-mm-yyy).
+	 * @param string $ending_date - the end date (dd-mm-yyy).
 	 *
 	 * @return false|object { form_id => id, conversion => 0 }
 	 */
@@ -269,9 +268,9 @@ class Forminator_Form_Views_Model {
 	 * Get most popular form by type
 	 *
 	 * @since 1.0
-	 * @param string $form_type - the form type
-	 * @param string $starting_date - the start date (dd-mm-yyy)
-	 * @param string $ending_date - the end date (dd-mm-yyy)
+	 * @param string $form_type - the form type.
+	 * @param string $starting_date - the start date (dd-mm-yyy).
+	 * @param string $ending_date - the end date (dd-mm-yyy).
 	 *
 	 * @return false|object { form_id => id, views => 0 }
 	 */
@@ -304,7 +303,7 @@ class Forminator_Form_Views_Model {
 	 */
 	public function count_non_empty_ip_address() {
 		global $wpdb;
-		$sql   = "SELECT COUNT(`ip`) FROM {$this->get_table_name()} WHERE `ip` IS NOT NULL AND `ip` != '' LIMIT 1";// phpcs:ignore
+		$sql   = "SELECT COUNT(`ip`) FROM {$this->get_table_name()} WHERE `ip` IS NOT NULL AND `ip` != '' LIMIT 1";
 		$total = $wpdb->get_var( $sql ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 
 		return intval( $total );
@@ -318,7 +317,7 @@ class Forminator_Form_Views_Model {
 	public function maybe_cleanup_ip_address() {
 		global $wpdb;
 		if ( $this->count_non_empty_ip_address() ) {
-			$wpdb->query( "UPDATE {$this->get_table_name()} SET `ip` = NULL" );// phpcs:ignore
+			$wpdb->query( "UPDATE {$this->get_table_name()} SET `ip` = NULL" );
 			forminator_maybe_log( __METHOD__ );
 			return true;
 		}

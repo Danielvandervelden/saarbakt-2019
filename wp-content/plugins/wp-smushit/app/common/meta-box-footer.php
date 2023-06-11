@@ -21,7 +21,7 @@ $button_text = __( 'Save changes', 'wp-smushit' );
  *
  * @param bool $show_submit Should show submit?
  */
-$disabled = 'smush-integrations' === $current_tab ? apply_filters( 'wp_smush_integration_show_submit', false ) : false;
+$enabled = 'smush-integrations' === $current_tab ? apply_filters( 'wp_smush_integration_show_submit', false ) : true;
 
 if ( 'smush-cdn' === $current_tab && ! WP_Smush::get_instance()->core()->mod->cdn->get_status() ) {
 	$button_text = __( 'Save & Activate', 'wp-smushit' );
@@ -36,14 +36,18 @@ if ( 'smush-cdn' === $current_tab && ! WP_Smush::get_instance()->core()->mod->cd
 		</span>
 	<?php endif; ?>
 
-	<button type="submit" class="sui-button sui-button-blue" id="save-settings-button" aria-live="polite" <?php disabled( $disabled, false, false ); ?>>
-		<span class="sui-button-text-default">
+	<button type="submit" class="sui-button sui-button-blue" id="save-settings-button" aria-live="polite" <?php disabled( $enabled, false ); ?>>
+		<span class="sui-button-text-default sui-loading-text">
 			<span class="sui-icon-save" aria-hidden="true"></span> <?php echo esc_html( $button_text ); ?>
 		</span>
 
-		<span class="sui-button-text-onload">
+		<?php if ( ! empty( $button_msg ) ) : ?>
+			<span class="sui-button-text-onload">
+				<span class="sui-icon-loader sui-loading" aria-hidden="true"></span>
+				<?php echo esc_html( $button_msg ); ?>
+			</span>
+		<?php else : ?>
 			<span class="sui-icon-loader sui-loading" aria-hidden="true"></span>
-			<?php echo esc_html( $button_msg ); ?>
-		</span>
+		<?php endif; ?>
 	</button>
 </div>

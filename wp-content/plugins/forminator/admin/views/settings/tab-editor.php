@@ -1,5 +1,5 @@
 <?php
-$forminator_editor_settings = get_option( 'forminator_editor_settings', "true" );
+$forminator_editor_settings = get_option( 'forminator_editor_settings', 'true' );
 
 ?>
 <div class="sui-box-settings-row">
@@ -19,11 +19,10 @@ $forminator_editor_settings = get_option( 'forminator_editor_settings', "true" )
 			<input type="checkbox"
 				name="editor_settings"
 				value="true"
-				id="forminator-editor-settings" <?php checked( $forminator_editor_settings, "true" ); ?>/>
+				id="forminator-editor-settings" <?php checked( $forminator_editor_settings, 'true' ); ?>/>
 			<span class="sui-toggle-slider" aria-hidden="true"></span>
+			<span class="sui-toggle-label"><?php esc_html_e( 'Enable', 'forminator' ); ?></span>
 		</label>
-
-		<label for="forminator-editor-settings"><?php esc_html_e( 'Enable', 'forminator' ); ?></label>
 
 	</div>
 

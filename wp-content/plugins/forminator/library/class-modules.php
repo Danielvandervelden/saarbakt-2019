@@ -44,23 +44,26 @@ class Forminator_Modules {
 		/**
 		 * Filters modules list
 		 */
-		$modules = apply_filters( 'forminator_modules', array(
-			'custom_forms' => array(
-				'class'	  => 'Custom_Forms',
-				'slug'  => 'custom-forms',
-				'label'	  => __( 'Custom Forms', 'forminator' )
-			),
-			'polls' => array(
-				'class'	  => 'Polls',
-				'slug'  => 'polls',
-				'label'	  => __( 'Polls', 'forminator' )
-			),
-			'quizzes' => array(
-				'class'	  => 'Quizzes',
-				'slug'  => 'quizzes',
-				'label'	  => __( 'Quizzes', 'forminator' )
-			),
-		) );
+		$modules = apply_filters(
+			'forminator_modules',
+			array(
+				'custom_forms' => array(
+					'class' => 'Custom_Forms',
+					'slug'  => 'custom-forms',
+					'label' => __( 'Custom Forms', 'forminator' ),
+				),
+				'polls'        => array(
+					'class' => 'Polls',
+					'slug'  => 'polls',
+					'label' => __( 'Polls', 'forminator' ),
+				),
+				'quizzes'      => array(
+					'class' => 'Quizzes',
+					'slug'  => 'quizzes',
+					'label' => __( 'Quizzes', 'forminator' ),
+				),
+			)
+		);
 
 		array_walk( $modules, array( $this, 'load_module' ) );
 	}
@@ -73,11 +76,11 @@ class Forminator_Modules {
 	 * @param $id
 	 */
 	public function load_module( $data, $id ) {
-		$module_class = 'Forminator_' . $data[ 'class' ];
-		$module_slug = $data[ 'slug' ];
-		$module_label = $data[ 'label' ];
+		$module_class = 'Forminator_' . $data['class'];
+		$module_slug  = $data['slug'];
+		$module_label = $data['label'];
 
-		// Include module
+		// Include module.
 		$path = forminator_plugin_dir() . 'library/modules/' . $module_slug . '/loader.php';
 		if ( file_exists( $path ) ) {
 			include_once $path;

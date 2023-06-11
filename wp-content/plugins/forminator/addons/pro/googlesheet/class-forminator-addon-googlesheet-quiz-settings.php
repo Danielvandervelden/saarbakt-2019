@@ -42,7 +42,7 @@ class Forminator_Addon_Googlesheet_Quiz_Settings extends Forminator_Addon_Quiz_S
 	 * @return array
 	 */
 	public function quiz_settings_wizards() {
-		// numerical array steps
+		// numerical array steps.
 		return array(
 			array(
 				'callback'     => array( $this, 'pick_name' ),
@@ -171,7 +171,7 @@ class Forminator_Addon_Googlesheet_Quiz_Settings extends Forminator_Addon_Quiz_S
 			try {
 				$input_exceptions = new Forminator_Addon_Googlesheet_Quiz_Settings_Exception();
 				if ( empty( $file_name ) ) {
-					$input_exceptions->add_input_exception( __( 'Please put valid spread sheet name', 'forminator' ), 'file_name_error' );
+					$input_exceptions->add_input_exception( __( 'Please put valid Spreadsheet name', 'forminator' ), 'file_name_error' );
 				}
 
 				$google_client = $this->addon->get_google_client();
@@ -182,13 +182,13 @@ class Forminator_Addon_Googlesheet_Quiz_Settings extends Forminator_Addon_Quiz_S
 					try {
 						$folder = $drive->files->get( $folder_id );
 
-						// its from API var
+						// its from API var.
 						// phpcs:ignore WordPress.NamingConventions.ValidVariableName.NotSnakeCaseMemberVar
 						if ( Forminator_Addon_Googlesheet::MIME_TYPE_GOOGLE_DRIVE_FOLDER !== $folder->mimeType ) {
 							$input_exceptions->add_input_exception( __( 'This is not a folder, please use a valid Folder ID.', 'forminator' ), 'folder_id_error' );
 						}
 					} catch ( Forminator_Google_Exception $google_exception ) {
-						// catch 404
+						// catch 404.
 						if ( false !== stripos( $google_exception->getMessage(), 'File not found' ) ) {
 							$input_exceptions->add_input_exception( __( 'Folder not found, please put Folder ID.', 'forminator' ), 'folder_id_error' );
 						} else {
@@ -349,7 +349,7 @@ class Forminator_Addon_Googlesheet_Quiz_Settings extends Forminator_Addon_Quiz_S
 		foreach ( $this->get_quiz_settings_values() as $key => $value ) {
 			$multi_ids[] = array(
 				'id'    => $key,
-				// use name that was added by user on creating connection
+				// use name that was added by user on creating connection.
 				'label' => isset( $value['name'] ) ? $value['name'] : $key,
 			);
 		}
@@ -365,7 +365,7 @@ class Forminator_Addon_Googlesheet_Quiz_Settings extends Forminator_Addon_Quiz_S
 	 * @param array $submitted_data
 	 */
 	public function disconnect_quiz( $submitted_data ) {
-		// only execute if multi_id provided on submitted data
+		// only execute if multi_id provided on submitted data.
 		if ( isset( $submitted_data['multi_id'] ) && ! empty( $submitted_data['multi_id'] ) ) {
 			$addon_quiz_settings = $this->get_quiz_settings_values();
 			unset( $addon_quiz_settings[ $submitted_data['multi_id'] ] );

@@ -1,88 +1,60 @@
 <?php
-$banner_1x = forminator_plugin_url() . 'assets/images/graphic-bulk-mode.png';
-$banner_2x = forminator_plugin_url() . 'assets/images/graphic-bulk-mode@2x.png';
+$user      = wp_get_current_user();
+$banner_1x = forminator_plugin_url() . 'assets/images/Feature_highlight.png';
+$banner_2x = forminator_plugin_url() . 'assets/images/Feature_highlight@2x.png';
 ?>
 
-<div
-	id="forminator-new-feature"
-	class="sui-dialog sui-dialog-onboard"
-	aria-hidden="true"
->
-
-	<div class="sui-dialog-overlay sui-fade-out" data-a11y-dialog-hide="forminator-new-feature" aria-hidden="true"></div>
+<div class="sui-modal sui-modal-md">
 
 	<div
-		class="sui-dialog-content sui-fade-out"
 		role="dialog"
+		id="forminator-new-feature"
+		class="sui-modal-content"
+		aria-live="polite"
+		aria-modal="true"
+		aria-labelledby="forminator-new-feature__title"
 	>
 
-		<div class="sui-slider forminator-feature-modal" data-prop="forminator_dismiss_feature_11412" data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_dismiss_notification' ) ); ?>">
+		<div class="sui-box forminator-feature-modal" data-prop="forminator_dismiss_feature_1231" data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_dismiss_notification' ) ); ?>">
 
-			<ul role="document" class="sui-slider-content">
+			<div class="sui-box-header sui-flatten sui-content-center">
 
-				<li class="sui-current sui-loaded" data-slide="1">
+				<figure class="sui-box-banner" aria-hidden="true">
+					<img
+						src="<?php echo esc_url( $banner_1x ); ?>"
+						srcset="<?php echo esc_url( $banner_1x ); ?> 1x, <?php echo esc_url( $banner_2x ); ?> 2x"
+						alt=""
+					/>
+				</figure>
 
-					<div class="sui-box">
+				<button class="sui-button-icon sui-button-white sui-button-float--right forminator-dismiss-new-feature" data-modal-close>
+					<span class="sui-icon-close sui-md" aria-hidden="true"></span>
+					<span class="sui-screen-reader-text"><?php esc_html_e( 'Close this dialog.', 'forminator' ); ?></span>
+				</button>
 
-						<div class="sui-box-banner" role="banner" aria-hidden="true">
-							<img
-								src="<?php echo esc_url( $banner_1x ); ?>"
-								srcset="<?php echo esc_url( $banner_1x ); ?> 1x, <?php echo esc_url( $banner_2x ); ?> 2x"
-								class="sui-image"
-								alt="Forminator"
-							/>
-						</div>
+				<h3 class="sui-box-title sui-lg" style="overflow: initial; white-space: initial; text-overflow: initial;"><?php esc_html_e( 'IMPORTANT! File Upload Storage Changes', 'forminator' ); ?></h3>
 
-						<div class="sui-box-header sui-block-content-center">
+				<p class="sui-description">
+					<?php
+					printf(
+						/* translators: User name */
+						__( 'Hey %1$s, to enhance security, Forminator will now store the file uploads from all your forms with random names in the “%2$s/wp-content/uploads/forminator%3$s” directory by default. However, you can specify a different storage directory for the uploaded files in the %4$sSettings > Data%5$s page.', 'forminator' ),
+						esc_html( ucfirst( $user->display_name ) ),
+                        '<strong>',
+                        '</strong>',
+                        '<a href="' . esc_url( admin_url( 'admin.php?page=forminator-settings&section=data' ) ) . '" target="_blank">',
+                        '</a>'
+					);
+					?>
+				</p>
 
-							<button data-a11y-dialog-hide="forminator-new-feature" class="sui-dialog-close forminator-dismiss-new-feature" aria-label="<?php esc_html_e( 'Close this dialog window', 'forminator' ); ?>"></button>
+			</div>
 
-							<?php //if ( FORMINATOR_PRO ) { ?>
+			<div class="sui-box-footer sui-flatten sui-content-center">
 
-								<h2 class="sui-box-title"><?php esc_html_e( 'New! Bulk Edit, Quiz Pagination, and More', 'forminator' ); ?></h2>
+				<button class="sui-button forminator-dismiss-new-feature" data-modal-close><?php esc_html_e( 'Got it', 'forminator' ); ?></button>
 
-								<p class="sui-description"><?php printf( esc_html__( 'Ever get tired of adding Select/Checkbox options one at a time? Good news! We\'ve added Bulk Edit and CSV Upload options to Radio, Checkbox and Select fields. Simply switch to Bulk Edit mode and choose from the predefined options, or import your own from a %1$s.csv%2$s file.', 'forminator' ), '<strong>', '</strong>' ); ?></p>
-
-							<?php //} else { ?>
-
-						 	<?php //} ?>
-
-						</div>
-
-							<div class="sui-box-body" sui-spacing-bottom="0">
-
-								<ul class="sui-list" sui-type="bullets">
-
-									<li>
-										<p class="sui-description"><strong sui-color="darkgray"><?php esc_html_e( 'Image support in Checkbox and Radio fields', 'forminator' ); ?></strong></p>
-										<p class="sui-description"><?php esc_html_e( 'Checkbox and Radio button fields now support images. So you can now use a combination of label + image or image only as checkbox / radio options.', 'forminator' ); ?></p>
-									</li>
-
-									<li>
-										<p class="sui-description"><strong sui-color="darkgray"><?php esc_html_e( 'Pagination support in quizzes', 'forminator' ); ?></strong></p>
-										<p class="sui-description"><?php esc_html_e( 'We\'ve also added support for pagination in knowledge quizzes. This option enables you to show quiz questions one at a time, or all the questions at once.', 'forminator' ); ?></p>
-									</li>
-
-									<li>
-										<p class="sui-description"><strong sui-color="darkgray"><?php esc_html_e( 'Set reCAPTCHA badge position', 'forminator' ); ?></strong></p>
-										<p class="sui-description"><?php esc_html_e( 'You now have more control over where the reCAPTCHA V3 badge should be positioned on your form pages.', 'forminator' ); ?></p>
-									</li>
-
-								</ul>
-
-							</div>
-
-							<div class="sui-box-footer sui-block-content-center">
-
-								<button class="sui-button forminator-dismiss-new-feature" type="button" data-a11y-dialog-hide="forminator-new-feature"><?php esc_html_e( 'Got It', 'forminator' ); ?></button>
-
-							</div>
-
-					</div>
-
-				</li>
-
-			</ul>
+			</div>
 
 		</div>
 
@@ -95,7 +67,7 @@ $banner_2x = forminator_plugin_url() . 'assets/images/graphic-bulk-mode@2x.png';
 		e.preventDefault();
 
 		var $notice = jQuery( e.currentTarget ).closest( '.forminator-feature-modal' );
-		var ajaxUrl = '<?php echo forminator_ajax_url();// phpcs:ignore ?>';
+		var ajaxUrl = '<?php echo esc_url( forminator_ajax_url() ); ?>';
 
 		jQuery.post(
 			ajaxUrl,

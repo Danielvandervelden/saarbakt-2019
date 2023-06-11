@@ -40,7 +40,7 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
     /**
      * Sets the filters, removing paging options.
      *
-     * @param array $filters the filters
+     * @param array $filters the filters.
      */
     public function setFilters($filters)
     {
@@ -116,6 +116,7 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
      * @return \ArrayIterator an iterator that can be used to iterate
      *    across objects in the current page
      */
+	#[\ReturnTypeWillChange]
     public function getIterator()
     {
         return new \ArrayIterator($this->data);
@@ -269,7 +270,7 @@ class Collection extends StripeObject implements \Countable, \IteratorAggregate
         }
 
         if (isset($url['query'])) {
-            // If the URL contains a query param, parse it out into $params so they
+            // If the URL contains a query param, parse it out into $params so they.
             // don't interact weirdly with each other.
             $query = [];
             \parse_str($url['query'], $query);

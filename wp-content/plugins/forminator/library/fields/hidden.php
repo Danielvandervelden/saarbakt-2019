@@ -84,7 +84,7 @@ class Forminator_Hidden extends Forminator_Field {
 	 * @return array
 	 */
 	public function autofill_settings( $settings = array() ) {
-		//Unsupported Autofill
+		// Unsupported Autofill.
 		$autofill_settings = array();
 
 		return $autofill_settings;
@@ -95,11 +95,11 @@ class Forminator_Hidden extends Forminator_Field {
 	 *
 	 * @since 1.0
 	 * @param $field
-	 * @param $settings
+	 * @param Forminator_Render_Form $views_obj Forminator_Render_Form object.
 	 *
 	 * @return mixed
 	 */
-	public function markup( $field, $settings = array() ) {
+	public function markup( $field, $views_obj ) {
 
 		$id          = self::get_property( 'element_id', $field );
 		$name        = $id;
@@ -107,7 +107,7 @@ class Forminator_Hidden extends Forminator_Field {
 		$placeholder = esc_html( self::get_property( 'placeholder', $field ) );
 		$value       = esc_html( $this->get_value( $field ) );
 
-		return sprintf( '<input type="hidden" id="%s" name="%s" value="%s" />', $id, $name, $value );
+		return sprintf( '<input type="hidden" id="%s" name="%s" value="%s" />', $id . '_' . Forminator_CForm_Front::$uid, $name, $value );
 	}
 
 	/**
@@ -143,11 +143,17 @@ class Forminator_Hidden extends Forminator_Field {
 			case 'embed_url':
 				$value = $embed_url;
 				break;
+			case 'login_url':
+				$value = forminator_get_login_url( $embed_url );
+				break;
 			case 'user_agent':
-				$value = $_SERVER['HTTP_USER_AGENT'];
+				$value = esc_html( $_SERVER['HTTP_USER_AGENT'] );
 				break;
 			case 'refer_url':
-				$value = isset( $_SERVER['HTTP_REFERER'] ) ? $_SERVER['HTTP_REFERER'] : $embed_url;
+				$value = isset( $_SERVER['HTTP_REFERER'] ) ? esc_url( $_SERVER['HTTP_REFERER'] ) : $embed_url;
+				break;
+			case 'submission_id':
+				$value = 'submission_id';
 				break;
 			case 'user_id':
 				$value = forminator_get_user_data( 'ID' );
@@ -186,7 +192,7 @@ class Forminator_Hidden extends Forminator_Field {
 		$value = '';
 
 		if ( $this->has_prefill( $field ) ) {
-			// We have pre-fill parameter, use its value or $value
+			// We have pre-fill parameter, use its value or $value.
 			$value = $this->get_prefill( $field, $value );
 		}
 
@@ -196,22 +202,22 @@ class Forminator_Hidden extends Forminator_Field {
 	/**
 	 * Get calculable value
 	 *
-	 * @param string $submitted_data Submitted data.
+	 * @param string $submitted_field_data Submitted data.
 	 * @param array  $field_settings Field settings.
 	 * @return string
 	 */
-	public function get_calculable_value( $submitted_data, $field_settings ) {
-		$calculable_value = $submitted_data;
+	public static function get_calculable_value( $submitted_field_data, $field_settings ) {
+		$calculable_value = $submitted_field_data;
 		/**
 		 * Filter formula being used on calculable value on hidden field
 		 *
 		 * @param float $calculable_value
-		 * @param array $submitted_data
+		 * @param array $submitted_field_data
 		 * @param array $field_settings
 		 *
 		 * @return string|int|float
 		 */
-		$calculable_value = apply_filters( 'forminator_field_hidden_calculable_value', $calculable_value, $submitted_data, $field_settings );
+		$calculable_value = apply_filters( 'forminator_field_hidden_calculable_value', $calculable_value, $submitted_field_data, $field_settings );
 
 		return $calculable_value;
 	}
@@ -221,14 +227,14 @@ class Forminator_Hidden extends Forminator_Field {
 	 *
 	 * @since 1.0.2
 	 *
-	 * @param array $field
-	 * @param array|string $data - the data to be sanitized
+	 * @param array        $field
+	 * @param array|string $data - the data to be sanitized.
 	 *
 	 * @return array|string $data - the data after sanitization
 	 */
 	public function sanitize( $field, $data ) {
 		$original_data = $data;
-		// Sanitize
+		// Sanitize.
 		if ( in_array( $field['default_value'], array( 'refer_url', 'embed_url' ) ) ) {
 			$data = urldecode_deep( $data );
 		}

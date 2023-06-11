@@ -18,7 +18,7 @@ class Forminator_Addon_Wp_Googlesheet_Client_Logger extends Forminator_Google_Lo
 	/**
 	 * Writes a message to the current log implementation.
 	 *
-	 * @param string $message The message
+	 * @param string $message The message.
 	 */
 	protected function write( $message ) {
 		forminator_addon_maybe_log( $message );

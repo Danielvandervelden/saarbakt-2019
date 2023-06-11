@@ -6,20 +6,20 @@ use Forminator\Stripe\Exception;
 use Forminator\Stripe\Stripe;
 use Forminator\Stripe\Util;
 
-// @codingStandardsIgnoreStart
-// PSR2 requires all constants be upper case. Sadly, the CURL_SSLVERSION
+// @codingStandardsIgnoreStart.
+// PSR2 requires all constants be upper case. Sadly, the CURL_SSLVERSION.
 // constants do not abide by those rules.
 
-// Note the values come from their position in the enums that
+// Note the values come from their position in the enums that.
 // defines them in cURL's source code.
 
-// Available since PHP 5.5.19 and 5.6.3
+// Available since PHP 5.5.19 and 5.6.3.
 if (!\defined('CURL_SSLVERSION_TLSv1_2')) {
     \define('CURL_SSLVERSION_TLSv1_2', 6);
 }
-// @codingStandardsIgnoreEnd
+// @codingStandardsIgnoreEnd.
 
-// Available since PHP 7.0.7 and cURL 7.47.0
+// Available since PHP 7.0.7 and cURL 7.47.0.
 if (!\defined('CURL_HTTP_VERSION_2TLS')) {
     \define('CURL_HTTP_VERSION_2TLS', 4);
 }
@@ -159,7 +159,7 @@ class CurlClient implements ClientInterface
         $this->requestStatusCallback = $requestStatusCallback;
     }
 
-    // USER DEFINED TIMEOUTS
+    // USER DEFINED TIMEOUTS.
 
     const DEFAULT_TIMEOUT = 80;
     const DEFAULT_CONNECT_TIMEOUT = 30;
@@ -191,19 +191,19 @@ class CurlClient implements ClientInterface
         return $this->connectTimeout;
     }
 
-    // END OF USER DEFINED TIMEOUTS
+    // END OF USER DEFINED TIMEOUTS.
 
     public function request($method, $absUrl, $headers, $params, $hasFile)
     {
         $method = \strtolower($method);
 
         $opts = [];
-        if (\is_callable($this->defaultOptions)) { // call defaultOptions callback, set options to return value
+        if (\is_callable($this->defaultOptions)) { // call defaultOptions callback, set options to return value.
             $opts = \call_user_func_array($this->defaultOptions, \func_get_args());
             if (!\is_array($opts)) {
                 throw new Exception\UnexpectedValueException('Non-array value returned by defaultOptions CurlClient callback');
             }
-        } elseif (\is_array($this->defaultOptions)) { // set default curlopts from array
+        } elseif (\is_array($this->defaultOptions)) { // set default curlopts from array.
             $opts = $this->defaultOptions;
         }
 
@@ -233,25 +233,25 @@ class CurlClient implements ClientInterface
             throw new Exception\UnexpectedValueException("Unrecognized method {$method}");
         }
 
-        // It is only safe to retry network failures on POST requests if we
-        // add an Idempotency-Key header
+        // It is only safe to retry network failures on POST requests if we.
+        // add an Idempotency-Key header.
         if (('post' === $method) && (Stripe::$maxNetworkRetries > 0)) {
             if (!$this->hasHeader($headers, 'Idempotency-Key')) {
                 $headers[] = 'Idempotency-Key: ' . $this->randomGenerator->uuid();
             }
         }
 
-        // By default for large request body sizes (> 1024 bytes), cURL will
-        // send a request without a body and with a `Expect: 100-continue`
-        // header, which gives the server a chance to respond with an error
-        // status code in cases where one can be determined right away (say
-        // on an authentication problem for example), and saves the "large"
+        // By default for large request body sizes (> 1024 bytes), cURL will.
+        // send a request without a body and with a `Expect: 100-continue`.
+        // header, which gives the server a chance to respond with an error.
+        // status code in cases where one can be determined right away (say.
+        // on an authentication problem for example), and saves the "large".
         // request body from being ever sent.
         //
-        // Unfortunately, the bindings don't currently correctly handle the
-        // success case (in which the server sends back a 100 CONTINUE), so
-        // we'll error under that condition. To compensate for that problem
-        // for the time being, override cURL's behavior by simply always
+        // Unfortunately, the bindings don't currently correctly handle the.
+        // success case (in which the server sends back a 100 CONTINUE), so.
+        // we'll error under that condition. To compensate for that problem.
+        // for the time being, override cURL's behavior by simply always.
         // sending an empty `Expect:` header.
         $headers[] = 'Expect: ';
 
@@ -267,11 +267,11 @@ class CurlClient implements ClientInterface
         }
 
         if (!isset($opts[\CURLOPT_HTTP_VERSION]) && $this->getEnableHttp2()) {
-            // For HTTPS requests, enable HTTP/2, if supported
+            // For HTTPS requests, enable HTTP/2, if supported.
             $opts[\CURLOPT_HTTP_VERSION] = \CURL_HTTP_VERSION_2TLS;
         }
 
-        // Stripe's API servers are only accessible over IPv4. Force IPv4 resolving to avoid
+        // Stripe's API servers are only accessible over IPv4. Force IPv4 resolving to avoid.
         // potential issues (cf. https://github.com/stripe/stripe-php/issues/1045).
         $opts[\CURLOPT_IPRESOLVE] = \CURL_IPRESOLVE_V4;
 
@@ -281,7 +281,7 @@ class CurlClient implements ClientInterface
     }
 
     /**
-     * @param array $opts cURL options
+     * @param array $opts cURL options.
      * @param string $absUrl
      */
     private function executeRequestWithRetries($opts, $absUrl)
@@ -293,10 +293,10 @@ class CurlClient implements ClientInterface
             $errno = 0;
             $message = null;
 
-            // Create a callback to capture HTTP headers for the response
+            // Create a callback to capture HTTP headers for the response.
             $rheaders = new Util\CaseInsensitiveArray();
             $headerCallback = function ($curl, $header_line) use (&$rheaders) {
-                // Ignore the HTTP request line (HTTP/1.1 200 OK)
+                // Ignore the HTTP request line (HTTP/1.1 200 OK).
                 if (false === \strpos($header_line, ':')) {
                     return \strlen($header_line);
                 }
@@ -414,14 +414,14 @@ class CurlClient implements ClientInterface
             return true;
         }
 
-        // Destination refused the connection, the connection was reset, or a
-        // variety of other connection failures. This could occur from a single
+        // Destination refused the connection, the connection was reset, or a.
+        // variety of other connection failures. This could occur from a single.
         // saturated server, so retry in case it's intermittent.
         if (\CURLE_COULDNT_CONNECT === $errno) {
             return true;
         }
 
-        // The API may ask us not to retry (eg; if doing so would be a no-op)
+        // The API may ask us not to retry (eg; if doing so would be a no-op).
         // or advise us to retry (eg; in cases of lock timeouts); we defer to that.
         if (isset($rheaders['stripe-should-retry'])) {
             if ('false' === $rheaders['stripe-should-retry']) {
@@ -432,15 +432,15 @@ class CurlClient implements ClientInterface
             }
         }
 
-        // 409 Conflict
+        // 409 Conflict.
         if (409 === $rcode) {
             return true;
         }
 
         // Retry on 500, 503, and other internal errors.
         //
-        // Note that we expect the stripe-should-retry header to be false
-        // in most cases when a 500 is returned, since our idempotency framework
+        // Note that we expect the stripe-should-retry header to be false.
+        // in most cases when a 500 is returned, since our idempotency framework.
         // would typically replay it anyway.
         if ($rcode >= 500) {
             return true;
@@ -459,15 +459,15 @@ class CurlClient implements ClientInterface
      */
     private function sleepTime($numRetries, $rheaders)
     {
-        // Apply exponential backoff with $initialNetworkRetryDelay on the
-        // number of $numRetries so far as inputs. Do not allow the number to exceed
+        // Apply exponential backoff with $initialNetworkRetryDelay on the.
+        // number of $numRetries so far as inputs. Do not allow the number to exceed.
         // $maxNetworkRetryDelay.
         $sleepSeconds = \min(
             Stripe::getInitialNetworkRetryDelay() * 1.0 * 2 ** ($numRetries - 1),
             Stripe::getMaxNetworkRetryDelay()
         );
 
-        // Apply some jitter by randomizing the value in the range of
+        // Apply some jitter by randomizing the value in the range of.
         // ($sleepSeconds / 2) to ($sleepSeconds).
         $sleepSeconds *= 0.5 * (1 + $this->randomGenerator->randFloat());
 
@@ -523,7 +523,7 @@ class CurlClient implements ClientInterface
      */
     private function canSafelyUseHttp2()
     {
-        // Versions of curl older than 7.60.0 don't respect GOAWAY frames
+        // Versions of curl older than 7.60.0 don't respect GOAWAY frames.
         // (cf. https://github.com/curl/curl/issues/2416), which Stripe use.
         $curlVersion = \curl_version()['version'];
 

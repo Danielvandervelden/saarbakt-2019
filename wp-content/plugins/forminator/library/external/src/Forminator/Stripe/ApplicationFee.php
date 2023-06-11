@@ -1,6 +1,6 @@
 <?php
 
-// File generated from our OpenAPI spec
+// File generated from our OpenAPI spec.
 
 namespace Forminator\Stripe;
 
@@ -31,7 +31,7 @@ class ApplicationFee extends ApiResource
     const PATH_REFUNDS = '/refunds';
 
     /**
-     * @param string $id the ID of the application fee on which to retrieve the fee refunds
+     * @param string $id the ID of the application fee on which to retrieve the fee refunds.
      * @param null|array $params
      * @param null|array|string $opts
      *
@@ -45,7 +45,7 @@ class ApplicationFee extends ApiResource
     }
 
     /**
-     * @param string $id the ID of the application fee on which to create the fee refund
+     * @param string $id the ID of the application fee on which to create the fee refund.
      * @param null|array $params
      * @param null|array|string $opts
      *
@@ -59,8 +59,8 @@ class ApplicationFee extends ApiResource
     }
 
     /**
-     * @param string $id the ID of the application fee to which the fee refund belongs
-     * @param string $refundId the ID of the fee refund to retrieve
+     * @param string $id the ID of the application fee to which the fee refund belongs.
+     * @param string $refundId the ID of the fee refund to retrieve.
      * @param null|array $params
      * @param null|array|string $opts
      *
@@ -74,8 +74,8 @@ class ApplicationFee extends ApiResource
     }
 
     /**
-     * @param string $id the ID of the application fee to which the fee refund belongs
-     * @param string $refundId the ID of the fee refund to update
+     * @param string $id the ID of the application fee to which the fee refund belongs.
+     * @param string $refundId the ID of the fee refund to update.
      * @param null|array $params
      * @param null|array|string $opts
      *

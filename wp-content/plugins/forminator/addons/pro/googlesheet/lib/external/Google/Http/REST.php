@@ -82,8 +82,8 @@ class Forminator_Google_Http_REST
       if (isset($decoded['error']) &&
           isset($decoded['error']['message'])  &&
           isset($decoded['error']['code'])) {
-        // if we're getting a json encoded error definition, use that instead of the raw response
-        // body for improved readability
+        // if we're getting a json encoded error definition, use that instead of the raw response.
+        // body for improved readability.
         $err .= ": ({$decoded['error']['code']}) {$decoded['error']['message']}";
       } else {
         $err .= ": ($code) $body";
@@ -110,7 +110,7 @@ class Forminator_Google_Http_REST
       throw new Forminator_Google_Service_Exception($err, $code, null, $errors, $map);
     }
 
-    // Only attempt to decode the response, if the response code wasn't (204) 'no content'
+    // Only attempt to decode the response, if the response code wasn't (204) 'no content'.
     if ($code != '204') {
       if ($response->getExpectedRaw()) {
         return $body;
@@ -170,7 +170,7 @@ class Forminator_Google_Http_REST
     }
 
     if (count($queryVars)) {
-      $requestUrl .= '?' . implode($queryVars, '&');
+      $requestUrl .= '?' . implode('&', $queryVars);
     }
 
     return $requestUrl;

@@ -21,7 +21,7 @@ abstract class Forminator_Calculator_Symbol_Abstract {
 	 * @return string[]
 	 */
 	final public function get_identifiers() {
-		// Lower-case all identifiers to make it easier to find duplicate identifiers
+		// Lower-case all identifiers to make it easier to find duplicate identifiers.
 		$identifiers = array_map( 'strtolower', $this->identifiers );
 
 		return $identifiers;

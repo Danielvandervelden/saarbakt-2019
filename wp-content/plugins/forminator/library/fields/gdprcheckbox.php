@@ -86,7 +86,7 @@ class Forminator_GdprCheckbox extends Forminator_Field {
 	 * @return array
 	 */
 	public function autofill_settings( $settings = array() ) {
-		//Unsupported Autofill
+		// Unsupported Autofill.
 		$autofill_settings = array();
 
 		return $autofill_settings;
@@ -98,12 +98,13 @@ class Forminator_GdprCheckbox extends Forminator_Field {
 	 * @since 1.0.5
 	 *
 	 * @param $field
-	 * @param $settings
+	 * @param Forminator_Render_Form $views_obj Forminator_Render_Form object.
 	 *
 	 * @return mixed
 	 */
-	public function markup( $field, $settings = array() ) {
+	public function markup( $field, $views_obj ) {
 
+		$settings    = $views_obj->model->settings;
 		$this->field = $field;
 
 		$html        = '';
@@ -111,7 +112,7 @@ class Forminator_GdprCheckbox extends Forminator_Field {
 		$name        = $id;
 		$form_id     = isset( $settings['form_id'] ) ? $settings['form_id'] : false;
 		$description = wp_kses_post( forminator_replace_variables( self::get_property( 'gdpr_description', $field ), $form_id ) );
-		$id          = 'forminator-field-' . $id . '-' . uniqid();
+		$id          = 'forminator-field-' . $id . '_' . Forminator_CForm_Front::$uid;
 		$label       = esc_html( self::get_property( 'field_label', $field ) );
 
 		$html .= '<div class="forminator-field">';
@@ -188,10 +189,9 @@ class Forminator_GdprCheckbox extends Forminator_Field {
 	 *
 	 * @param array        $field
 	 * @param array|string $data
-	 * @param array        $post_data
 	 */
-	public function validate( $field, $data, $post_data = array() ) {
-		// value of gdpr checkbox is `string` *true*
+	public function validate( $field, $data ) {
+		// value of gdpr checkbox is `string` *true*.
 		$id = $this->get_id( $field );
 		if ( empty( $data ) || 'true' !== $data ) {
 			$this->validation_message[ $id ] = apply_filters(
@@ -209,13 +209,13 @@ class Forminator_GdprCheckbox extends Forminator_Field {
 	 * @since 1.0.5
 	 *
 	 * @param array        $field
-	 * @param array|string $data - the data to be sanitized
+	 * @param array|string $data - the data to be sanitized.
 	 *
 	 * @return array|string $data - the data after sanitization
 	 */
 	public function sanitize( $field, $data ) {
 		$original_data = $data;
-		// Sanitize
+		// Sanitize.
 		$data = forminator_sanitize_field( $data );
 
 		return apply_filters( 'forminator_field_gdprcheckbox_sanitize', $data, $field, $original_data );

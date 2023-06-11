@@ -1,7 +1,7 @@
 <?php
 $_per_page          = forminator_form_view_per_page();
 $module_type        = forminator_get_prefix( $module_slug, 'c' );
-$export_dialog      = 'export_' . $module_type;
+$export_dialog      = 'export_' . $module_slug;
 $preview_dialog     = 'preview_' . forminator_get_prefix( $module_slug, 'c', false, true );
 $create_dialog      = forminator_get_prefix( $module_slug, 'custom_', false, true );
 $dashboard_settings = forminator_get_dashboard_settings( forminator_get_prefix( $module_slug, '', false, true ), array() );
@@ -23,7 +23,7 @@ if ( 0 === $num_recent ) {
 }
 
 $method  = 'get_' . forminator_get_prefix( $module_slug, '', false, true );
-$modules = Forminator_API::$method( null, 1,  $num_recent, $statuses );
+$modules = Forminator_API::$method( null, 1, $num_recent, $statuses );
 ?>
 
 <div class="sui-box">
@@ -69,11 +69,11 @@ $modules = Forminator_API::$method( null, 1,  $num_recent, $statuses );
 			<tbody>
 
 				<?php
-					foreach ( $modules as $index => $module ) {
-						$module = (array) $module;
-						$module['name'] = forminator_get_form_name( $module['id'] );
-						$page = ceil( ( $index + 1 ) / $_per_page );
-				?>
+				foreach ( $modules as $index => $module ) {
+					$module         = (array) $module;
+					$module['name'] = forminator_get_form_name( $module['id'] );
+					$page           = ceil( ( $index + 1 ) / $_per_page );
+					?>
 
 					<tr>
 
@@ -81,18 +81,18 @@ $modules = Forminator_API::$method( null, 1,  $num_recent, $statuses );
 
 						<td class="fui-col-status">
 
-							<?php
-							if ( 'publish' === $module['status'] ) {
-								$status_class = 'published';
-								$status_text  = esc_html__( 'Published', 'forminator' );
-							} else {
-								$status_class = 'draft';
-								$status_text  = esc_html__( 'Draft', 'forminator' );
-							}
-							// For Quizzes.
-							$has_leads = isset( $module['has_leads'] ) ? $module['has_leads'] : false;
-							$leads_id  = isset( $module['leads_id'] ) ? $module['leads_id'] : 0;
-							?>
+						<?php
+						if ( 'publish' === $module['status'] ) {
+							$status_class = 'published';
+							$status_text  = esc_html__( 'Published', 'forminator' );
+						} else {
+							$status_class = 'draft';
+							$status_text  = esc_html__( 'Draft', 'forminator' );
+						}
+						// For Quizzes.
+						$has_leads = isset( $module['settings']['hasLeads'] ) ? $module['settings']['hasLeads'] : false;
+						$leads_id  = isset( $module['settings']['leadsId'] ) ? $module['settings']['leadsId'] : 0;
+						?>
 
 							<span
 								class="sui-status-dot sui-<?php echo esc_html( $status_class ); ?> sui-tooltip"
@@ -117,7 +117,7 @@ $modules = Forminator_API::$method( null, 1,  $num_recent, $statuses );
 
 								<ul>
 									<li>
-										<?php $wizard_page_prefix = 'quiz' !== $module_type ? $module_type : ( 'nowrong' === $module['quiz_type'] ? $module['quiz_type'] : 'knowledge' ); ?>
+									<?php $wizard_page_prefix = 'quiz' !== $module_type ? $module_type : ( 'nowrong' === $module['quiz_type'] ? $module['quiz_type'] : 'knowledge' ); ?>
 										<a href="<?php echo esc_url( admin_url( 'admin.php?page=forminator-' . $wizard_page_prefix . '-wizard&id=' . $module['id'] ) ); ?>">
 											<i class="sui-icon-pencil" aria-hidden="true"></i> <?php esc_html_e( 'Edit', 'forminator' ); ?>
 										</a>
@@ -125,7 +125,7 @@ $modules = Forminator_API::$method( null, 1,  $num_recent, $statuses );
 
 									<li><button class="wpmudev-open-modal"
 										data-modal="<?php echo esc_attr( $preview_dialog ); ?>"
-										data-modal-title="<?php echo sprintf( '%s - %s', esc_html( $preview_title ), htmlspecialchars( htmlspecialchars( $module['name'] ) ) ); // phpcs:ignore ?>"
+										data-modal-title="<?php echo sprintf( '%s - %s', esc_attr( $preview_title ), esc_html( htmlspecialchars( htmlspecialchars( $module['name'] ) ) ) ); ?>"
 										data-nonce-preview="<?php echo esc_attr( wp_create_nonce( 'forminator_load_module' ) ); ?>"
 										data-form-id="<?php echo esc_attr( $module['id'] ); ?>"
 										data-has-leads="<?php echo esc_attr( $has_leads ); ?>"
@@ -144,17 +144,17 @@ $modules = Forminator_API::$method( null, 1,  $num_recent, $statuses );
 										<input type="hidden" name="forminator_action" value="clone">
 										<input type="hidden" name="form_type" value="<?php echo esc_attr( forminator_get_prefix( $module_slug, 'custom-' ) ); ?>">
 										<input type="hidden" name="id" value="<?php echo esc_attr( $module['id'] ); ?>"/>
-									   <?php
-											$clone_nonce = esc_attr( 'forminator-nonce-clone-' . $module['id'] );
-											wp_nonce_field( $clone_nonce, 'forminatorNonce' );
-									   ?>
-										<?php if ( $has_leads ): ?>
+								   <?php
+										$clone_nonce = esc_attr( 'forminator-nonce-clone-' . $module['id'] );
+										wp_nonce_field( $clone_nonce, 'forminatorNonce' );
+									?>
+										<?php if ( $has_leads ) : ?>
 											<button type="submit" disabled="disabled" class="fui-button-with-tag sui-tooltip sui-tooltip-left sui-constrained" data-tooltip="<?php esc_html_e( 'Duplicate isn\'t supported at the moment for the quizzes with lead capturing enabled.', 'forminator' ); ?>">
 												<span class="sui-icon-page-multiple" aria-hidden="true"></span>
 												<span class="fui-button-label"><?php esc_html_e( 'Duplicate', 'forminator' ); ?></span>
 												<span class="sui-tag sui-tag-blue sui-tag-sm"><?php echo esc_html__( 'Coming soon', 'forminator' ); ?></span>
 											</button>
-										<?php else: ?>
+										<?php else : ?>
 											<button type="submit">
 												<i class="sui-icon-page-multiple" aria-hidden="true"></i> <?php esc_html_e( 'Duplicate', 'forminator' ); ?>
 											</button>
@@ -163,14 +163,14 @@ $modules = Forminator_API::$method( null, 1,  $num_recent, $statuses );
 
 									<?php if ( Forminator::is_import_export_feature_enabled() ) : ?>
 
-										<?php if ( $has_leads ): ?>
+										<?php if ( $has_leads ) : ?>
 											<li aria-hidden="true"><a href="#" class="fui-button-with-tag sui-tooltip sui-tooltip-left"
 												data-tooltip="<?php esc_html_e( 'Export isn\'t supported at the moment for the quizzes with lead capturing enabled.', 'forminator' ); ?>">
 												<span class="sui-icon-cloud-migration" aria-hidden="true"></span>
 												<span class="fui-button-label"><?php esc_html_e( 'Export', 'forminator' ); ?></span>
 												<span class="sui-tag sui-tag-blue sui-tag-sm"><?php echo esc_html__( 'Coming soon', 'forminator' ); ?></span>
 											</a></li>
-										<?php else: ?>
+										<?php else : ?>
 											<li><a href="#"
 												class="wpmudev-open-modal"
 												data-modal="<?php echo esc_attr( $export_dialog ); ?>"
@@ -216,7 +216,7 @@ $modules = Forminator_API::$method( null, 1,  $num_recent, $statuses );
 			</button>
 
 			<div class="sui-actions-right">
-				<p class="sui-description"><a href="<?php echo admin_url( 'admin.php?page=forminator-' . $module_type ); // phpcs:ignore ?>" class="sui-link-gray"><?php echo esc_html( $view_all ); ?></a></p>
+				<p class="sui-description"><a href="<?php echo esc_url( admin_url( 'admin.php?page=forminator-' . $module_type ) ); ?>" class="sui-link-gray"><?php echo esc_html( $view_all ); ?></a></p>
 			</div>
 
 		</div>

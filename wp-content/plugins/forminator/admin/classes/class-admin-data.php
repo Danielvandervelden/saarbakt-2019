@@ -31,13 +31,13 @@ class Forminator_Admin_Data {
 	/**
 	 * Combine Data and pass to JS
 	 *
-	 * @since 1.0
 	 * @return array
+	 * @since 1.0
 	 */
 	public function get_options_data() {
-		$data           = $this->admin_js_defaults();
-		$data           = apply_filters( 'forminator_data', $data );
-		$data['fields'] = forminator_get_fields_sorted( 'position', SORT_ASC );
+		$data              = $this->admin_js_defaults();
+		$data              = apply_filters( 'forminator_data', $data );
+		$data['fields']    = forminator_get_fields_sorted( 'position', SORT_ASC );
 		$data['fieldsPro'] = forminator_get_pro_fields();
 
 		return $data;
@@ -55,8 +55,8 @@ class Forminator_Admin_Data {
 	/**
 	 * Get current generated nonce
 	 *
-	 * @since 1.2
 	 * @return string
+	 * @since 1.2
 	 */
 	public function get_nonce() {
 		return $this->_nonce;
@@ -65,9 +65,8 @@ class Forminator_Admin_Data {
 	/**
 	 * Return published pages
 	 *
-	 * @since 1.8
-	 *
 	 * @return mixed
+	 * @since 1.8
 	 */
 	public static function get_pages() {
 		if ( ! is_null( self::$pages ) ) {
@@ -76,7 +75,7 @@ class Forminator_Admin_Data {
 
 		global $wpdb;
 
-		$sql = "SELECT ID, post_title FROM {$wpdb->posts} WHERE post_type = 'page' AND post_status = 'publish' ORDER BY post_title ASC";
+		$sql         = "SELECT ID, post_title FROM {$wpdb->posts} WHERE post_type = 'page' AND post_status = 'publish' ORDER BY post_title ASC";
 		self::$pages = $wpdb->get_results( $sql );
 
 		return self::$pages;
@@ -85,11 +84,11 @@ class Forminator_Admin_Data {
 	/**
 	 * Default Admin properties
 	 *
-	 * @since 1.0
 	 * @return array
+	 * @since 1.0
 	 */
 	public function admin_js_defaults() {
-		// Generate addon nonce
+		// Generate addon nonce.
 		Forminator_Addon_Admin_Ajax::get_instance()->generate_nonce();
 		$id = filter_input( INPUT_GET, 'id', FILTER_VALIDATE_INT );
 
@@ -110,13 +109,15 @@ class Forminator_Admin_Data {
 			'hasV2Captcha'                   => forminator_has_v2_captcha_settings(),
 			'hasV2InvisibleCaptcha'          => forminator_has_v2_invisible_captcha_settings(),
 			'hasV3Captcha'                   => forminator_has_v3_captcha_settings(),
+			'hasHCaptcha'                    => forminator_has_hcaptcha_settings(),
+			'loadCaptcha'                    => wp_create_nonce( 'forminator_load_captcha_settings' ),
 			'hasStripe'                      => forminator_has_stripe_connected(),
 			'formNonce'                      => $this->get_nonce(),
 			'resetTrackingDataNonce'         => wp_create_nonce( 'forminator_reset_tracking_data' ),
-			'previewNonce'							=> wp_create_nonce( 'forminator_load_module' ),
+			'previewNonce'                   => wp_create_nonce( 'forminator_load_module' ),
 			'searchNonce'                    => wp_create_nonce( 'forminator_search_emails' ),
 			'gFontNonce'                     => wp_create_nonce( 'forminator_load_google_fonts' ),
-			'dismissNonce'					 		=> wp_create_nonce( 'forminator_dismiss_notification' ),
+			'dismissNonce'                   => wp_create_nonce( 'forminator_dismiss_notification' ),
 			'formProcessNonce'               => wp_create_nonce( 'forminator_form_request' ),
 			'formExportNonce'                => wp_create_nonce( 'forminator_popup_export_form' ),
 			'pollProcessNonce'               => wp_create_nonce( 'forminator_poll_request' ),
@@ -126,11 +127,12 @@ class Forminator_Admin_Data {
 			'cloneNonce'                     => wp_create_nonce( 'forminator-nonce-clone-' . $id ),
 			'addons_enabled'                 => Forminator::is_addons_feature_enabled(),
 			'pluginUrl'                      => forminator_plugin_url(),
-			'imagesUrl'                      => forminator_plugin_url() . '/assets/images',
+			'imagesUrl'                      => forminator_plugin_url() . 'assets/images',
 			'addonNonce'                     => Forminator_Addon_Admin_Ajax::get_instance()->get_nonce(),
 			'countries'                      => forminator_get_countries_list(),
 			'userList'                       => forminator_list_users(),
 			'variables'                      => forminator_get_vars(),
+			'variablesForHiddenField'		 => forminator_get_vars( true ),
 			'payment_variables'              => forminator_get_payment_vars(),
 			'maxUpload'                      => forminator_get_max_upload(),
 			'captchaLangs'                   => forminator_get_captcha_languages(),
@@ -159,7 +161,65 @@ class Forminator_Admin_Data {
 			'pollAnswerColors'               => forminator_get_poll_chart_colors(),
 			'isMainSite'                     => forminator_is_main_site(),
 			'isSubdomainNetwork'             => forminator_is_subdomain_network(),
-			'showFieldSettings'					=> get_option( 'forminator_editor_settings', "true" ),
+			'showFieldSettings'              => get_option( 'forminator_editor_settings', 'true' ),
+			'hasStripePro'                   => defined( 'FORMINATOR_STRIPE_ADDON' ) && class_exists( 'Forminator_Stripe_Addon' ),
+			'stripeForms'                    => $this->get_forms_by_field_type( 'stripe' ),
+			'paypalForms'                    => $this->get_forms_by_field_type( 'paypal' ),
+			'form_modules'                   => $this->get_modules( 'get_forms' ),
+			'quiz_modules'                   => $this->get_modules( 'get_quizzes' ),
+			'poll_modules'                   => $this->get_modules( 'get_polls' )
 		);
+	}
+
+	/**
+	 * Get form by field
+	 *
+	 * @param $type
+	 *
+	 * @return array
+	 */
+	public function get_forms_by_field_type( $type ) {
+		$field_forms = array();
+		$forms       = Forminator_Form_Model::model()->get_models( 99 );
+		if ( ! empty( $forms ) ) {
+			foreach ( $forms as $form ) {
+				if ( ! empty( $form->fields ) ) {
+					foreach ( $form->fields as $f => $field ) {
+						$field_array = $field->to_formatted_array();
+						$field_type  = isset( $field_array['type'] ) ? $field_array['type'] : '';
+						if ( $type === $field_type ) {
+							$field_forms[ $form->id ] = isset( $form->settings['formName'] ) ? $form->settings['formName'] : '';
+						}
+					}
+				}
+			}
+		}
+
+		return $field_forms;
+	}
+
+	/**
+	 * Print forms select
+	 *
+	 * @return array
+	 * @since 1.0
+	 */
+	public function get_modules( $method ) {
+		$modules      = array();
+		$modules_data = Forminator_API::$method( null, 1, 999, 'publish' );
+		if ( ! empty( $modules_data ) ) {
+			foreach ( $modules_data as $m => $module ) {
+				$module = (array) $module;
+				$title  = forminator_get_form_name( $module['id'] );
+				if ( mb_strlen( $title ) > 25 ) {
+					$title = mb_substr( $title, 0, 25 ) . '...';
+				}
+				$modules[ $m ]['id']   = $module['id'];
+				$modules[ $m ]['name'] = $title;
+			}
+		}
+
+		return $modules;
+
 	}
 }

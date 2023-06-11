@@ -27,9 +27,8 @@ class CDN extends Abstract_Summary_Page implements Interface_Page {
 
 		if ( ! WP_Smush::is_pro() ) {
 			$this->add_meta_box(
-				'cdn',
-				__( 'CDN', 'wp-smushit' ),
-				array( $this, 'cdn_upsell_meta_box' )
+				'cdn/upsell',
+				__( 'CDN', 'wp-smushit' )
 			);
 
 			return;
@@ -38,7 +37,9 @@ class CDN extends Abstract_Summary_Page implements Interface_Page {
 		if ( ! $this->settings->get( 'cdn' ) ) {
 			$this->add_meta_box(
 				'cdn/disabled',
-				__( 'CDN', 'wp-smushit' )
+				__( 'CDN', 'wp-smushit' ),
+				null,
+				array( $this, 'header_meta_box' )
 			);
 
 			return;
@@ -48,31 +49,8 @@ class CDN extends Abstract_Summary_Page implements Interface_Page {
 			'cdn',
 			__( 'CDN', 'wp-smushit' ),
 			array( $this, 'cdn_meta_box' ),
-			null,
+			array( $this, 'header_meta_box' ),
 			array( $this, 'common_meta_box_footer' )
-		);
-	}
-
-	/**
-	 * CDN meta box (for free users).
-	 *
-	 * @since 3.0
-	 */
-	public function cdn_upsell_meta_box() {
-		$upgrade_url = add_query_arg(
-			array(
-				'utm_source'   => 'smush',
-				'utm_medium'   => 'plugin',
-				'utm_campaign' => 'smush_cdn_upgrade_button',
-			),
-			$this->upgrade_url
-		);
-
-		$this->view(
-			'cdn/upsell-meta-box',
-			array(
-				'upgrade_url' => $upgrade_url,
-			)
 		);
 	}
 
@@ -83,6 +61,15 @@ class CDN extends Abstract_Summary_Page implements Interface_Page {
 	 */
 	public function common_meta_box_footer() {
 		$this->view( 'meta-box-footer', array(), 'common' );
+	}
+
+	/**
+	 * Header CDN with notification.
+	 *
+	 * @since 3.9.6
+	 */
+	public function header_meta_box() {
+		$this->view( 'cdn/meta-box-header' );
 	}
 
 	/**
@@ -102,7 +89,7 @@ class CDN extends Abstract_Summary_Page implements Interface_Page {
 			'disabled'   => __( 'CDN is not yet active. Configure your settings below and click Activate.', 'wp-smushit' ),
 			'activating' => __(
 				'Your settings have been saved and changes are now propagating to the CDN. Changes can take up to 30
-				minutes to take effect but your images will continue to be served in the mean time, please be patient.',
+				minutes to take effect but your images will continue to be served in the meantime, please be patient.',
 				'wp-smushit'
 			),
 			'upgrade'    => sprintf(

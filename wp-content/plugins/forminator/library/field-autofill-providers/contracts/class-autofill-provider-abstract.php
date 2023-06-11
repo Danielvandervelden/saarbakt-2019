@@ -118,7 +118,6 @@ abstract class Forminator_Autofill_Provider_Abstract implements Forminator_Autof
 	 * Add hook filter to forminator fields based on @see get_attribute_to_hook
 	 *
 	 * @since 1.0.5
-	 *
 	 */
 	final protected function hook_to_fields() {
 		$hookable_attributes = $this->get_attribute_to_hook();
@@ -150,7 +149,7 @@ abstract class Forminator_Autofill_Provider_Abstract implements Forminator_Autof
 		}
 
 		foreach ( $hookable_attributes[ $field_slug ] as $hookable_attribute ) {
-			// Dedupe
+			// Dedupe.
 			if ( in_array( $hookable_attribute, $providers, true ) ) {
 				continue;
 			}

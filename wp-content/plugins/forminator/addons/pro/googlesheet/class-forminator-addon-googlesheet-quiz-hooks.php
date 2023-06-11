@@ -71,8 +71,8 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 		 *
 		 * @param array $submitted_data
 		 * @param array $current_entry_fields
-		 * @param int $quiz_id current quiz ID
-		 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon quiz Settings instance
+		 * @param int $quiz_id current quiz ID.
+		 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon quiz Settings instance.
 		 */
 		$submitted_data = apply_filters(
 			'forminator_addon_googlesheet_quiz_submitted_data',
@@ -89,8 +89,8 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 		 *
 		 * @param array $current_entry_fields
 		 * @param array $submitted_data
-		 * @param int $quiz_id current Quiz ID
-		 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance
+		 * @param int $quiz_id current Quiz ID.
+		 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance.
 		 */
 		$current_entry_fields = apply_filters(
 			'forminator_addon_googlesheet_quiz_entry_fields',
@@ -111,16 +111,16 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 		 *
 		 * @since 1.6.2
 		 *
-		 * @param int $quiz_id current Quiz ID
+		 * @param int $quiz_id current Quiz ID.
 		 * @param array $submitted_data
-		 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance
+		 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance.
 		 */
 		do_action( 'forminator_addon_googlesheet_quiz_before_create_row', $quiz_id, $submitted_data, $quiz_settings_instance );
 
 		foreach ( $addon_setting_values as $key => $addon_setting_value ) {
-			// save it on entry field, with name `status-$MULTI_ID`, and value is the return result on sending data to Google Sheets
+			// save it on entry field, with name `status-$MULTI_ID`, and value is the return result on sending data to Google Sheets.
 			if ( $quiz_settings_instance->is_multi_quiz_settings_complete( $key ) ) {
-				// exec only on completed connection
+				// exec only on completed connection.
 				$data[] = array(
 					'name'  => 'status-' . $key,
 					'value' => $this->get_status_on_create_row( $key, $submitted_data, $addon_setting_value, $current_entry_fields ),
@@ -135,10 +135,10 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 		 * @since 1.6.2
 		 *
 		 * @param array $entry_fields
-		 * @param int $quiz_id current Quiz ID
+		 * @param int $quiz_id current Quiz ID.
 		 * @param array $submitted_data
 		 * @param array $current_entry_fields
-		 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance
+		 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance.
 		 */
 		$data = apply_filters(
 			'forminator_addon_quiz_googlesheet_entry_fields',
@@ -165,7 +165,7 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 	 * @return array `is_sent` true means its success send data to Google Sheets, false otherwise
 	 */
 	public function get_status_on_create_row( $connection_id, $submitted_data, $connection_settings, $quiz_entry_fields ) {
-		// initialize as null
+		// initialize as null.
 		$api = null;
 
 		$quiz_id                = $this->quiz_id;
@@ -181,14 +181,14 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 			 * @since 1.6.2
 			 *
 			 * @param array $connection_settings
-			 * @param int $quiz_id current Quiz ID
+			 * @param int $quiz_id current Quiz ID.
 			 * @param array $submitted_data
 			 * @param array $quiz_entry_fields
-			 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance
+			 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance.
 			 */
 			do_action( 'forminator_addon_quiz_googlesheet_before_prepare_sheet_headers', $connection_settings, $quiz_id, $submitted_data, $quiz_entry_fields, $quiz_settings_instance );
 
-			// prepare headers
+			// prepare headers.
 			$header_fields = $this->get_sheet_headers( $connection_settings['file_id'], $quiz_settings );
 
 			/**
@@ -196,12 +196,12 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 			 *
 			 * @since 1.6.2
 			 *
-			 * @param array $header_fields sheet headers
+			 * @param array $header_fields sheet headers.
 			 * @param array $connection_settings
-			 * @param int $quiz_id current Quiz ID
+			 * @param int $quiz_id current Quiz ID.
 			 * @param array $submitted_data
 			 * @param array $quiz_entry_fields
-			 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance
+			 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance.
 			 */
 			$header_fields = apply_filters(
 				'forminator_addon_quiz_googlesheet_sheet_headers',
@@ -218,12 +218,12 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 			 *
 			 * @since 1.6.2
 			 *
-			 * @param array $header_fields sheet headers
+			 * @param array $header_fields sheet headers.
 			 * @param array $connection_settings
-			 * @param int $quiz_id current Quiz ID
+			 * @param int $quiz_id current Quiz ID.
 			 * @param array $submitted_data
 			 * @param array $quiz_entry_fields
-			 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance
+			 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance.
 			 */
 			do_action( 'forminator_addon_quiz_googlesheet_after_prepare_sheet_headers', $header_fields, $connection_settings, $quiz_id, $submitted_data, $quiz_entry_fields, $quiz_settings_instance );
 
@@ -234,7 +234,7 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 				if ( isset( $quiz_entry['name'] ) && isset( $quiz_entry['value'] ) && 'entry' === $quiz_entry['name'] ) {
 					if ( is_array( $quiz_entry['value'] ) ) {
 
-						// KNOWLEDGE
+						// KNOWLEDGE.
 						if ( 'knowledge' === $this->quiz->quiz_type ) {
 							foreach ( $quiz_entry['value'] as $data ) {
 								$question   = isset( $data['question'] ) ? $data['question'] : '';
@@ -277,11 +277,10 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 
 			$form_entry_fields = get_addons_lead_form_entry_data( $quiz_settings, $submitted_data, $addons_fields );
 
-			// all avail fields on library
-			$fields      = forminator_fields_to_array();
-			$field_types = array_keys( $fields );
+			// all avail fields on library.
+			$field_types = Forminator_Core::get_field_types();
 
-			// sort by length, so stripos will work by traverse from longest field type first
+			// sort by length, so stripos will work by traverse from longest field type first.
 			$field_types_strlen = array_map( 'strlen', $field_types );
 			array_multisort( $field_types_strlen, $field_types );
 			$field_types = array_reverse( $field_types );
@@ -296,7 +295,7 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 						$value     = new Forminator_Google_Service_Sheets_ExtendedValue();
 						$cell_data = new Forminator_Google_Service_Sheets_CellData();
 
-						// only once
+						// only once.
 						$date_value = 0 === $i ? $date : '';
 						$value->setStringValue( $date_value );
 						$cell_data->setUserEnteredValue( $value );
@@ -317,7 +316,7 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 						$value     = new Forminator_Google_Service_Sheets_ExtendedValue();
 						$cell_data = new Forminator_Google_Service_Sheets_CellData();
 
-						// only once for nowrong
+						// only once for nowrong.
 						$result_value = $answer['result'];
 						if ( 'nowrong' === $this->quiz->quiz_type ) {
 							$result_value = 0 === $i ? $result_value : '';
@@ -338,7 +337,7 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 						}
 
 						$meta_value = array();
-						// take from entry fields (to be saved)
+						// take from entry fields (to be saved).
 						if ( isset( $form_entry_fields[ $form_column_name ] ) ) {
 							$meta_value = $form_entry_fields[ $form_column_name ];
 						}
@@ -352,7 +351,7 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 						$cell_data->setUserEnteredValue( $value );
 						$values[] = $cell_data;
 					} else {
-						// unknown column, set empty
+						// unknown column, set empty.
 						$value     = new Forminator_Google_Service_Sheets_ExtendedValue();
 						$cell_data = new Forminator_Google_Service_Sheets_CellData();
 						$value->setStringValue( '' );
@@ -361,21 +360,21 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 					}
 				}
 
-				// Build the RowData
+				// Build the RowData.
 				$row_data = new Forminator_Google_Service_Sheets_RowData();
 				$row_data->setValues( $values );
 
-				// Prepare the request
+				// Prepare the request.
 				$append_request = new Forminator_Google_Service_Sheets_AppendCellsRequest();
 				$append_request->setSheetId( 0 );
 				$append_request->setRows( $row_data );
 				$append_request->setFields( 'userEnteredValue' );
 
-				// Set the request
+				// Set the request.
 				$request = new Forminator_Google_Service_Sheets_Request();
 				$request->setAppendCells( $append_request );
 
-				// Add the request to the requests array
+				// Add the request to the requests array.
 				$requests[] = $request;
 			}
 
@@ -383,7 +382,7 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 				throw new Forminator_Addon_Googlesheet_Exception( __( 'No data to be send to GoogleSheet', 'forminator' ) );
 			}
 
-			// Prepare the update
+			// Prepare the update.
 			$batch_update_request = new Forminator_Google_Service_Sheets_BatchUpdateSpreadsheetRequest(
 				array(
 					'requests' => $requests,
@@ -496,7 +495,7 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 			}
 		}
 
-		// dont use translation because it will be used as reference
+		// dont use translation because it will be used as reference.
 		$required_header_columns = array(
 			self::GSHEET_DATE_COLUMN_NAME,
 			self::GSHEET_QUESTION_COLUMN_NAME,
@@ -525,13 +524,13 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 				//add
 				$new_range = $sheet_title . '!' . Forminator_Addon_Googlesheet_Form_Hooks::column_number_to_letter( $column_number ) . '1';
 
-				// update headers map
+				// update headers map.
 				$header_fields[ $required_header_column ] = array(
 					'range' => $new_range,
 					'value' => $expected_header_value,
 				);
 
-				// increment for next usage
+				// increment for next usage.
 				$column_number ++;
 				$update_body = new Forminator_Google_Service_Sheets_ValueRange();
 				$update_body->setRange( $new_range );
@@ -541,10 +540,10 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 			} else {
 				$header_field = $header_fields[ $required_header_column ];
 				if ( $expected_header_value !== $header_field['value'] ) {
-					// update headers map
+					// update headers map.
 					$header_fields[ $required_header_column ]['value'] = $expected_header_value;
 
-					// update sheet
+					// update sheet.
 					$update_body = new Forminator_Google_Service_Sheets_ValueRange();
 					$update_body->setRange( $header_field['range'] );
 					$update_body->setValues( array( array( $expected_header_value ) ) );
@@ -630,9 +629,9 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 		 *
 		 * @since 1.6.2
 		 *
-		 * @param array $export_headers headers to be displayed on export file
-		 * @param int $quiz_id current Quiz ID
-		 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance
+		 * @param array $export_headers headers to be displayed on export file.
+		 * @param int $quiz_id current Quiz ID.
+		 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance.
 		 */
 		$export_headers = apply_filters(
 			'forminator_addon_quiz_googlesheet_export_headers',
@@ -667,8 +666,8 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 		 * @since 1.6.2
 		 *
 		 * @param array $addon_meta_data
-		 * @param int $quiz_id current Quiz ID
-		 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance
+		 * @param int $quiz_id current Quiz ID.
+		 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_quiz_googlesheet_metadata',
@@ -686,11 +685,11 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 		 *
 		 * @since 1.2
 		 *
-		 * @param array $export_columns column to be exported
-		 * @param int $quiz_id current Quiz ID
-		 * @param Forminator_Form_Entry_Model $entry_model Form Entry Model
-		 * @param array $addon_meta_data meta data saved by addon on entry fields
-		 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance
+		 * @param array $export_columns column to be exported.
+		 * @param int $quiz_id current Quiz ID.
+		 * @param Forminator_Form_Entry_Model $entry_model Form Entry Model.
+		 * @param array $addon_meta_data meta data saved by addon on entry fields.
+		 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Quiz Settings instance.
 		 */
 		$export_columns = apply_filters(
 			'forminator_addon_quiz_googlesheet_export_columns',
@@ -727,8 +726,8 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 		 * @since 1.6.2
 		 *
 		 * @param array $addon_meta_data
-		 * @param int $quiz_id current Form ID
-		 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Form Settings instance
+		 * @param int $quiz_id current Form ID.
+		 * @param Forminator_Addon_Googlesheet_Quiz_Settings $quiz_settings_instance Google Sheets Addon Form Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_quiz_googlesheet_metadata',
@@ -813,7 +812,7 @@ class Forminator_Addon_Googlesheet_Quiz_Hooks extends Forminator_Addon_Quiz_Hook
 
 		$additional_entry_item['sub_entries'] = $sub_entries;
 
-		// return single array
+		// return single array.
 		return $additional_entry_item;
 	}
 }

@@ -94,7 +94,7 @@ class Forminator_Google_Cache_File extends Forminator_Google_Cache_Abstract
   {
     $storageFile = $this->getWriteableCacheFile($key);
     if ($this->acquireWriteLock($storageFile)) {
-      // We serialize the whole request object, since we don't only want the
+      // We serialize the whole request object, since we don't only want the.
       // responseContent but also the postBody used, headers, size, etc.
       $data = serialize($value);
       $result = fwrite($this->fh, $data);
@@ -141,9 +141,9 @@ class Forminator_Google_Cache_File extends Forminator_Google_Cache_Abstract
 
   private function getCacheDir($file, $forWrite)
   {
-    // use the first 2 characters of the hash as a directory prefix
-    // this should prevent slowdowns due to huge directory listings
-    // and thus give some basic amount of scalability
+    // use the first 2 characters of the hash as a directory prefix.
+    // this should prevent slowdowns due to huge directory listings.
+    // and thus give some basic amount of scalability.
     $storageDir = $this->path . '/' . substr(md5($file), 0, 2);
     if ($forWrite && ! is_dir($storageDir)) {
       if (! mkdir($storageDir, 0700, true)) {

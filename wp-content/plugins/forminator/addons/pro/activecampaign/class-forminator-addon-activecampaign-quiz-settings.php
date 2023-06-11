@@ -48,7 +48,7 @@ class Forminator_Addon_Activecampaign_Quiz_Settings extends Forminator_Addon_Qui
 	 * @return array
 	 */
 	public function quiz_settings_wizards() {
-		// numerical array steps
+		// numerical array steps.
 		return array(
 			array(
 				'callback'     => array( $this, 'pick_name' ),
@@ -70,7 +70,7 @@ class Forminator_Addon_Activecampaign_Quiz_Settings extends Forminator_Addon_Qui
 	}
 
 	/**
-	 * Setup Connection Name
+	 * Set up Connection Name
 	 *
 	 * @since 1.0 Activecampaign Addon
 	 *
@@ -170,7 +170,7 @@ class Forminator_Addon_Activecampaign_Quiz_Settings extends Forminator_Addon_Qui
 	}
 
 	/**
-	 * Setup Contact List
+	 * Set up Contact List
 	 *
 	 * @since 1.0 Activecampaign Addon
 	 *
@@ -312,7 +312,7 @@ class Forminator_Addon_Activecampaign_Quiz_Settings extends Forminator_Addon_Qui
 
 
 	/**
-	 * Setup fields map
+	 * Set up fields map
 	 *
 	 * @since 1.0 Activecampaign Addon
 	 *
@@ -330,35 +330,34 @@ class Forminator_Addon_Activecampaign_Quiz_Settings extends Forminator_Addon_Qui
 		$multi_id = $submitted_data['multi_id'];
 		unset( $submitted_data['multi_id'] );
 
-		// find type of email
+		// find type of email.
 		$email_fields                 = array();
 		$forminator_quiz_element_ids  = array();
 		$forminator_field_element_ids = array();
 		foreach ( $this->form_fields as $form_field ) {
-			// collect element ids
+			// collect element ids.
 			$forminator_field_element_ids[] = $form_field['element_id'];
 			if ( 'email' === $form_field['type'] ) {
 				$email_fields[] = $form_field;
 			}
-
 		}
 
 		$quiz_questions = $this->get_quiz_fields();
 		$quiz_fields    = array(
-			'quiz-name'       => __( 'Quiz Name', 'forminator' ),
+			'quiz-name' => __( 'Quiz Name', 'forminator' ),
 		);
 		foreach ( $quiz_questions as $quiz_question ) {
-			// collect element ids
+			// collect element ids.
 			$forminator_quiz_element_ids[]         = $quiz_question['slug'];
 			$quiz_fields[ $quiz_question['slug'] ] = $quiz_question['title'];
 		}
 		if ( 'knowledge' === $this->quiz->quiz_type ) {
 			$quiz_fields['correct-answers'] = __( 'Correct Answers', 'forminator' );
 			$quiz_fields['total-answers']   = __( 'Total Answers', 'forminator' );
-			array_push( $forminator_quiz_element_ids,'quiz-name','correct-answers', 'total-answers' );
+			array_push( $forminator_quiz_element_ids, 'quiz-name', 'correct-answers', 'total-answers' );
 		} elseif ( 'nowrong' === $this->quiz->quiz_type ) {
 			$quiz_fields['result-answers'] = __( 'Result Answer', 'forminator' );
-			array_push( $forminator_quiz_element_ids,'quiz-name', 'result-answers' );
+			array_push( $forminator_quiz_element_ids, 'quiz-name', 'result-answers' );
 		}
 
 		$forminator_field_element_ids = array_merge( $forminator_field_element_ids, $forminator_quiz_element_ids );
@@ -388,13 +387,22 @@ class Forminator_Addon_Activecampaign_Quiz_Settings extends Forminator_Addon_Qui
 
 		try {
 
-			$ac_api      = $this->addon->get_api();
-			$list_detail = $ac_api->get_list( $list_id );
+			$ac_api = $this->addon->get_api();
+			$lists_request = $ac_api->get_lists();
+			$custom_fields = array();
 
-			//get global fields assigned to the form as well as explecit field
-			if ( ! empty( $this->custom_fields ) && is_array( $this->custom_fields ) ) {
-				foreach ( $this->custom_fields as $field ) {
-					$fields[ $field->id ] = $field->title;
+			foreach ( $lists_request as $list ) {
+				if ( $list_id === $list->id ) {
+					if ( ! empty( $list->fields ) ) {
+						$custom_fields = $list->fields;
+					}
+				}
+			}
+
+			// get global fields assigned to the form as well as explecit field
+			if ( ! empty( $custom_fields ) ) {
+				foreach ( $custom_fields as $custom_field ) {
+					$fields[ $custom_field->id ] = $custom_field->title;
 				}
 			}
 
@@ -426,7 +434,7 @@ class Forminator_Addon_Activecampaign_Quiz_Settings extends Forminator_Addon_Qui
 						if ( ! in_array( $element_id, $forminator_field_element_ids, true ) ) {
 							$input_exceptions->add_input_exception(
 								/* translators: %s: title */
-								sprintf( __( 'Please assign valid field for %s', 'forminator' ), $title ),
+								sprintf( __( 'Please assign valid field for %s', 'forminator' ), esc_html( $title ) ),
 								$key . '_error'
 							);
 							continue;
@@ -507,7 +515,7 @@ class Forminator_Addon_Activecampaign_Quiz_Settings extends Forminator_Addon_Qui
 	}
 
 	/**
-	 * Setup options
+	 * Set up options
 	 *
 	 * Contains :
 	 * - Double opt-in quiz,
@@ -555,7 +563,7 @@ class Forminator_Addon_Activecampaign_Quiz_Settings extends Forminator_Addon_Qui
 		}
 		$tag_selected_fields = array();
 		foreach ( $saved_tags as $key => $saved_tag ) {
-			// using form data
+			// using form data.
 			if ( stripos( $saved_tag, '{' ) === 0
 				&& stripos( $saved_tag, '}' ) === ( strlen( $saved_tag ) - 1 )
 			) {
@@ -570,10 +578,10 @@ class Forminator_Addon_Activecampaign_Quiz_Settings extends Forminator_Addon_Qui
 					// let this go, its already selected.
 					unset( $forminator_form_element_ids[ $element_id ] );
 				} else {
-					// no more exist on element ids let it go
+					// no more exist on element ids let it go.
 					unset( $saved_tags[ $key ] );
 				}
-			} else { // free form type
+			} else { // free form type.
 				$tag_selected_fields[] = array(
 					'element_id'  => $saved_tag,
 					'field_label' => $saved_tag,
@@ -613,7 +621,7 @@ class Forminator_Addon_Activecampaign_Quiz_Settings extends Forminator_Addon_Qui
 			try {
 				$input_exceptions = new Forminator_Addon_Activecampaign_Quiz_Settings_Exception();
 
-				// possible different type intended
+				// possible different type intended.
 				// phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
 				if ( ! empty( $double_opt_form_id ) && ! in_array( $double_opt_form_id, array_keys( $forms ) ) ) {
 					$input_exceptions->add_input_exception( __( 'Please pick valid ActiveCampaign Quiz', 'forminator' ), 'double_opt_form_id_error' );
@@ -674,7 +682,7 @@ class Forminator_Addon_Activecampaign_Quiz_Settings extends Forminator_Addon_Qui
 	}
 
 	/**
-	 * Check if setup options completed
+	 * Check if set up options completed
 	 *
 	 * @since 1.0 Activecampaign Addon
 	 *
@@ -683,7 +691,7 @@ class Forminator_Addon_Activecampaign_Quiz_Settings extends Forminator_Addon_Qui
 	 * @return bool
 	 */
 	public function setup_options_is_completed( $submitted_data ) {
-		// all settings here are optional, so it can be marked as completed
+		// all settings here are optional, so it can be marked as completed.
 		return true;
 	}
 
@@ -708,10 +716,10 @@ class Forminator_Addon_Activecampaign_Quiz_Settings extends Forminator_Addon_Qui
 		$multi_ids            = array();
 		$quiz_settings_values = $this->get_quiz_settings_values();
 		foreach ( $quiz_settings_values as $key => $value ) {
-			// apply some sorting if applicable
+			// apply some sorting if applicable.
 			$multi_ids[] = array(
 				'id'    => $key,
-				// use name that was added by user on creating connection
+				// use name that was added by user on creating connection.
 				'label' => isset( $value['name'] ) ? $value['name'] : $key,
 			);
 		}
@@ -737,7 +745,7 @@ class Forminator_Addon_Activecampaign_Quiz_Settings extends Forminator_Addon_Qui
 	 * @param array $submitted_data
 	 */
 	public function disconnect_form( $submitted_data ) {
-		// only execute if multi_id provided on submitted data
+		// only execute if multi_id provided on submitted data.
 		if ( isset( $submitted_data['multi_id'] ) && ! empty( $submitted_data['multi_id'] ) ) {
 			$addon_quiz_settings = $this->get_quiz_settings_values();
 			unset( $addon_quiz_settings[ $submitted_data['multi_id'] ] );

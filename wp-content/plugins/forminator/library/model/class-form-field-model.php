@@ -27,6 +27,13 @@ class Forminator_Form_Field_Model {
 	public $form_id;
 
 	/**
+	 * This is parent group, optional
+	 *
+	 * @var string
+	 */
+	public $parent_group = '';
+
+	/**
 	 * This contains all the parsed json data from frontend form
 	 *
 	 * @var array
@@ -103,9 +110,10 @@ class Forminator_Form_Field_Model {
 	 */
 	public function to_array() {
 		$data = array(
-			'id'         => $this->slug,
-			'element_id' => $this->slug,
-			'form_id'    => $this->form_id,
+			'id'           => $this->slug,
+			'element_id'   => $this->slug,
+			'form_id'      => $this->form_id,
+			'parent_group' => $this->parent_group,
 		);
 
 		return array_merge( $data, $this->raw );
@@ -131,11 +139,11 @@ class Forminator_Form_Field_Model {
 		}
 
 		foreach ( $data as $key => $val ) {
-			$key        = sanitize_key( $key ); // Attempt ti sanitize key
+			$key        = sanitize_key( $key ); // Attempt ti sanitize key.
 			$this->$key = $val;
 		}
 
-		// Add `wrapper_id` when necessary
+		// Add `wrapper_id` when necessary.
 		if ( ! isset( $this->wrapper_id ) ) {
 			$wrapper_id = '';
 			if ( isset( $this->form_id ) && ! empty( $this->form_id ) && false !== stripos( $this->form_id, 'wrapper-' ) ) {
@@ -143,7 +151,7 @@ class Forminator_Form_Field_Model {
 			} elseif ( isset( $this->formID ) && ! empty( $this->formID )  // phpcs:ignore WordPress.NamingConventions.ValidVariableName.NotSnakeCaseMemberVar
 					&& false !== stripos( $this->formID, 'wrapper-' ) ) { // phpcs:ignore WordPress.NamingConventions.ValidVariableName.NotSnakeCaseMemberVar
 
-				// Backward compat formID
+				// Backward compat formID.
 				$wrapper_id = $this->formID; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.NotSnakeCaseMemberVar
 			}
 
@@ -151,6 +159,49 @@ class Forminator_Form_Field_Model {
 				$this->wrapper_id = $wrapper_id;
 			}
 		}
+	}
+
+	/**
+	 * Check if subfield is enabled or disabled
+	 *
+	 * @param string $subfield_name Subfield name.
+	 * @return boolean
+	 */
+	public function is_subfield_enabled( $subfield_name ) {
+		$subfield_slugs = array(
+			'hours'          => 'element_id', // Always enabled.
+			'minutes'        => 'element_id',
+			'ampm'           => 'element_id',
+			'year'           => 'element_id',
+			'day'            => 'element_id',
+			'month'          => 'element_id',
+			'street_address' => 'street_address',
+			'address_line'   => 'address_line',
+			'city'           => 'address_city',
+			'state'          => 'address_state',
+			'zip'            => 'address_zip',
+			'country'        => 'address_country',
+			'prefix'         => 'prefix',
+			'first-name'     => 'fname',
+			'middle-name'    => 'mname',
+			'last-name'      => 'lname',
+		);
+
+		$subfield_slug = isset( $subfield_slugs[ $subfield_name ] )
+				? $subfield_slugs[ $subfield_name ] : $subfield_name;
+
+		$is_enabled = ! empty( $this->raw[ $subfield_slug ] );
+
+		/**
+		 * Filter is subfield enabled or not
+		 *
+		 * @param boolean                     $is_enabled Filtered result.
+		 * @param string                      $subfield_name Subfield name.
+		 * @param Forminator_Form_Field_Model $object Field object.
+		 */
+		$is_enabled = apply_filters( 'forminator_is_subfield_enabled', $is_enabled, $subfield_name, $this );
+
+		return $is_enabled;
 	}
 
 	/**

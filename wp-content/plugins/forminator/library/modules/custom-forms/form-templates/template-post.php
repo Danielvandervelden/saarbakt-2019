@@ -20,7 +20,7 @@ class Forminator_Template_Post extends Forminator_Template {
 		return array(
 			'id'          => 'post',
 			'name'        => __( 'Create Post', 'forminator' ),
-			'description' => __( "A simple contact form for your users to contact you", 'forminator' ),
+			'description' => __( 'A simple contact form for your users to contact you', 'forminator' ),
 			'icon'        => 'plus',
 			'priortiy'    => 7,
 		);
@@ -41,22 +41,22 @@ class Forminator_Template_Post extends Forminator_Template {
 						'element_id'         => 'postdata-1',
 						'type'               => 'postdata',
 						'cols'               => '12',
-						"data_status"        => "pending",
-						"post_title_label"   => "Post Title",
-						"post_content_label" => "Post Content",
-						"post_excerpt_label" => "Post Excerpt",
-						"post_image_label"   => "Featured Image",
-						"category_label"     => "Category",
-						"post_tag_label"     => "Tags",
-						"select_author"      => 1,
-						"category_multiple"  => "0",
-						"post_tag_multiple"  => "0",
-						"post_type"          => "post",
-						"post_title"         => true,
-						"post_content"       => true,
-						"category"           => true,
-						"post_image"         => true,
-						'options'     => array(
+						'data_status'        => 'pending',
+						'post_title_label'   => 'Post Title',
+						'post_content_label' => 'Post Content',
+						'post_excerpt_label' => 'Post Excerpt',
+						'post_image_label'   => 'Featured Image',
+						'category_label'     => 'Category',
+						'post_tag_label'     => 'Tags',
+						'select_author'      => 1,
+						'category_multiple'  => '0',
+						'post_tag_multiple'  => '0',
+						'post_type'          => 'post',
+						'post_title'         => true,
+						'post_content'       => true,
+						'category'           => true,
+						'post_image'         => true,
+						'options'            => array(
 							array(
 								'label' => __( '', 'forminator' ),
 								'value' => '',
@@ -76,18 +76,18 @@ class Forminator_Template_Post extends Forminator_Template {
 	 */
 	public function settings() {
 		return array(
-			"form-type"                     => "default",
-			"submission-behaviour"          => "behaviour-thankyou",
-			"thankyou-message"              => __( "Thank you for contacting us, we will be in touch shortly.", 'forminator' ),
+			'form-type'                     => 'default',
+			'submission-behaviour'          => 'behaviour-thankyou',
+			'thankyou-message'              => __( 'Thank you. Your post has been submitted.', 'forminator' ),
 			'submitData'                    => array(
-				"custom-submit-text"          => __( "Create Post", 'forminator' ),
-				"custom-invalid-form-message" => __( "Error: Your form is not valid, please fix the errors!", 'forminator' ),
+				'custom-submit-text'          => __( 'Create Post', 'forminator' ),
+				'custom-invalid-form-message' => __( 'Error: Your form is not valid, please fix the errors!', 'forminator' ),
 			),
 			'enable-ajax'                   => 'true',
 			'validation-inline'             => true,
 			'fields-style'                  => 'open',
-			"form-expire"                   => 'no_expire',
-			// Main container
+			'form-expire'                   => 'no_expire',
+			// Main container.
 			'form-padding-top'              => '0',
 			'form-padding-right'            => '0',
 			'form-padding-bottom'           => '0',
@@ -95,70 +95,72 @@ class Forminator_Template_Post extends Forminator_Template {
 			'form-border-width'             => '0',
 			'form-border-style'             => 'none',
 			'form-border-radius'            => '0',
-			// Typography - Label
+			// Typography - Label.
 			'cform-label-font-family'       => 'Roboto',
 			'cform-label-custom-family'     => '',
 			'cform-label-font-size'         => '12',
 			'cform-label-font-weight'       => 'bold',
-			// Typography - Section Title
+			// Typography - Section Title.
 			'cform-title-font-family'       => 'Roboto',
 			'cform-title-custom-family'     => '',
 			'cform-title-font-size'         => '45',
 			'cform-title-font-weight'       => 'normal',
 			'cform-title-text-align'        => 'left',
-			// Typography - Section Subtitle
+			// Typography - Section Subtitle.
 			'cform-subtitle-font-family'    => 'Roboto',
 			'cform-subtitle-custom-font'    => '',
 			'cform-subtitle-font-size'      => '18',
 			'cform-subtitle-font-weight'    => 'normal',
 			'cform-subtitle-text-align'     => 'left',
-			// Typography - Input & Textarea
+			// Typography - Input & Textarea.
 			'cform-input-font-family'       => 'Roboto',
 			'cform-input-custom-font'       => '',
 			'cform-input-font-size'         => '16',
 			'cform-input-font-weight'       => 'normal',
-			// Typography - Radio & Checkbox
+			// Typography - Radio & Checkbox.
 			'cform-radio-font-family'       => 'Roboto',
 			'cform-radio-custom-font'       => '',
 			'cform-radio-font-size'         => '14',
 			'cform-radio-font-weight'       => 'normal',
-			// Typography - Select
+			// Typography - Select.
 			'cform-select-font-family'      => 'Roboto',
 			'cform-select-custom-family'    => '',
 			'cform-select-font-size'        => '16',
 			'cform-select-font-weight'      => 'normal',
-			// Typography - Multi Select
+			// Typography - Multi Select.
 			'cform-multiselect-font-family' => 'Roboto',
 			'cform-multiselect-custom-font' => '',
 			'cform-multiselect-font-size'   => '16',
 			'cform-multiselect-font-weight' => 'normal',
-			// Typography - Dropdown
+			// Typography - Dropdown.
 			'cform-dropdown-font-family'    => 'Roboto',
 			'cform-dropdown-custom-font'    => '',
 			'cform-dropdown-font-size'      => '16',
 			'cform-dropdown-font-weight'    => 'normal',
-			// Typography - Calendar
+			// Typography - Calendar.
 			'cform-calendar-font-family'    => 'Roboto',
 			'cform-calendar-custom-font'    => '',
 			'cform-calendar-font-size'      => '13',
 			'cform-calendar-font-weight'    => 'normal',
-			// Typography - Buttons
+			// Typography - Buttons.
 			'cform-button-font-family'      => 'Roboto',
 			'cform-button-custom-font'      => '',
 			'cform-button-font-size'        => '14',
 			'cform-button-font-weight'      => '500',
-			// Typography - Timeline
+			// Typography - Timeline.
 			'cform-timeline-font-family'    => 'Roboto',
 			'cform-timeline-custom-font'    => '',
 			'cform-timeline-font-size'      => '12',
 			'cform-timeline-font-weight'    => 'normal',
-			// Typography - Pagination
+			// Typography - Pagination.
 			'cform-pagination-font-family'  => '',
 			'cform-pagination-custom-font'  => '',
 			'cform-pagination-font-size'    => '16',
 			'cform-pagination-font-weight'  => 'normal',
 			'payment_require_ssl'           => false,
 			'submission-file'               => 'delete',
+			// Layout - Radio/Checkbox.
+			'field-image-size'              => 'custom',
 		);
 	}
 }

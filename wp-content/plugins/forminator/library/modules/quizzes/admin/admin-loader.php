@@ -15,6 +15,23 @@ if ( ! defined( 'ABSPATH' ) ) {
 class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 
 	/**
+	 * module objects
+	 *
+	 * @var array
+	 */
+	public $module;
+
+	/**
+	 * @var string
+	 */
+	public $page_edit_nowrong;
+
+	/**
+	 * @var string
+	 */
+	public $page_edit_knowledge;
+
+	/**
 	 * Initialize
 	 *
 	 * @since 1.0
@@ -47,8 +64,8 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 	 */
 	public function add_menu_pages() {
 		new Forminator_Quiz_Page( $this->page, 'quiz/list', __( 'Quizzes', 'forminator' ), __( 'Quizzes', 'forminator' ), 'forminator' );
-		new Forminator_Quiz_New_NoWrong( $this->page_edit_nowrong, 'quiz/nowrong', __( 'New Quiz', 'forminator' ), __( 'New Quiz', 'forminator' ), 'forminator' );
-		new Forminator_Quiz_New_Knowledge( $this->page_edit_knowledge, 'quiz/knowledge', __( 'New Quiz', 'forminator' ), __( 'New Quiz', 'forminator' ), 'forminator' );
+		new Forminator_Quiz_New_NoWrong( $this->page_edit_nowrong, 'quiz/nowrong', __( 'Edit Quiz', 'forminator' ), __( 'New Quiz', 'forminator' ), 'forminator' );
+		new Forminator_Quiz_New_Knowledge( $this->page_edit_knowledge, 'quiz/knowledge', __( 'Edit Quiz', 'forminator' ), __( 'New Quiz', 'forminator' ), 'forminator' );
 		new Forminator_Quiz_View_Page( $this->page_entries, 'quiz/entries', __( 'Submissions:', 'forminator' ), __( 'View Quizzes', 'forminator' ), 'forminator' );
 	}
 
@@ -73,8 +90,9 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 	public function is_knowledge_wizard() {
 		global $plugin_page;
 
-		if ( ( ! isset( $plugin_page ) || empty( $plugin_page ) ) && isset( $_GET[ 'page' ] ) ) {
-			$plugin_page = sanitize_text_field( $_GET[ 'page' ] );
+		$page = Forminator_Core::sanitize_text_field( 'page' );
+		if ( empty( $plugin_page ) && $page ) {
+			$plugin_page = $page;
 		}
 
 		return $this->page_edit_knowledge === $plugin_page;
@@ -89,8 +107,9 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 	public function is_nowrong_wizard() {
 		global $plugin_page;
 
-		if ( ( ! isset( $plugin_page ) || empty( $plugin_page ) ) && isset( $_GET[ 'page' ] ) ) {
-			$plugin_page = sanitize_text_field( $_GET[ 'page' ] );
+		$page = Forminator_Core::sanitize_text_field( 'page' );
+		if ( empty( $plugin_page ) && $page ) {
+			$plugin_page = $page;
 		}
 
 		return $this->page_edit_nowrong === $plugin_page;
@@ -151,25 +170,24 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 		$lead_settings = array();
 
 		if ( $this->is_knowledge_wizard() || $this->is_nowrong_wizard() ) {
-			$id = isset( $_GET['id'] ) ? intval( $_GET['id'] ) : null;
-
-			if ( ! is_null( $id ) && is_null( $model ) ) {
+			$id = filter_input( INPUT_GET, 'id', FILTER_VALIDATE_INT );
+			if ( $id && is_null( $model ) ) {
 				/** @var  Forminator_Quiz_Model $model */
-				$model = Forminator_Quiz_Model::model()->load( $id );
+				$model = Forminator_Base_Form_Model::get_model( $id );
 			}
 
 			if ( $this->is_knowledge_wizard() ) {
 				$data['formNonce']   = wp_create_nonce( 'forminator_save_quiz' );
 				$data['application'] = 'knowledge';
 
-				// Load stored record
+				// Load stored record.
 				if ( is_object( $model ) ) {
 
 					$settings = apply_filters( 'forminator_quiz_settings', $model->settings, $model, $data, $this );
 
 					$has_lead   = isset( $settings['hasLeads'] ) ? $settings['hasLeads'] : false;
 					$lead_id    = isset( $settings['leadsId'] ) ? $settings['leadsId'] : 0;
-					$form_model = Forminator_Form_Model::model()->load( $lead_id );
+					$form_model = Forminator_Base_Form_Model::get_model( $lead_id );
 					if ( is_object( $form_model ) && $has_lead ) {
 						$wrappers      = $form_model->get_fields_grouped();
 						$lead_settings = $form_model->settings;
@@ -204,14 +222,14 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 				$data['formNonce']   = wp_create_nonce( 'forminator_save_quiz' );
 				$data['application'] = 'nowrong';
 
-				// Load stored record
+				// Load stored record.
 				if ( is_object( $model ) ) {
 					unset( $model->settings['priority_order'] );
 					$settings = apply_filters( 'forminator_quiz_settings', $model->settings, $model, $data, $this );
 
 					$has_lead   = isset( $settings['hasLeads'] ) ? $settings['hasLeads'] : false;
 					$lead_id    = isset( $settings['leadsId'] ) ? $settings['leadsId'] : 0;
-					$form_model = Forminator_Form_Model::model()->load( $lead_id );
+					$form_model = Forminator_Base_Form_Model::get_model( $lead_id );
 					if ( is_object( $form_model ) && $has_lead ) {
 						$wrappers      = $form_model->get_fields_grouped();
 						$lead_settings = $form_model->settings;
@@ -232,7 +250,7 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 								'quiz_title'    => $model->name,
 								'version'       => FORMINATOR_VERSION,
 								'wrappers'      => $wrappers,
-								'lead_settings' => $lead_settings
+								'lead_settings' => $lead_settings,
 							)
 						),
 						'notifications' => $notifications,
@@ -261,34 +279,34 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 	private static function common_default_data() {
 		return array(
 			// Pagination.
-			'page-indicator-color'                        => '#888888',
-			'start-button-background-static'              => '#17A8E3',
-			'start-button-background-hover'               => '#008FCA',
-			'start-button-background-active'              => '#008FCA',
-			'start-button-color-static'                   => '#FFFFFF',
-			'start-button-color-hover'                    => '#FFFFFF',
-			'start-button-color-active'                   => '#FFFFFF',
-			'start-button-font-family'                    => 'Roboto',
-			'start-button-font-size'                      => '14',
-			'start-button-font-weight'                    => '500',
-			'navigation-button-background-static'         => '#1ABCA1',
-			'navigation-button-background-hover'          => '#159C85',
-			'navigation-button-background-active'         => '#159C85',
-			'navigation-button-color-static'              => '#FFFFFF',
-			'navigation-button-color-hover'               => '#FFFFFF',
-			'navigation-button-color-active'              => '#FFFFFF',
-			'navigation-button-font-family'               => 'Roboto',
-			'navigation-button-font-size'                 => '14',
-			'navigation-button-font-weight'               => '500',
-			'back-questions-button-background-static'     => '#1ABCA1',
-			'back-questions-button-background-hover'      => '#159C85',
-			'back-questions-button-background-active'     => '#159C85',
-			'back-questions-button-color-static'          => '#FFFFFF',
-			'back-questions-button-color-hover'           => '#FFFFFF',
-			'back-questions-button-color-active'          => '#FFFFFF',
-			'page-indicator-font-family'                  => 'Roboto',
-			'page-indicator-font-size'                    => '13',
-			'page-indicator-font-weight'                  => '400',
+			'page-indicator-color'                    => '#888888',
+			'start-button-background-static'          => '#17A8E3',
+			'start-button-background-hover'           => '#008FCA',
+			'start-button-background-active'          => '#008FCA',
+			'start-button-color-static'               => '#FFFFFF',
+			'start-button-color-hover'                => '#FFFFFF',
+			'start-button-color-active'               => '#FFFFFF',
+			'start-button-font-family'                => 'Roboto',
+			'start-button-font-size'                  => '14',
+			'start-button-font-weight'                => '500',
+			'navigation-button-background-static'     => '#1ABCA1',
+			'navigation-button-background-hover'      => '#159C85',
+			'navigation-button-background-active'     => '#159C85',
+			'navigation-button-color-static'          => '#FFFFFF',
+			'navigation-button-color-hover'           => '#FFFFFF',
+			'navigation-button-color-active'          => '#FFFFFF',
+			'navigation-button-font-family'           => 'Roboto',
+			'navigation-button-font-size'             => '14',
+			'navigation-button-font-weight'           => '500',
+			'back-questions-button-background-static' => '#1ABCA1',
+			'back-questions-button-background-hover'  => '#159C85',
+			'back-questions-button-background-active' => '#159C85',
+			'back-questions-button-color-static'      => '#FFFFFF',
+			'back-questions-button-color-hover'       => '#FFFFFF',
+			'back-questions-button-color-active'      => '#FFFFFF',
+			'page-indicator-font-family'              => 'Roboto',
+			'page-indicator-font-size'                => '13',
+			'page-indicator-font-weight'              => '400',
 		);
 	}
 
@@ -300,105 +318,110 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 	 * @return array
 	 */
 	public static function knowledge_default_data( $name, $has_leads ) {
-		return array_merge( self::common_default_data(), array(
-			'hasLeads'					 => $has_leads,
-			'formName'               => $name,
-			'version'                => FORMINATOR_VERSION,
-			'admin-email-recipients' => array(
-				get_option( 'admin_email' ),
-			),
-			'admin-email-title'      => __( "New Quiz Submission for {quiz_name}", 'forminator' ),
-			'admin-email-editor'     => __(
-				"You have a new quiz submission: <br/><br/>{quiz_answer}<br/><br/>Quiz results: <br/>{quiz_result} <br/>---<br/> This message was sent from {site_url}.",
-				'forminator'
-			),
-			'results_behav' => 'after',
-			'visual_style' => 'list',
-			'forminator-quiz-theme' => 'default',
-			'msg_correct' => 'Correct! It was %UserAnswer%.',
-			'msg_incorrect' => 'Wrong! It was %CorrectAnswer%, sorry...',
-			'msg_count' => 'You got %YourNum%/%Total% correct!',
-			// KNOWLEDGE title
-			'knowledge-title-color' =>                       '#333333',
-			'knowledge-title-font-family' =>                 'Roboto',
-			'knowledge-title-font-size' =>                   '42',
-			'knowledge-title-font-weight' =>                 '500',
-			// KNOWLEDGE description
-			'knowledge-description-color' =>                 '#8C8C8C',
-			'knowledge-description-font-family' =>           'Roboto',
-			'knowledge-description-font-size' =>             '20',
-			'knowledge-description-font-weight' =>           '400',
-			// KNOWLEDGE question
-			'knowledge-question-color' =>                    '#333333',
-			'knowledge-question-font-family' =>              'Roboto',
-			'knowledge-question-font-size' =>                '24',
-			'knowledge-question-font-weight' =>              '700',
-			'knowledge-question-description-color'        => '#8C8C8C',
-			'question-description-font-family'            => 'Roboto',
-			'question-description-font-size'              => '20',
-			'question-description-font-weight'            => '400',
-			// KNOWLEDGE answer
-			'knowledge-answer-background-static' =>          '#FAFAFA',
-			'knowledge-answer-background-hover' =>           '#F3FBFE',
-			'knowledge-answer-background-active' =>          '#F3FBFE',
-			'knowledge-aright-background' =>                 '#F4FCF2',
-			'knowledge-awrong-background' =>                 '#FDF2F2',
-			'knowledge-answer-border-static' =>              '#EBEDEB',
-			'knowledge-answer-border-hover' =>               '#17A8E3',
-			'knowledge-answer-border-active' =>              '#17A8E3',
-			'knowledge-aright-border' =>                     '#0BC30B',
-			'knowledge-awrong-border' =>                     '#DA0000',
-			'knowledge-answer-color-static' =>               '#888888',
-			'knowledge-answer-color-active' =>               '#333333',
-			'knowledge-aright-color' =>                      '#0BC30B',
-			'knowledge-awrong-color' =>                      '#DA0000',
-			'knowledge-answer-font-size' =>                  '14',
-			'knowledge-answer-font-family' =>                'Roboto',
-			'knowledge-answer-font-weight' =>                '500',
-			'knowledge-answer-check-border-static' =>        '#BFBFBF',
-			'knowledge-answer-check-border-active' =>        '#17A8E3',
-			'knowledge-answer-check-border-correct' =>       '#0BC30B',
-			'knowledge-answer-check-border-incorrect' =>     '#DA0000',
-			'knowledge-answer-check-background-static' =>    '#FFFFFF',
-			'knowledge-answer-check-background-active' =>    '#17A8E3',
-			'knowledge-answer-check-background-correct' =>   '#0BC30B',
-			'knowledge-answer-check-background-incorrect' => '#DA0000',
-			'knowledge-phrasing-color' =>                    '#4D4D4D',
-			'knowledge-phrasing-font-size' =>                '16',
-			'knowledge-phrasing-font-family' =>              'Roboto',
-			'knowledge-phrasing-font-weight' =>              '700',
-			// KNOWLEDGE button
-			'knowledge-submit-background-static' =>          '#17A8E3',
-			'knowledge-submit-background-hover' =>           '#008FCA',
-			'knowledge-submit-background-active' =>          '#008FCA',
-			'knowledge-submit-color-static' =>               '#FFFFFF',
-			'knowledge-submit-color-hover' =>                '#FFFFFF',
-			'knowledge-submit-color-active' =>               '#FFFFFF',
-			'knowledge-submit-font-family' =>                'Roboto',
-			'knowledge-submit-font-size' =>                  '14',
-			'knowledge-submit-font-weight' =>                '500',
-			// KNOWLEDGE summary
-			'knowledge-summary-color' =>                     '#333333',
-			'knowledge-summary-font-family' =>               'Roboto',
-			'knowledge-summary-font-size' =>                 '40',
-			'knowledge-summary-font-weight' =>               '400',
-			'knowledge-result-retake-font-family' =>           'Roboto',
-			'knowledge-result-retake-font-size' =>             '13',
-			'knowledge-result-retake-font-weight' =>           '500',
-			'knowledge-result-retake-background-static' =>     '#222222',
-			'knowledge-result-retake-background-hover' =>      '#222222',
-			'knowledge-result-retake-background-active' =>     '#222222',
-			// KNOWLEDGE social
-			'enable-share' =>                                'on',
-			'knowledge-sshare-color' =>                      '#4D4D4D',
-			'knowledge-sshare-font-family' =>                'Roboto',
-			'knowledge-sshare-font-size' =>                  '20',
-			'knowledge-social-facebook' =>                   '#0084BF',
-			'knowledge-social-twitter' =>                    '#1DA1F2',
-			'knowledge-social-google' =>                     '#DB4437',
-			'forminator-knowledge-social-linkedin' =>        '#0084BF',
-			'knowledge-social-size' =>                       '36'
-		) );
+		return array_merge(
+			self::common_default_data(),
+			array(
+				'hasLeads'                                 => $has_leads,
+				'formName'                                 => $name,
+				'version'                                  => FORMINATOR_VERSION,
+				'admin-email-recipients'                   => array(
+					get_option( 'admin_email' ),
+				),
+				'admin-email-title'                        => __( 'New Quiz Submission for {quiz_name}', 'forminator' ),
+				'admin-email-editor'                       => __(
+					'You have a new quiz submission: <br/><br/>{quiz_answer}<br/><br/>Quiz results: <br/>{quiz_result} <br/>---<br/> This message was sent from {site_url}.',
+					'forminator'
+				),
+				'results_behav'                            => 'after',
+				'visual_style'                             => 'list',
+				'forminator-quiz-theme'                    => 'default',
+				'msg_correct'                              => 'Correct! It was %UserAnswer%.',
+				'msg_incorrect'                            => 'Wrong! It was %CorrectAnswer%, sorry...',
+				'msg_count'                                => 'You got %YourNum%/%Total% correct!',
+				// KNOWLEDGE title.
+				'knowledge-title-color'                    => '#333333',
+				'knowledge-title-font-family'              => 'Roboto',
+				'knowledge-title-font-size'                => '42',
+				'knowledge-title-font-weight'              => '500',
+				// KNOWLEDGE description.
+				'knowledge-description-color'              => '#8C8C8C',
+				'knowledge-description-font-family'        => 'Roboto',
+				'knowledge-description-font-size'          => '20',
+				'knowledge-description-font-weight'        => '400',
+				// KNOWLEDGE question.
+				'knowledge-question-color'                 => '#333333',
+				'knowledge-question-font-family'           => 'Roboto',
+				'knowledge-question-font-size'             => '24',
+				'knowledge-question-font-weight'           => '700',
+				'knowledge-question-description-color'     => '#8C8C8C',
+				'question-description-font-family'         => 'Roboto',
+				'question-description-font-size'           => '20',
+				'question-description-font-weight'         => '400',
+				// KNOWLEDGE answer.
+				'knowledge-answer-background-static'       => '#FAFAFA',
+				'knowledge-answer-background-hover'        => '#F3FBFE',
+				'knowledge-answer-background-active'       => '#F3FBFE',
+				'knowledge-aright-background'              => '#F4FCF2',
+				'knowledge-awrong-background'              => '#FDF2F2',
+				'knowledge-answer-border-static'           => '#EBEDEB',
+				'knowledge-answer-border-hover'            => '#17A8E3',
+				'knowledge-answer-border-active'           => '#17A8E3',
+				'knowledge-aright-border'                  => '#0BC30B',
+				'knowledge-awrong-border'                  => '#DA0000',
+				'knowledge-answer-color-static'            => '#888888',
+				'knowledge-answer-color-active'            => '#333333',
+				'knowledge-aright-color'                   => '#0BC30B',
+				'knowledge-awrong-color'                   => '#DA0000',
+				'knowledge-answer-font-size'               => '14',
+				'knowledge-answer-font-family'             => 'Roboto',
+				'knowledge-answer-font-weight'             => '500',
+				'knowledge-answer-check-border-static'     => '#BFBFBF',
+				'knowledge-answer-check-border-active'     => '#17A8E3',
+				'knowledge-answer-check-border-correct'    => '#0BC30B',
+				'knowledge-answer-check-border-incorrect'  => '#DA0000',
+				'knowledge-answer-check-background-static' => '#FFFFFF',
+				'knowledge-answer-check-background-active' => '#17A8E3',
+				'knowledge-answer-check-background-correct' => '#0BC30B',
+				'knowledge-answer-check-background-incorrect' => '#DA0000',
+				'knowledge-phrasing-color'                 => '#4D4D4D',
+				'knowledge-phrasing-font-size'             => '16',
+				'knowledge-phrasing-font-family'           => 'Roboto',
+				'knowledge-phrasing-font-weight'           => '700',
+				// KNOWLEDGE button.
+				'knowledge-submit-background-static'       => '#17A8E3',
+				'knowledge-submit-background-hover'        => '#008FCA',
+				'knowledge-submit-background-active'       => '#008FCA',
+				'knowledge-submit-color-static'            => '#FFFFFF',
+				'knowledge-submit-color-hover'             => '#FFFFFF',
+				'knowledge-submit-color-active'            => '#FFFFFF',
+				'knowledge-submit-font-family'             => 'Roboto',
+				'knowledge-submit-font-size'               => '14',
+				'knowledge-submit-font-weight'             => '500',
+				// KNOWLEDGE summary.
+				'knowledge-summary-color'                  => '#333333',
+				'knowledge-summary-font-family'            => 'Roboto',
+				'knowledge-summary-font-size'              => '40',
+				'knowledge-summary-font-weight'            => '400',
+				'knowledge-result-retake-font-family'      => 'Roboto',
+				'knowledge-result-retake-font-size'        => '13',
+				'knowledge-result-retake-font-weight'      => '500',
+				'knowledge-result-retake-background-static' => '#222222',
+				'knowledge-result-retake-background-hover' => '#222222',
+				'knowledge-result-retake-background-active' => '#222222',
+				// KNOWLEDGE social.
+				'enable-share'                             => 'on',
+				'knowledge-sshare-color'                   => '#4D4D4D',
+				'knowledge-sshare-font-family'             => 'Roboto',
+				'knowledge-sshare-font-size'               => '20',
+				'knowledge-social-facebook'                => '#0084BF',
+				'knowledge-social-twitter'                 => '#1DA1F2',
+				'knowledge-social-google'                  => '#DB4437',
+				'forminator-knowledge-social-linkedin'     => '#0084BF',
+				'knowledge-social-size'                    => '36',
+				// KNOWLEDGE Radio and Checkbox Image Size.
+				'field-image-size'                         => 'custom',
+			)
+		);
 	}
 
 	/**
@@ -409,96 +432,99 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 	 * @return array
 	 */
 	public static function nowrong_default_data( $name, $has_leads ) {
-		return array_merge( self::common_default_data(), array(
-			'hasLeads'					 => $has_leads,
-			'formName'               => $name,
-			'version'                => FORMINATOR_VERSION,
-			'admin-email-recipients' => array(
-				get_option( 'admin_email' ),
-			),
-			'results_behav' => 'after',
-			'visual_style' => 'list',
-			'forminator-quiz-theme' => 'default',
-			'msg_correct' => 'Correct! It was %UserAnswer%.',
-			'msg_incorrect' => 'Wrong! It was %CorrectAnswer%, sorry...',
-			'msg_count' => 'You got %YourNum%/%Total% correct!',
-			// NOWRONG title
-			'nowrong-title-settings' =>                      false,
-			'nowrong-title-color' =>                         '#333333',
-			'nowrong-title-font-family' =>                   'Roboto',
-			'nowrong-title-font-size' =>                     '42',
-			'nowrong-title-font-weight' =>                   '500',
-			// NOWRONG description
-			'nowrong-description-settings' =>                false,
-			'nowrong-description-color' =>                   '#8C8C8C',
-			'nowrong-description-font-family' =>             'Roboto',
-			'nowrong-description-font-size' =>               '20',
-			'nowrong-description-font-weight' =>             '400',
-			// NOWRONG image
-			'nowrong-image-settings' =>                      false,
-			'nowrong-image-border-color' =>                  '#000000',
-			'nowrong-image-border-width' =>                  '0',
-			'nowrong-image-border-style' =>                  'solid',
-			// NOWRONG question
-			'nowrong-question-settings' =>                   false,
-			'nowrong-question-font-size' =>                  '24',
-			'nowrong-question-font-family' =>                'Roboto',
-			'nowrong-question-font-weight' =>                '700',
-			'nowrong-question-description-color'      => '#8C8C8C',
-			'question-description-font-family'        => 'Roboto',
-			'question-description-font-size'          => '20',
-			'question-description-font-weight'        => '400',
-			// NOWRONG answer
-			'nowrong-answer-settings' =>                     false,
-			'nowrong-answer-border-static' =>                '#EBEDEB',
-			'nowrong-answer-border-hover' =>                 '#17A8E3',
-			'nowrong-answer-border-active' =>                '#17A8E3',
-			'nowrong-answer-background-static' =>            '#FAFAFA',
-			'nowrong-answer-background-hover' =>             '#F3FBFE',
-			'nowrong-answer-background-active' =>            '#F3FBFE',
-			'nowrong-answer-chkbo-static' =>                 '#BFBFBF',
-			'nowrong-answer-chkbo-active' =>                 '#17A8E3',
-			'nowrong-answer-color-static' =>                 '#888888',
-			'nowrong-answer-color-active' =>                 '#333333',
-			'nowrong-answer-font-size' =>                    '14',
-			'nowrong-answer-font-family' =>                  'Roboto',
-			'nowrong-answer-font-weight' =>                  '500',
-			// NOWRONG submit
-			'nowrong-submit-background-static' =>            '#17A8E3',
-			'nowrong-submit-background-hover' =>             '#008FCA',
-			'nowrong-submit-background-active' =>            '#008FCA',
-			'nowrong-submit-color-static' =>                 '#FFFFFF',
-			'nowrong-submit-color-hover' =>                  '#FFFFFF',
-			'nowrong-submit-color-active' =>                 '#FFFFFF',
-			'nowrong-submit-font-family' =>                  'Roboto',
-			'nowrong-submit-font-size' =>                    '14',
-			'nowrong-submit-font-weight' =>                  '500',
-			// NOWRONG result
-			'nowrong-result-background-main' =>              '#FAFAFA',
-			'nowrong-result-background-header' =>            '#FAFAFA',
-			'nowrong-result-border-color' =>                 '#17A8E3',
-			'nowrong-result-quiz-color' =>                   '#888888',
-			'nowrong-result-quiz-font-family' =>             'Roboto',
-			'nowrong-result-quiz-font-size' =>               '15',
-			'nowrong-result-quiz-font-weight' =>             '500',
-			'nowrong-result-retake-font-family' =>           'Roboto',
-			'nowrong-result-retake-font-size' =>             '13',
-			'nowrong-result-retake-font-weight' =>           '500',
-			'nowrong-result-retake-background-static' =>     '#222222',
-			'nowrong-result-retake-background-hover' =>      '#222222',
-			'nowrong-result-retake-background-active' =>     '#222222',
-			'nowrong-result-background-body' =>              '#EBEDEB',
-			'nowrong-result-title-color' =>                  '#333333',
-			'nowrong-result-title-font-family' =>            'Roboto',
-			'nowrong-result-title-font-size' =>              '15',
-			'nowrong-result-title-font-weight' =>            '500',
-			'nowrong-result-description-color' =>            '#4D4D4D',
-			'nowrong-result-description-font-family' =>      'Roboto',
-			'nowrong-result-description-font-size' =>        '13',
-			'nowrong-result-description-font-weight' =>      '400',
-			// NOWRONG social
-			'enable-share' =>                                'on',
-		) );
+		return array_merge(
+			self::common_default_data(),
+			array(
+				'hasLeads'                                => $has_leads,
+				'formName'                                => $name,
+				'version'                                 => FORMINATOR_VERSION,
+				'admin-email-recipients'                  => array(
+					get_option( 'admin_email' ),
+				),
+				'results_behav'                           => 'after',
+				'visual_style'                            => 'list',
+				'forminator-quiz-theme'                   => 'default',
+				'msg_correct'                             => 'Correct! It was %UserAnswer%.',
+				'msg_incorrect'                           => 'Wrong! It was %CorrectAnswer%, sorry...',
+				'msg_count'                               => 'You got %YourNum%/%Total% correct!',
+				// NOWRONG title.
+				'nowrong-title-settings'                  => false,
+				'nowrong-title-color'                     => '#333333',
+				'nowrong-title-font-family'               => 'Roboto',
+				'nowrong-title-font-size'                 => '42',
+				'nowrong-title-font-weight'               => '500',
+				// NOWRONG description.
+				'nowrong-description-settings'            => false,
+				'nowrong-description-color'               => '#8C8C8C',
+				'nowrong-description-font-family'         => 'Roboto',
+				'nowrong-description-font-size'           => '20',
+				'nowrong-description-font-weight'         => '400',
+				// NOWRONG image.
+				'nowrong-image-settings'                  => false,
+				'nowrong-image-border-color'              => '#000000',
+				'nowrong-image-border-width'              => '0',
+				'nowrong-image-border-style'              => 'solid',
+				// NOWRONG question.
+				'nowrong-question-settings'               => false,
+				'nowrong-question-font-size'              => '24',
+				'nowrong-question-font-family'            => 'Roboto',
+				'nowrong-question-font-weight'            => '700',
+				'nowrong-question-description-color'      => '#8C8C8C',
+				'question-description-font-family'        => 'Roboto',
+				'question-description-font-size'          => '20',
+				'question-description-font-weight'        => '400',
+				// NOWRONG answer.
+				'nowrong-answer-settings'                 => false,
+				'nowrong-answer-border-static'            => '#EBEDEB',
+				'nowrong-answer-border-hover'             => '#17A8E3',
+				'nowrong-answer-border-active'            => '#17A8E3',
+				'nowrong-answer-background-static'        => '#FAFAFA',
+				'nowrong-answer-background-hover'         => '#F3FBFE',
+				'nowrong-answer-background-active'        => '#F3FBFE',
+				'nowrong-answer-chkbo-static'             => '#BFBFBF',
+				'nowrong-answer-chkbo-active'             => '#17A8E3',
+				'nowrong-answer-color-static'             => '#888888',
+				'nowrong-answer-color-active'             => '#333333',
+				'nowrong-answer-font-size'                => '14',
+				'nowrong-answer-font-family'              => 'Roboto',
+				'nowrong-answer-font-weight'              => '500',
+				// NOWRONG submit.
+				'nowrong-submit-background-static'        => '#17A8E3',
+				'nowrong-submit-background-hover'         => '#008FCA',
+				'nowrong-submit-background-active'        => '#008FCA',
+				'nowrong-submit-color-static'             => '#FFFFFF',
+				'nowrong-submit-color-hover'              => '#FFFFFF',
+				'nowrong-submit-color-active'             => '#FFFFFF',
+				'nowrong-submit-font-family'              => 'Roboto',
+				'nowrong-submit-font-size'                => '14',
+				'nowrong-submit-font-weight'              => '500',
+				// NOWRONG result.
+				'nowrong-result-background-main'          => '#FAFAFA',
+				'nowrong-result-background-header'        => '#FAFAFA',
+				'nowrong-result-border-color'             => '#17A8E3',
+				'nowrong-result-quiz-color'               => '#888888',
+				'nowrong-result-quiz-font-family'         => 'Roboto',
+				'nowrong-result-quiz-font-size'           => '15',
+				'nowrong-result-quiz-font-weight'         => '500',
+				'nowrong-result-retake-font-family'       => 'Roboto',
+				'nowrong-result-retake-font-size'         => '13',
+				'nowrong-result-retake-font-weight'       => '500',
+				'nowrong-result-retake-background-static' => '#222222',
+				'nowrong-result-retake-background-hover'  => '#222222',
+				'nowrong-result-retake-background-active' => '#222222',
+				'nowrong-result-background-body'          => '#EBEDEB',
+				'nowrong-result-title-color'              => '#333333',
+				'nowrong-result-title-font-family'        => 'Roboto',
+				'nowrong-result-title-font-size'          => '15',
+				'nowrong-result-title-font-weight'        => '500',
+				'nowrong-result-description-color'        => '#4D4D4D',
+				'nowrong-result-description-font-family'  => 'Roboto',
+				'nowrong-result-description-font-size'    => '13',
+				'nowrong-result-description-font-weight'  => '400',
+				// NOWRONG social.
+				'enable-share'                            => 'on',
+			)
+		);
 	}
 
 	/**
@@ -513,112 +539,122 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 	public function add_l10n_strings( $data ) {
 		$data['quizzes'] = array(
 			'quizzes'                      => __( 'Quizzes', 'forminator' ),
-			"popup_label"                  => __( "Choose Quiz Type", 'forminator' ),
-			"results"                      => __( "Results", 'forminator' ),
-			"questions"                    => __( "Questions", 'forminator' ),
-			"details"                      => __( "Details", 'forminator' ),
-			"settings"                     => __( "Settings", 'forminator' ),
-			"appearance"                   => __( "Appearance", 'forminator' ),
-			"preview"                      => __( "Preview", 'forminator' ),
-			"preview_quiz"                 => __( "Preview Quiz", 'forminator' ),
-			"list"                         => __( "List", 'forminator' ),
-			"grid"                         => __( "Grid", 'forminator' ),
-			"visual_style"                 => __( "Visual style", 'forminator' ),
-			"quiz_title"                   => __( "Quiz Title", 'forminator' ),
-			"quiz_title_desc"              => __( "Further customize the appearance for quiz title. It appears as result's header.", 'forminator' ),
-			"title"                        => __( "Title", 'forminator' ),
-			"title_desc"                   => __( "Further customize appearance for quiz title.", 'forminator' ),
-			"image_desc"                   => __( "Further customize appearance for quiz featured image.", 'forminator' ),
-			"enable_styles"                => __( "Enable custom styles", 'forminator' ),
-			"desc_desc"                    => __( "Further customize appearance for quiz description / intro.", 'forminator' ),
-			"description"                  => __( "Description / Intro", 'forminator' ),
-			"feat_image"                   => __( "Featured image", 'forminator' ),
-			"font_color"                   => __( "Font color", 'forminator' ),
-			"browse"                       => __( "Browse", 'forminator' ),
-			"clear"                        => __( "Clear", 'forminator' ),
-			"results_behav"                => __( "Results behaviour", 'forminator' ),
-			"rb_description"               => __( "Pick if you want to reveal the correct answer as user finishes question, or only after the whole quiz is completed.", 'forminator' ),
-			"reveal"                       => __( "When to reveal correct answer", 'forminator' ),
-			"after"                        => __( "After user picks answer", 'forminator' ),
-			"before"                       => __( "At the end of whole quiz", 'forminator' ),
-			"phrasing"                     => __( "Answer phrasing", 'forminator' ),
-			"phrasing_desc"                => __( "Pick how you want the correct & incorrect answers to read. Use <strong>%UserAnswer%</strong> to pull in the value user selected & <strong>%CorrectAnswer%</strong> to pull in the correct value.",
-												  'forminator' ),
-			"phrasing_desc_alt"            => __( "Further customize appearance for answer message.", 'forminator' ),
-			"msg_correct"                  => __( "Correct answer message", 'forminator' ),
-			"msg_incorrect"                => __( "Incorrect answer message", 'forminator' ),
-			"msg_count"                    => __( "Final count message", 'forminator' ),
-			"msg_count_desc"               => __( "Edit the copy of the final result count message that will appear after the quiz is complete. Use <strong>%YourNum%</strong> to display number of correct answers and <strong>%Total%</strong> for total number of questions.",
-												  'forminator' ),
-			"msg_count_info"               => __( "You can now add some html content here to personalize even more text displayed as Final Count Message. Try it now!", 'forminator' ),
-			"share"                        => __( "Share on social media", 'forminator' ),
-			"order"                        => __( "Results priority order", 'forminator' ),
-			"order_label"                  => __( "Pick priority for results", 'forminator' ),
-			"order_alt"                    => __( "Quizzes can have even number of scores for 2 or more results, in those scenarios, this order will help determine the result.", 'forminator' ),
-			"questions_title"              => __( "Questions", 'forminator' ),
-			"question_desc"                => __( "Further customize appearance for quiz questions.", 'forminator' ),
-			"result_title"                 => __( "Result title", 'forminator' ),
-			"result_description"           => __( "Result description", 'forminator' ),
-			"result_description_desc"      => __( "Further customize the appearance for result description typography.", 'forminator' ),
-			"result_title_desc"            => __( "Further customize the appearance for result title typography.", 'forminator' ),
-			"retake_button"                => __( "Retake button", 'forminator' ),
-			"retake_button_desc"           => __( "Further customize the appearance for retake quiz button.", 'forminator' ),
-			"validate_form_name"           => __( "Form name cannot be empty! Please pick a name for your quiz.", 'forminator' ),
-			"validate_form_question"       => __( "Quiz question cannot be empty! Please add questions for your quiz.", 'forminator' ),
-			"validate_form_answers"        => __( "Quiz answers cannot be empty! Please add some questions.", 'forminator' ),
-			"validate_form_answers_result" => __( "Result answer cannot be empty! Please select a result.", 'forminator' ),
-			"validate_form_correct_answer" => __( "This question needs a correct answer. Please, select one before saving or proceeding to next step.", 'forminator' ),
-			"validate_form_no_answer"      => __( "Please add an answer for this question.", 'forminator' ),
-			"answer"                       => __( "Answers", 'forminator' ),
-			"no_answer"                    => __( "You don't have any answer for this question yet.", 'forminator' ),
-			"answer_desc"                  => __( "Further customize appearance for quiz answers.", 'forminator' ),
-			"back"                         => __( "Back", 'forminator' ),
-			"cancel"                       => __( "Cancel", 'forminator' ),
-			"continue"                     => __( "Continue", 'forminator' ),
-			"correct_answer"               => __( "Correct answer", 'forminator' ),
-			"correct_answer_desc"          => __( "Customize appearance for correct answers.", 'forminator' ),
-			"finish"                       => __( "Finish", 'forminator' ),
-			"smartcrawl"                   => __( "<strong>Want more control?</strong> <strong><a href='https://wpmudev.com/project/smartcrawl-wordpress-seo/' target='_blank'>SmartCrawl</a></strong> OpenGraph and Twitter Card support lets you choose how your content looks when it’s shared on social media.",
-												  'forminator' ),
-			"submit"                       => __( "Submit", 'forminator' ),
-			"submit_desc"                  => __( "Further customize appearance for quiz submit button.", 'forminator' ),
-			"main_styles"                  => __( "Main styles", 'forminator' ),
-			"border"                       => __( "Border", 'forminator' ),
-			"border_desc"                  => __( "Further customize border for result's main container.", 'forminator' ),
-			"padding"                      => __( "Padding", 'forminator' ),
-			"background"                   => __( "Background", 'forminator' ),
-			"background_desc"              => __( "The Results box has three different backgrounds: main container, header background (where quiz title and reload button are placed), and content background (where result title and description are placed). Here you can customize the three of them.",
-												  'forminator' ),
-			"bg_main"                      => __( "Main BG", 'forminator' ),
-			"bg_header"                    => __( "Header BG", 'forminator' ),
-			"bg_content"                   => __( "Content BG", 'forminator' ),
-			"color"                        => __( "Color", 'forminator' ),
-			"result_appearance"            => __( "Result's Box", 'forminator' ),
-			"margin"                       => __( "Margin", 'forminator' ),
-			"summary"                      => __( "Summary", 'forminator' ),
-			"summary_desc"                 => __( "Further customize appearance for quiz final count message", 'forminator' ),
-			"sshare"                       => __( "Sharing text", 'forminator' ),
-			"sshare_desc"                  => __( "Further customize appearance for share on social media text", 'forminator' ),
-			"social"                       => __( "Social icons", 'forminator' ),
-			"social_desc"                  => __( "Further customize appearance for social media icons", 'forminator' ),
-			"wrong_answer"                 => __( "Wrong answer", 'forminator' ),
-			"wrong_answer_desc"            => __( "Customize appearance for wrong answers.", 'forminator' ),
-			"msg_description"              => __( "Use <strong>%UserAnswer%</strong> to pull in the value user selected and <strong>%CorrectAnswer%</strong> to pull in the correct value.",
-												  'forminator' ),
-			"facebook"                     => __( "Facebook", 'forminator' ),
-			"twitter"                      => __( "Twitter", 'forminator' ),
-			"google"                       => __( "Google", 'forminator' ),
-			"linkedin"                     => __( "LinkedIn", 'forminator' ),
-			"title_styles"                 => __( "Title Appearance", 'forminator' ),
-			"enable"                       => __( "Enable", 'forminator' ),
-			"checkbox_styles"              => __( "Checkbox styles", 'forminator' ),
-			"main"                         => __( "Main", 'forminator' ),
-			"header"                       => __( "Header", 'forminator' ),
-			"content"                      => __( "Content", 'forminator' ),
-			"quiz_design"                  => __( "Quiz design", 'forminator' ),
-			"quiz_design_description"      => __( "Choose a pre-made style for your quiz and further customize it's appearance.", 'forminator' ),
-			"customize_quiz_colors"        => __( "Customize quiz colors", 'forminator' ),
-			"visual_style_description"     => __( "There are two ways for displaying your quiz answers: grid or list.", 'forminator' ),
+			'popup_label'                  => __( 'Choose Quiz Type', 'forminator' ),
+			'results'                      => __( 'Results', 'forminator' ),
+			'questions'                    => __( 'Questions', 'forminator' ),
+			'details'                      => __( 'Details', 'forminator' ),
+			'settings'                     => __( 'Settings', 'forminator' ),
+			'appearance'                   => __( 'Appearance', 'forminator' ),
+			'preview'                      => __( 'Preview', 'forminator' ),
+			'preview_quiz'                 => __( 'Preview Quiz', 'forminator' ),
+			'list'                         => __( 'List', 'forminator' ),
+			'grid'                         => __( 'Grid', 'forminator' ),
+			'visual_style'                 => __( 'Visual style', 'forminator' ),
+			'quiz_title'                   => __( 'Quiz Title', 'forminator' ),
+			'quiz_title_desc'              => __( "Further customize the appearance for quiz title. It appears as result's header.", 'forminator' ),
+			'title'                        => __( 'Title', 'forminator' ),
+			'title_desc'                   => __( 'Further customize appearance for quiz title.', 'forminator' ),
+			'image_desc'                   => __( 'Further customize appearance for quiz featured image.', 'forminator' ),
+			'enable_styles'                => __( 'Enable custom styles', 'forminator' ),
+			'desc_desc'                    => __( 'Further customize appearance for quiz description / intro.', 'forminator' ),
+			'description'                  => __( 'Description / Intro', 'forminator' ),
+			'feat_image'                   => __( 'Featured image', 'forminator' ),
+			'font_color'                   => __( 'Font color', 'forminator' ),
+			'browse'                       => __( 'Browse', 'forminator' ),
+			'clear'                        => __( 'Clear', 'forminator' ),
+			'results_behav'                => __( 'Results behavior', 'forminator' ),
+			'rb_description'               => __( 'Pick if you want to reveal the correct answer as user finishes question, or only after the whole quiz is completed.', 'forminator' ),
+			'reveal'                       => __( 'When to reveal correct answer', 'forminator' ),
+			'after'                        => __( 'After user picks answer', 'forminator' ),
+			'before'                       => __( 'At the end of whole quiz', 'forminator' ),
+			'phrasing'                     => __( 'Answer phrasing', 'forminator' ),
+			'phrasing_desc'                => __(
+				'Pick how you want the correct & incorrect answers to read. Use <strong>%UserAnswer%</strong> to pull in the value user selected & <strong>%CorrectAnswer%</strong> to pull in the correct value.',
+				'forminator'
+			),
+			'phrasing_desc_alt'            => __( 'Further customize appearance for answer message.', 'forminator' ),
+			'msg_correct'                  => __( 'Correct answer message', 'forminator' ),
+			'msg_incorrect'                => __( 'Incorrect answer message', 'forminator' ),
+			'msg_count'                    => __( 'Final count message', 'forminator' ),
+			'msg_count_desc'               => __(
+				'Edit the copy of the final result count message that will appear after the quiz is complete. Use <strong>%YourNum%</strong> to display number of correct answers and <strong>%Total%</strong> for total number of questions.',
+				'forminator'
+			),
+			'msg_count_info'               => __( 'You can now add some html content here to personalize even more text displayed as Final Count Message. Try it now!', 'forminator' ),
+			'share'                        => __( 'Share on social media', 'forminator' ),
+			'order'                        => __( 'Results priority order', 'forminator' ),
+			'order_label'                  => __( 'Pick priority for results', 'forminator' ),
+			'order_alt'                    => __( 'Quizzes can have even number of scores for 2 or more results, in those scenarios, this order will help determine the result.', 'forminator' ),
+			'questions_title'              => __( 'Questions', 'forminator' ),
+			'question_desc'                => __( 'Further customize appearance for quiz questions.', 'forminator' ),
+			'result_title'                 => __( 'Result title', 'forminator' ),
+			'result_description'           => __( 'Result description', 'forminator' ),
+			'result_description_desc'      => __( 'Further customize the appearance for result description typography.', 'forminator' ),
+			'result_title_desc'            => __( 'Further customize the appearance for result title typography.', 'forminator' ),
+			'retake_button'                => __( 'Retake button', 'forminator' ),
+			'retake_button_desc'           => __( 'Further customize the appearance for retake quiz button.', 'forminator' ),
+			'validate_form_name'           => __( 'Form name cannot be empty! Please pick a name for your quiz.', 'forminator' ),
+			'validate_form_question'       => __( 'Quiz question cannot be empty! Please add questions for your quiz.', 'forminator' ),
+			'validate_form_answers'        => __( 'Quiz answers cannot be empty! Please add some questions.', 'forminator' ),
+			'validate_form_answers_result' => __( 'Result answer cannot be empty! Please select a result.', 'forminator' ),
+			'validate_form_correct_answer' => __( 'This question needs a correct answer. Please, select one before saving or proceeding to next step.', 'forminator' ),
+			'validate_form_no_answer'      => __( 'Please add an answer for this question.', 'forminator' ),
+			'answer'                       => __( 'Answers', 'forminator' ),
+			'no_answer'                    => __( "You don't have any answer for this question yet.", 'forminator' ),
+			'answer_desc'                  => __( 'Further customize appearance for quiz answers.', 'forminator' ),
+			'back'                         => __( 'Back', 'forminator' ),
+			'cancel'                       => __( 'Cancel', 'forminator' ),
+			'continue'                     => __( 'Continue', 'forminator' ),
+			'correct_answer'               => __( 'Correct answer', 'forminator' ),
+			'correct_answer_desc'          => __( 'Customize appearance for correct answers.', 'forminator' ),
+			'finish'                       => __( 'Finish', 'forminator' ),
+			'smartcrawl'                   => __(
+				"<strong>Want more control?</strong> <strong><a href='https://wpmudev.com/project/smartcrawl-wordpress-seo/' target='_blank'>SmartCrawl</a></strong> OpenGraph and Twitter Card support lets you choose how your content looks when it’s shared on social media.",
+				'forminator'
+			),
+			'submit'                       => __( 'Submit', 'forminator' ),
+			'submit_desc'                  => __( 'Further customize appearance for quiz submit button.', 'forminator' ),
+			'main_styles'                  => __( 'Main styles', 'forminator' ),
+			'border'                       => __( 'Border', 'forminator' ),
+			'border_desc'                  => __( "Further customize border for result's main container.", 'forminator' ),
+			'padding'                      => __( 'Padding', 'forminator' ),
+			'background'                   => __( 'Background', 'forminator' ),
+			'background_desc'              => __(
+				'The Results box has three different backgrounds: main container, header background (where quiz title and reload button are placed), and content background (where result title and description are placed). Here you can customize the three of them.',
+				'forminator'
+			),
+			'bg_main'                      => __( 'Main BG', 'forminator' ),
+			'bg_header'                    => __( 'Header BG', 'forminator' ),
+			'bg_content'                   => __( 'Content BG', 'forminator' ),
+			'color'                        => __( 'Color', 'forminator' ),
+			'result_appearance'            => __( "Result's Box", 'forminator' ),
+			'margin'                       => __( 'Margin', 'forminator' ),
+			'summary'                      => __( 'Summary', 'forminator' ),
+			'summary_desc'                 => __( 'Further customize appearance for quiz final count message', 'forminator' ),
+			'sshare'                       => __( 'Sharing text', 'forminator' ),
+			'sshare_desc'                  => __( 'Further customize appearance for share on social media text', 'forminator' ),
+			'social'                       => __( 'Social icons', 'forminator' ),
+			'social_desc'                  => __( 'Further customize appearance for social media icons', 'forminator' ),
+			'wrong_answer'                 => __( 'Wrong answer', 'forminator' ),
+			'wrong_answer_desc'            => __( 'Customize appearance for wrong answers.', 'forminator' ),
+			'msg_description'              => __(
+				'Use <strong>%UserAnswer%</strong> to pull in the value user selected and <strong>%CorrectAnswer%</strong> to pull in the correct value.',
+				'forminator'
+			),
+			'facebook'                     => __( 'Facebook', 'forminator' ),
+			'twitter'                      => __( 'Twitter', 'forminator' ),
+			'google'                       => __( 'Google', 'forminator' ),
+			'linkedin'                     => __( 'LinkedIn', 'forminator' ),
+			'title_styles'                 => __( 'Title Appearance', 'forminator' ),
+			'enable'                       => __( 'Enable', 'forminator' ),
+			'checkbox_styles'              => __( 'Checkbox styles', 'forminator' ),
+			'main'                         => __( 'Main', 'forminator' ),
+			'header'                       => __( 'Header', 'forminator' ),
+			'content'                      => __( 'Content', 'forminator' ),
+			'quiz_design'                  => __( 'Quiz design', 'forminator' ),
+			'quiz_design_description'      => __( "Choose a pre-made style for your quiz and further customize it's appearance.", 'forminator' ),
+			'customize_quiz_colors'        => __( 'Customize quiz colors', 'forminator' ),
+			'visual_style_description'     => __( 'There are two ways for displaying your quiz answers: grid or list.', 'forminator' ),
 		);
 
 		$data['quiz_details'] = array(
@@ -682,17 +718,11 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 			return;
 		}
 
-		// Get module name
-		$name = '';
-		if ( isset( $_GET['name'] ) ) { // WPCS: CSRF ok.
-			$name = sanitize_text_field( $_GET['name'] );
-		}
+		// Get module name.
+		$name = Forminator_Core::sanitize_text_field( 'name' );
 
-		// Get if quiz has leads
-		$has_leads = false;
-		if ( isset( $_GET['leads'] ) ) {
-			$has_leads = sanitize_text_field( $_GET['leads'] );
-		}
+		// Get if quiz has leads.
+		$has_leads = Forminator_Core::sanitize_text_field( 'leads', false );
 
 		if ( $this->is_knowledge_wizard() ) {
 			$quiz_type = 'knowledge';
@@ -811,7 +841,7 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 				$status = Forminator_Poll_Model::STATUS_PUBLISH;
 			}
 		} else {
-			$form_model = Forminator_Quiz_Model::model()->load( $id );
+			$form_model = Forminator_Base_Form_Model::get_model( $id );
 			$action     = 'update';
 
 			if ( ! is_object( $form_model ) ) {
@@ -835,11 +865,11 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 		$results = array();
 		// Check if results exist.
 		if ( isset( $template->results ) && is_array( $template->results ) ) {
-			$results = $template->results;
+			$results = forminator_sanitize_array_field( $template->results );
 			foreach ( $template->results as $key => $result ) {
 				$description = '';
 				if ( isset( $result['description'] ) ) {
-					$description = $result['description'];
+					$description = wp_kses_post( $result['description'] );
 				}
 				$results[ $key ]['description'] = $description;
 			}
@@ -850,7 +880,7 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 		$questions = array();
 		// Check if answers exist.
 		if ( isset( $template->questions ) ) {
-			$questions = forminator_sanitize_field( $template->questions );
+			$questions = $template->questions;
 
 			// Check if questions exist.
 			foreach ( $questions as &$question ) {
@@ -870,12 +900,12 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 
 		$notifications = array();
 		if ( isset( $template->notifications ) ) {
-			$notifications = forminator_sanitize_field( $template->notifications );
+			$notifications = forminator_sanitize_array_field( $template->notifications );
 
 			$count = 0;
 			foreach ( $notifications as $notification ) {
 				if ( isset( $notification['email-editor'] ) ) {
-					$notifications[ $count ]['email-editor'] = $template->notifications[ $count ]['email-editor'];
+					$notifications[ $count ]['email-editor'] = wp_kses_post( $template->notifications[ $count ]['email-editor'] );
 				}
 
 				$count++;
@@ -896,12 +926,11 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 		 *
 		 * @since 1.11
 		 *
-		 * @param int    $id - quiz id
-		 * @param string $type - quiz type
-		 * @param string $status - quiz status
-		 * @param array  $questions - quiz questions
-		 * @param array  $results - quiz results
-		 *
+		 * @param int    $id - quiz id.
+		 * @param string $type - quiz type.
+		 * @param string $status - quiz status.
+		 * @param array  $questions - quiz questions.
+		 * @param array  $results - quiz results.
 		 */
 		do_action( 'forminator_quiz_action_' . $action, $id, $type, $status, $questions, $results );
 
@@ -924,12 +953,12 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 
 		$name = $name . __( ' - Leads form', 'forminator' );
 
-		$model->name = $name;
+		$model->name          = $name;
 		$model->notifications = array();
 
 		$template = new Forminator_Template_Leads();
 
-		// Setup template fields
+		// Setup template fields.
 		foreach ( $template->fields() as $row ) {
 			foreach ( $row['fields'] as $f ) {
 				$field          = new Forminator_Form_Field_Model();
@@ -943,17 +972,17 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 
 		$settings = $template->settings();
 
-		// form name & version
+		// form name & version.
 		$settings['formName'] = $name;
 		$settings['version']  = FORMINATOR_VERSION;
 
-		// settings
+		// settings.
 		$model->settings = $settings;
 
-		// status
+		// status.
 		$model->status = 'leads';
 
-		// Save data
+		// Save data.
 		$id = $model->save();
 
 		return $id;
@@ -978,7 +1007,7 @@ class Forminator_Quiz_Admin extends Forminator_Admin_Module {
 					'recipients'       => get_option( 'admin_email' ),
 					'email-subject'    => __( 'New Quiz Submission for {quiz_name}', 'forminator' ),
 					'email-editor'     => __( 'You have a new quiz submission: <br/><br/>{quiz_answer}<br/><br/>Quiz results: <br/>{quiz_result} <br/>---<br/> This message was sent from {site_url}.', 'forminator' ),
-				)
+				),
 			);
 		}
 

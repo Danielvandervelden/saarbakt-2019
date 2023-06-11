@@ -105,7 +105,7 @@ class Forminator_WP_Post_Autofill_Provider extends Forminator_Autofill_Provider_
 				$post_id = url_to_postid( $wp_referer );
 				if ( $post_id ) {
 					$post_object = get_post( $post_id );
-					// make sure its wp_post
+					// make sure its wp_post.
 					if ( $post_object instanceof WP_Post ) {
 						$this->wp_post = $post_object;
 					}

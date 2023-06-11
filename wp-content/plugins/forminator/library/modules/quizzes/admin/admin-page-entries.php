@@ -38,8 +38,9 @@ class Forminator_Quiz_View_Page extends Forminator_Admin_View_Page {
 	public function before_render() {
 		$this->maybe_redirect();
 
-		if ( isset( $_REQUEST['form_id'] ) ) { // WPCS: CSRF OK
-			$this->form_id = intval( $_REQUEST['form_id'] );
+		$form_id = (int) Forminator_Core::sanitize_text_field( 'form_id' );
+		if ( $form_id ) {
+			$this->form_id = $form_id;
 			parent::before_render();
 			$this->total_fields++;
 			$this->process_request();
@@ -50,15 +51,16 @@ class Forminator_Quiz_View_Page extends Forminator_Admin_View_Page {
 			$this->lead_cform = new Forminator_CForm_View_Page( 'forminator-quiz-view', 'custom-form/entries', __( 'Submissions:', 'forminator' ), __( 'View Custom Form', 'forminator' ), 'forminator' );
 			$this->lead_cform->before_render( $this->lead_id() );
 			$this->lead_fields = $this->lead_cform->get_fields();
-        }
+		}
 	}
 
 	/**
 	 * Action delete_all
 	 */
 	public function delete_all_action() {
-		if ( isset( $_REQUEST['ids'] ) && is_array( $_REQUEST['ids'] ) ) {
-			$entries = implode( ",", $_REQUEST['ids'] );
+		$ids = isset( $_GET['ids'] ) ? Forminator_Core::sanitize_array( $_GET['ids'] ) : array();
+		if ( ! empty( $ids ) ) {
+			$entries = implode( ',', $ids );
 			Forminator_Form_Entry_Model::delete_by_entrys( $this->model->id, $entries );
 			$this->maybe_redirect_to_referer();
 			exit;
@@ -83,7 +85,7 @@ class Forminator_Quiz_View_Page extends Forminator_Admin_View_Page {
 	 * @return bool
 	 */
 	public function has_leads() {
-		if ( isset( $this->model->settings['hasLeads'] ) && in_array( $this->model->settings['hasLeads'], array( true, 'true' ), true ) ) {
+		if ( isset( $this->model->settings['hasLeads'] ) && filter_var( $this->model->settings['hasLeads'], FILTER_VALIDATE_BOOLEAN ) ) {
 			return true;
 		}
 
@@ -106,26 +108,14 @@ class Forminator_Quiz_View_Page extends Forminator_Admin_View_Page {
 	}
 
 	/**
-	 * Get fields table
-	 *
-	 * @since 1.0
-	 * @return array
-	 */
-	public function get_table() {
-		$per_page = $this->get_per_page();
-		$entries  = Forminator_Form_Entry_Model::list_entries( $this->form_id, $per_page, ( $this->get_paged() - 1 ) * $per_page );
-
-		return $entries;
-	}
-
-	/**
 	 * Get paged
 	 *
 	 * @since 1.0
 	 * @return int
 	 */
 	public function get_paged() {
-		$paged = isset( $_GET['paged'] ) ? intval( $_GET['paged'] ) : 1;
+		$paged = filter_input( INPUT_GET, 'paged', FILTER_VALIDATE_INT );
+		$paged = $paged ? $paged : 1;
 
 		return $paged;
 	}
@@ -157,7 +147,7 @@ class Forminator_Quiz_View_Page extends Forminator_Admin_View_Page {
 	 * @return string
 	 */
 	protected function forminator_get_form_type() {
-		return ( isset( $_GET['form_type'] ) ? sanitize_text_field( $_GET['form_type'] ) : '' );
+		return Forminator_Core::sanitize_text_field( 'form_type' );
 	}
 
 	/**
@@ -196,10 +186,10 @@ class Forminator_Quiz_View_Page extends Forminator_Admin_View_Page {
 				$entries_data['detail']['colspan'] = 0;
 				$entries_data['detail']['items']   = array();
 
-				$entries_data['detail']['quiz_entry']   = isset( $entry->meta_data['entry'] ) ? $entry->meta_data['entry'] : array();
-				$entries_data['detail']['quiz_url']     = isset( $entry->meta_data['quiz_url'] ) ? $entry->meta_data['quiz_url'] : array();
-            }
-        }
+				$entries_data['detail']['quiz_entry'] = isset( $entry->meta_data['entry'] ) ? $entry->meta_data['entry'] : array();
+				$entries_data['detail']['quiz_url']   = isset( $entry->meta_data['quiz_url'] ) ? $entry->meta_data['quiz_url'] : array();
+			}
+		}
 
 		return $entries_data;
 
@@ -212,18 +202,19 @@ class Forminator_Quiz_View_Page extends Forminator_Admin_View_Page {
 		if ( $this->lead_cform ) {
 			$this->lead_cform->entries_header();
 		} else { ?>
-            <thead>
-                <tr>
-                    <th>
-                        <label class="sui-checkbox">
-                            <input id="wpf-cform-check_all" type="checkbox">
-                            <span></span>
-                            <div class="sui-description"><?php esc_html_e( 'ID', 'forminator' ); ?></div>
-                        </label>
-                    </th>
-                    <th colspan="5"><?php esc_html_e( 'Date Submitted', 'forminator' ); ?></th>
-                </tr>
-            </thead>
-        <?php }
+			<thead>
+				<tr>
+					<th>
+						<label class="sui-checkbox">
+							<input id="wpf-cform-check_all" type="checkbox">
+							<span></span>
+							<div class="sui-description"><?php esc_html_e( 'ID', 'forminator' ); ?></div>
+						</label>
+					</th>
+					<th colspan="5"><?php esc_html_e( 'Date Submitted', 'forminator' ); ?></th>
+				</tr>
+			</thead>
+			<?php
+		}
 	}
 }

@@ -5,8 +5,9 @@
  * @since 3.2.0
  * @package WP_Smush
  *
- * @var array $cpts      Custom post types.
- * @var array $settings  Lazy loading settings.
+ * @var array $conflicts  Conflicting plugins.
+ * @var array $cpts       Custom post types.
+ * @var array $settings   Lazy loading settings.
  */
 
 if ( ! defined( 'WPINC' ) ) {
@@ -25,14 +26,32 @@ wp_enqueue_style( 'wp-color-picker' );
 	?>
 </p>
 
-<div class="sui-notice sui-notice-success">
-	<div class="sui-notice-content">
-		<div class="sui-notice-message">
-			<i class="sui-notice-icon sui-icon-check-tick sui-md" aria-hidden="true"></i>
-			<p><?php esc_html_e( 'Lazy loading is active.', 'wp-smushit' ); ?></p>
+<?php if ( ! $conflicts || ! is_array( $conflicts ) || empty( $conflicts ) ) : ?>
+	<div class="sui-notice sui-notice-success">
+		<div class="sui-notice-content">
+			<div class="sui-notice-message">
+				<i class="sui-notice-icon sui-icon-check-tick sui-md" aria-hidden="true"></i>
+				<p><?php esc_html_e( 'Lazy loading is active.', 'wp-smushit' ); ?></p>
+			</div>
 		</div>
 	</div>
-</div>
+<?php else : ?>
+	<div class="sui-notice sui-notice-warning">
+		<div class="sui-notice-content">
+			<div class="sui-notice-message">
+				<i class="sui-notice-icon sui-icon-warning-alert sui-md" aria-hidden="true"></i>
+				<p>
+					<?php
+					printf( /* translators: %s - list of plugins */
+						esc_html__( "We've detected another active plugin that offers Lazy Load: %s. Smush may not work as expected if Lazy Load is enabled in multiple plugins. For best results, activate Lazy Load in only one plugin at a time.", 'wp-smushit' ),
+						'<strong>' . esc_html( join( ', ', $conflicts ) ) . '</strong>'
+					);
+					?>
+				</p>
+			</div>
+		</div>
+	</div>
+<?php endif; ?>
 
 <div class="sui-box-settings-row">
 	<div class="sui-box-settings-col-1">
@@ -197,7 +216,7 @@ wp_enqueue_style( 'wp-color-picker' );
 								<li><label for="spinner-<?php echo absint( $image ); ?>" class="sui-box-selector">
 									<input type="radio" name="animation[spinner-icon]" id="spinner-<?php echo absint( $image ); ?>" value="<?php echo absint( $image ); ?>" <?php checked( $image === $settings['animation']['spinner']['selected'] ); ?> />
 									<span>
-										<button class="remove-selector sui-button-icon sui-tooltip smush-ll-remove" data-tooltip="<?php esc_attr_e( 'Remove', 'wp-smushit' ); ?>">
+										<button class="remove-selector sui-button-icon sui-tooltip smush-ll-remove" data-id="<?php echo absint( $image ); ?>" data-tooltip="<?php esc_attr_e( 'Remove', 'wp-smushit' ); ?>">
 											<i class="sui-icon-close" aria-hidden="true" data-id="<?php echo absint( $image ); ?>" data-type="spinner"></i>
 										</button>
 

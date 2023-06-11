@@ -110,7 +110,7 @@ class Forminator_Google_Auth_AppIdentity extends Forminator_Google_Auth_Abstract
 
     $this->client->getLogger()->debug('App Identity authentication');
 
-    // Add the OAuth2 header to the request
+    // Add the OAuth2 header to the request.
     $request->setRequestHeaders(
         array('Authorization' => 'Bearer ' . $this->token['access_token'])
     );

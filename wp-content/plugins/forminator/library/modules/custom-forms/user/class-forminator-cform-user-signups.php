@@ -18,18 +18,23 @@ class Forminator_CForm_User_Signups {
 	public $user_data;
 
 	public function __construct( $signup ) {
-		//This is for internal variables (i.e. activation key)
+		// This is for internal variables (i.e. activation key).
 		foreach ( $signup as $key => $value ) {
 			$this->$key = $value;
 		}
 
 		$this->meta     = maybe_unserialize( $signup->meta );
 		$this->entry    = new Forminator_Form_Entry_Model( $this->meta['entry_id'] );
-		$this->form     = Forminator_Form_Model::model()->load( $this->meta['form_id'] );
+		$this->form     = Forminator_Base_Form_Model::get_model( $this->meta['form_id'] );
 		$this->settings = $this->form->settings;
-		// Don't use null coalescing operator for PHP version 5.6.*
-		$this->submitted_data = isset( $this->meta['submitted_data'] ) ? $this->meta['submitted_data'] : array();
+		// Don't use null coalescing operator for PHP version 5.6.*.
 		$this->user_data      = isset( $this->meta['user_data'] ) ? $this->meta['user_data'] : array();
+		$this->submitted_data = array();
+		if ( isset( $this->meta['prepared_data'] ) ) {
+			$this->submitted_data = $this->meta['prepared_data'];
+		} elseif ( isset( $this->meta['submitted_data'] ) ) {
+			$this->submitted_data = $this->meta['submitted_data'];
+		}
 	}
 
 	public static function get( $key ) {
@@ -62,7 +67,7 @@ class Forminator_CForm_User_Signups {
 
 		// Remove password for security.
 		$this->meta['user_data']['user_pass'] = '';
-		$this->meta['submitted_data']         = '';
+		$this->meta['prepared_data']          = '';
 
 		$now    = current_time( 'mysql', true );
 		$result = $wpdb->update(
@@ -76,6 +81,13 @@ class Forminator_CForm_User_Signups {
 		);
 
 		return $result;
+	}
+
+	public static function get_activation_email( $key ) {
+		$signup = self::get( $key );
+		return ! empty( $signup->settings['activation-email'] )
+			? $signup->settings['activation-email']
+			: 'default';
 	}
 
 	/**
@@ -115,17 +127,17 @@ class Forminator_CForm_User_Signups {
 	private static function install_signups() {
 		global $wpdb;
 
-		// Signups is not there and we need it so let's create it
+		// Signups is not there and we need it so let's create it.
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-		// Use WP's core CREATE TABLE query
+		// Use WP's core CREATE TABLE query.
 		$create_queries = wp_get_db_schema( 'ms_global' );
 		if ( ! is_array( $create_queries ) ) {
 			$create_queries = explode( ';', $create_queries );
 			$create_queries = array_filter( $create_queries );
 		}
 
-		// Filter out all the queries except wp_signups
+		// Filter out all the queries except wp_signups.
 		foreach ( $create_queries as $key => $query ) {
 			if ( preg_match( '|CREATE TABLE ([^ ]*)|', $query, $matches ) ) {
 				if ( trim( $matches[1], '`' ) !== $wpdb->signups ) {
@@ -134,7 +146,7 @@ class Forminator_CForm_User_Signups {
 			}
 		}
 
-		// Run WordPress's database upgrader
+		// Run WordPress's database upgrader.
 		if ( ! empty( $create_queries ) ) {
 			$result = dbDelta( $create_queries );
 		}
@@ -175,20 +187,20 @@ class Forminator_CForm_User_Signups {
 
 	public static function prep_signups_functionality() {
 		if ( ! is_multisite() ) {
-			// require MS functions
+			// require MS functions.
 			require_once ABSPATH . 'wp-includes/ms-functions.php';
 
 			self::create_signups_table();
 
-			// remove filter which checks for Network setting (not active on non-ms install)
+			// remove filter which checks for Network setting (not active on non-ms install).
 			remove_filter( 'option_users_can_register', 'users_can_register_signup_filter' );
 		}
 
-		//Update the signup URL
+		// Update the signup URL.
 		add_filter( 'wpmu_signup_user_notification_email', array( 'Forminator_CForm_User_Signups', 'modify_signup_user_notification_message' ), 10, 4 );
 		add_filter( 'wpmu_signup_blog_notification_email', array( 'Forminator_CForm_User_Signups', 'modify_signup_blog_notification_message' ), 10, 7 );
 
-		//Disable activation email for manual activation method
+		// Disable activation email for manual activation method.
 		add_filter( 'wpmu_signup_user_notification', array( 'Forminator_CForm_User_Signups', 'maybe_suppress_signup_user_notification' ), 10, 3 );
 		add_filter( 'wpmu_signup_blog_notification', array( 'Forminator_CForm_User_Signups', 'maybe_suppress_signup_blog_notification' ), 10, 6 );
 
@@ -197,7 +209,7 @@ class Forminator_CForm_User_Signups {
 	}
 
 	public static function get_pending_activations( $activation_key ) {
-		// Create table Signups for non-multisite installs
+		// Create table Signups for non-multisite installs.
 		if ( ! is_multisite() ) {
 			self::create_signups_table();
 		}
@@ -221,9 +233,13 @@ class Forminator_CForm_User_Signups {
 	}
 
 	public static function modify_signup_user_notification_message( $message, $user, $user_email, $key ) {
+		if ( 'none' === self::get_activation_email( $key ) ) {
+			/* translators: New user notification email. %s: Activation URL. */
+			$message = __( "To activate your user, please click the following link:\n\n%s\n", 'forminator' );
+		}
 		$url = add_query_arg(
 			array(
-				'page' => 'forminator_activation',
+				'page' => 'account_activation',
 				'key'  => $key,
 			),
 			home_url( '/' )
@@ -233,9 +249,14 @@ class Forminator_CForm_User_Signups {
 	}
 
 	public static function modify_signup_blog_notification_message( $message, $domain, $path, $title, $user, $user_email, $key ) {
+		if ( 'none' === self::get_activation_email( $key ) ) {
+			/* translators: New site notification email. 1: Activation URL, 2: New site URL. */
+			$message = __( "To activate your site, please click the following link:\n\n%1\$s\n\nAfter you activate, you can visit your site here:\n\n%2\$s", 'forminator' );
+		}
+
 		$url = add_query_arg(
 			array(
-				'page' => 'forminator_activation',
+				'page' => 'account_activation',
 				'key'  => $key,
 			),
 			home_url( '/' )
@@ -268,8 +289,8 @@ class Forminator_CForm_User_Signups {
 	 * Add meta of a user sign-up
 	 *
 	 * @param Forminator_Form_Entry_Model $entry
-	 * @param string $meta_key
-	 * @param string $meta_value
+	 * @param string                      $meta_key
+	 * @param string                      $meta_value
 	 *
 	 * @return bool
 	 */
@@ -288,7 +309,7 @@ class Forminator_CForm_User_Signups {
 	 * Activate signup
 	 *
 	 * @param string $key
-	 * @param bool $is_user_signon
+	 * @param bool   $is_user_signon
 	 *
 	 * @return array|Forminator_CForm_User_Signups|WP_Error
 	 */
@@ -303,14 +324,14 @@ class Forminator_CForm_User_Signups {
 
 		$user_id = username_exists( $signup->user_data['user_login'] );
 		if ( $user_id ) {
-			//User already exists
+			// User already exists.
 			$signup->set_as_activated();
 
 			return new WP_Error( 'user_already_exists', __( 'That username is already activated.', 'forminator' ), $signup );
 		}
 
 		if ( email_exists( $signup->user_data['user_email'] ) ) {
-			//Email already exists
+			// Email already exists.
 			return new WP_Error( 'email_already_exists', __( 'Sorry, that email address is already used!', 'forminator' ), $signup );
 		}
 
@@ -327,10 +348,11 @@ class Forminator_CForm_User_Signups {
 
 			return new WP_Error( 'create_user', $user_data );
 		}
-		//For decrypted password
-		$signup->submitted_data = $forminator_user_registration->change_submitted_data( $signup->submitted_data, $password );
+		Forminator_CForm_Front_Action::$prepared_data = $signup->submitted_data;
+		// For decrypted password.
+		$forminator_user_registration->change_submitted_data( $password );
 
-		$user_id = $forminator_user_registration->create_user( $user_data, $signup->form, $signup->entry, $signup->submitted_data, $is_user_signon );
+		$user_id = $forminator_user_registration->create_user( $user_data, $signup->form, $signup->entry, $is_user_signon );
 		if ( ! $user_id ) {
 			return new WP_Error( 'create_user', __( 'Could not create user', 'forminator' ), $signup );
 		}
@@ -339,11 +361,18 @@ class Forminator_CForm_User_Signups {
 
 		do_action( 'forminator_activate_user', $user_id, $signup->meta );
 
-		//Create site only on main site and if option for that is enabled
+		if ( isset( $signup->settings['activation-method'] )
+			&& 'manual' === $signup->settings['activation-method']
+			&& ! current_user_can( 'manage_options' )
+		) {
+			return new WP_Error( 'user_activated', __( 'User account has been activated.', 'forminator' ), $signup );
+		}
+
+		// Create site only on main site and if option for that is enabled.
 		if ( forminator_is_main_site() ) {
 			$option_create_site = forminator_get_property( $signup->settings, 'site-registration' );
 			if ( isset( $option_create_site ) && 'enable' === $option_create_site ) {
-				$forminator_user_registration->create_site( $user_id, $signup->form, $signup->entry, $password, $signup->submitted_data );
+				$forminator_user_registration->create_site( $user_id, $signup->form, $signup->entry, $password );
 			}
 		}
 
@@ -353,7 +382,7 @@ class Forminator_CForm_User_Signups {
 			'form_id'  => $signup->form->id,
 			'entry_id' => $signup->entry->entry_id,
 		);
-		//Redirected page for Email-activation method
+		// Redirected page for Email-activation method.
 		if ( isset( $signup->settings['activation-method'], $signup->settings['confirmation-page'] )
 			&& 'email' === $signup->settings['activation-method']
 			&& ! empty( $signup->settings['confirmation-page'] )

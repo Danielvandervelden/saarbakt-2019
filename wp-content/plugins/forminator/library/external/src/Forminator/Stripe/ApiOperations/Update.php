@@ -11,7 +11,7 @@ namespace Forminator\Stripe\ApiOperations;
 trait Update
 {
     /**
-     * @param string $id the ID of the resource to update
+     * @param string $id the ID of the resource to update.
      * @param null|array $params
      * @param null|array|string $opts
      *

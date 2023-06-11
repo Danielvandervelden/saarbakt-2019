@@ -1,1 +1,1 @@
-<?php // phpcs:ignore
+<?php // empty file

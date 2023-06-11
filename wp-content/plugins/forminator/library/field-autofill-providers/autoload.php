@@ -33,7 +33,7 @@ foreach ( $forminator_autofills as $forminator_autofill ) {
 		continue;
 	}
 
-	// only include file if all required files exist
+	// only include file if all required files exist.
 	foreach ( $required_files as $required_file ) {
 		/** @noinspection PhpIncludeInspection */
 		require_once $required_file;

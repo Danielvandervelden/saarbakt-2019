@@ -5,18 +5,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Class Forminator_Custom
+ *
  * @since 1.0
  */
 class Forminator_Custom extends Forminator_Field {
 
 	/**
-	* @var string
-	*/
+	 * @var string
+	 */
 	public $name = '';
 
 	/**
-	* @var string
-	*/
+	 * @var string
+	 */
 	public $slug = 'custom';
 
 	/**
@@ -30,10 +31,10 @@ class Forminator_Custom extends Forminator_Field {
 	public $options = array();
 
 	/**
-	* @var string
-	*/
-	//public $category = 'posts';
-	//Disable for now until we know what to do with this
+	 * @var string
+	 */
+	// public $category = 'posts';.
+	// Disable for now until we know what to do with this.
 
 	/**
 	 * Forminator_Custom constructor.
@@ -176,11 +177,11 @@ class Forminator_Custom extends Forminator_Field {
 	 *
 	 * @since 1.0
 	 * @param $field
-	 * @param $settings
+	 * @param Forminator_Render_Form $views_obj Forminator_Render_Form object.
 	 *
 	 * @return mixed
 	 */
-	public function markup( $field, $settings = array() ) {
+	public function markup( $field, $views_obj ) {
 		$required      = self::get_property( 'required', $field, false );
 		$id            = self::get_property( 'element_id', $field );
 		$name          = $id;
@@ -249,9 +250,8 @@ class Forminator_Custom extends Forminator_Field {
 	 * @since 1.0
 	 * @param array        $field
 	 * @param array|string $data
-	 * @param array        $post_data
 	 */
-	public function validate( $field, $data, $post_data = array() ) {
+	public function validate( $field, $data ) {
 		if ( $this->is_required( $field ) ) {
 			$id   = self::get_property( 'element_id', $field );
 			$name = self::get_property( 'custom_field_name', $field, __( 'field name', 'forminator' ) );
@@ -267,8 +267,8 @@ class Forminator_Custom extends Forminator_Field {
 	 *
 	 * @since 1.0.2
 	 *
-	 * @param array $field
-	 * @param array|string $data - the data to be sanitized
+	 * @param array        $field
+	 * @param array|string $data - the data to be sanitized.
 	 *
 	 * @return array|string $data - the data after sanitization
 	 */

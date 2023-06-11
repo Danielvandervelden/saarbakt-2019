@@ -88,7 +88,7 @@ class Forminator_Addon_Activecampaign_Wp_Api {
 		 *
 		 * @since 1.1
 		 *
-		 * @param string $user_agent current user agent
+		 * @param string $user_agent current user agent.
 		 */
 		$user_agent = apply_filters( 'forminator_addon_activecampaign_api_user_agent', $user_agent );
 
@@ -109,7 +109,7 @@ class Forminator_Addon_Activecampaign_Wp_Api {
 	 * @throws Forminator_Addon_Activecampaign_Wp_Api_Not_Found_Exception
 	 */
 	private function request( $verb, $path, $args = array() ) {
-		// Adding extra user agent for wp remote request
+		// Adding extra user agent for wp remote request.
 		add_filter( 'http_headers_useragent', array( $this, 'filter_user_agent' ) );
 
 		$url  = trailingslashit( $this->_endpoint ) . $path;
@@ -120,10 +120,10 @@ class Forminator_Addon_Activecampaign_Wp_Api {
 		 *
 		 * @since 1.1
 		 *
-		 * @param string $url  full url with scheme
-		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`
-		 * @param string $path requested path resource
-		 * @param array  $args argument sent to this function
+		 * @param string $url  full url with scheme.
+		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`.
+		 * @param string $path requested path resource.
+		 * @param array  $args argument sent to this function.
 		 */
 		$url = apply_filters( 'forminator_addon_activecampaign_api_url', $url, $verb, $path, $args );
 
@@ -139,9 +139,9 @@ class Forminator_Addon_Activecampaign_Wp_Api {
 		 * @since 1.1
 		 *
 		 * @param array  $headers
-		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`
-		 * @param string $path requested path resource
-		 * @param array  $args argument sent to this function
+		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`.
+		 * @param string $path requested path resource.
+		 * @param array  $args argument sent to this function.
 		 */
 		$headers = apply_filters( 'forminator_addon_activecampaign_api_request_headers', $headers, $verb, $path, $args );
 
@@ -156,9 +156,9 @@ class Forminator_Addon_Activecampaign_Wp_Api {
 		 *
 		 * @since 1.1
 		 *
-		 * @param array  $request_data it will be `http_build_query`-ed when `GET` or `wp_json_encode`-ed otherwise
-		 * @param string $verb         `GET` `POST` `PUT` `DELETE` `PATCH`
-		 * @param string $path         requested path resource
+		 * @param array  $request_data it will be `http_build_query`-ed when `GET` or `wp_json_encode`-ed otherwise.
+		 * @param string $verb         `GET` `POST` `PUT` `DELETE` `PATCH`.
+		 * @param string $path         requested path resource.
 		 */
 		$args = apply_filters( 'forminator_addon_activecampaign_api_request_data', $request_data, $verb, $path );
 
@@ -201,11 +201,11 @@ class Forminator_Addon_Activecampaign_Wp_Api {
 
 		$body = wp_remote_retrieve_body( $res );
 
-		// probably silent mode
+		// probably silent mode.
 		if ( ! empty( $body ) ) {
 			$res = json_decode( $body );
 
-			// auto validate
+			// auto validate.
 			if ( ! empty( $res ) ) {
 				if ( ! isset( $res->result_code ) || 1 !== $res->result_code ) {
 					$message = '';
@@ -224,9 +224,9 @@ class Forminator_Addon_Activecampaign_Wp_Api {
 		 *
 		 * @since 1.1
 		 *
-		 * @param mixed          $response    original wp remote request response or decoded body if available
-		 * @param string         $body        original content of http response's body
-		 * @param array|WP_Error $wp_response original wp remote request response
+		 * @param mixed          $response    original wp remote request response or decoded body if available.
+		 * @param string         $body        original content of http response's body.
+		 * @param array|WP_Error $wp_response original wp remote request response.
 		 */
 		$res = apply_filters( 'forminator_addon_activecampaign_api_response', $response, $body, $wp_response );
 

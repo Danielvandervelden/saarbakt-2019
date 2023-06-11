@@ -1,19 +1,20 @@
 <?php
+
 /**
  * Plugin Name: Google Analytics Dashboard for WP (GADWP)
  * Plugin URI: https://exactmetrics.com
  * Description: Displays Google Analytics Reports and Real-Time Statistics in your Dashboard. Automatically inserts the tracking code in every page of your website.
  * Author: ExactMetrics
- * Version: 6.8.0
- * Requires at least: 3.8.0
- * Requires PHP: 5.2
- * Author URI: https://exactmetrics.com
+ * Version: 7.15.3
+ * Requires at least: 4.8.0
+ * Requires PHP: 5.6
+ * Author URI: https://exactmetrics.com/lite/?utm_source=liteplugin&utm_medium=pluginheader&utm_campaign=authoruri&utm_content=7%2E0%2E0
  * Text Domain: google-analytics-dashboard-for-wp
  * Domain Path: /languages
  */
 
 // Exit if accessed directly.
-if ( ! defined( 'ABSPATH' ) ) {
+if (!defined('ABSPATH')) {
 	exit;
 }
 
@@ -26,7 +27,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @author  Chris Christoff
  * @access public
  */
-final class ExactMetrics_Lite {
+final class ExactMetrics_Lite
+{
 
 	/**
 	 * Holds the class object.
@@ -44,7 +46,7 @@ final class ExactMetrics_Lite {
 	 * @access public
 	 * @var string $version Plugin version.
 	 */
-	public $version = '6.8.0';
+	public $version = '7.15.3';
 
 	/**
 	 * Plugin file.
@@ -151,6 +153,7 @@ final class ExactMetrics_Lite {
 	 * @since 7.15.0
 	 * @accces public
 	 * @var string
+	 * @deprecated Since 8.3 with the removal of ga compatibility
 	 */
 	public $tracking_mode;
 
@@ -160,7 +163,8 @@ final class ExactMetrics_Lite {
 	 * @since 6.0.0
 	 * @access public
 	 */
-	public function __construct() {
+	public function __construct()
+	{
 		// We don't use this
 	}
 
@@ -168,28 +172,26 @@ final class ExactMetrics_Lite {
 	 * Returns the singleton instance of the class.
 	 *
 	 * @access public
+	 * @return object The ExactMetrics_Lite object.
 	 * @since 6.0.0
 	 *
-	 * @return object The ExactMetrics_Lite object.
 	 */
-	public static function get_instance() {
+	public static function get_instance()
+	{
 
-		if ( ! isset( self::$instance ) && ! ( self::$instance instanceof ExactMetrics_Lite ) ) {
-			self::$instance = new ExactMetrics_Lite();
+		if (!isset(self::$instance) && !(self::$instance instanceof ExactMetrics_Lite)) {
+			self::$instance       = new ExactMetrics_Lite();
 			self::$instance->file = __FILE__;
 
-			global $wp_version;
+			// Detect Pro version and return early
+			if (defined('EXACTMETRICS_PRO_VERSION')) {
+				add_action('admin_notices', array(self::$instance, 'exactmetrics_pro_notice'));
 
-			// Detect non-supported WordPress version and return early
-			if ( version_compare( $wp_version, '3.8', '<' ) && ( ! defined( 'EXACTMETRICS_FORCE_ACTIVATION' ) || ! EXACTMETRICS_FORCE_ACTIVATION ) ) {
-				add_action( 'admin_notices', array( self::$instance, 'exactmetrics_wp_notice' ) );
-				return;
+				return self::$instance;
 			}
 
-			// Detect Pro version and return early
-			if ( defined( 'EXACTMETRICS_PRO_VERSION' ) ) {
-				add_action( 'admin_notices', array( self::$instance, 'exactmetrics_pro_notice' ) );
-				return;
+			if (!self::$instance->check_compatibility()) {
+				return self::$instance;
 			}
 
 			// Define constants
@@ -209,19 +211,19 @@ final class ExactMetrics_Lite {
 
 			// This does the version to version background upgrade routines and initial install
 			$em_version = get_option( 'exactmetrics_current_version', '5.5.3' );
-			if ( version_compare( $em_version, '6.5.0', '<' ) ) {
+            if ( version_compare( $em_version, '7.13.1', '<' ) ) {
 				exactmetrics_lite_call_install_and_upgrade();
 			}
 
-			if ( is_admin() ) {
-				new AM_Deactivation_Survey( 'ExactMetrics', 'google-analytics-dashboard-for-wp' );
+			if (is_admin()) {
+				new AM_Deactivation_Survey('ExactMetrics', 'google-analytics-dashboard-for-wp');
 			}
 
 			// Load the plugin textdomain.
-			add_action( 'plugins_loaded', array( self::$instance, 'load_plugin_textdomain' ), 15 );
+			add_action('plugins_loaded', array(self::$instance, 'load_plugin_textdomain'), 15);
 
 			// Load admin only components.
-			if ( is_admin() || ( defined( 'DOING_CRON' ) && DOING_CRON ) ) {
+			if (is_admin() || (defined('DOING_CRON') && DOING_CRON)) {
 				self::$instance->notices            = new ExactMetrics_Notice_Admin();
 				self::$instance->reporting          = new ExactMetrics_Reporting();
 				self::$instance->api_auth           = new ExactMetrics_API_Auth();
@@ -230,18 +232,17 @@ final class ExactMetrics_Lite {
 				self::$instance->notification_event = new ExactMetrics_Notification_Event();
 			}
 
-			if ( exactmetrics_is_pro_version() ) {
+			if (exactmetrics_is_pro_version()) {
 				require_once EXACTMETRICS_PLUGIN_DIR . 'pro/includes/load.php';
 			} else {
 				require_once EXACTMETRICS_PLUGIN_DIR . 'lite/includes/load.php';
 			}
 
 			// Run hook to load ExactMetrics addons.
-			do_action( 'exactmetrics_load_plugins' ); // the updater class for each addon needs to be instantiated via `exactmetrics_updater`
+			do_action('exactmetrics_load_plugins'); // the updater class for each addon needs to be instantiated via `exactmetrics_updater`
 		}
 
 		return self::$instance;
-
 	}
 
 	/**
@@ -250,13 +251,14 @@ final class ExactMetrics_Lite {
 	 * The whole idea of the singleton design pattern is that there is a single
 	 * object therefore, we don't want the object to be cloned.
 	 *
+	 * @return void
 	 * @since 6.0.0
 	 * @access public
 	 *
-	 * @return void
 	 */
-	public function __clone() {
-		_doing_it_wrong( __FUNCTION__, esc_html__( 'Cheatin&#8217; huh?', 'google-analytics-dashboard-for-wp' ), '6.0.0' );
+	public function __clone()
+	{
+		_doing_it_wrong(__FUNCTION__, esc_html__('Cheatin&#8217; huh?', 'google-analytics-dashboard-for-wp'), '6.0.0');
 	}
 
 	/**
@@ -264,13 +266,14 @@ final class ExactMetrics_Lite {
 	 *
 	 * Attempting to wakeup an ExactMetrics instance will throw a doing it wrong notice.
 	 *
+	 * @return void
 	 * @since 6.0.0
 	 * @access public
 	 *
-	 * @return void
 	 */
-	public function __wakeup() {
-		_doing_it_wrong( __FUNCTION__, esc_html__( 'Cheatin&#8217; huh?', 'google-analytics-dashboard-for-wp' ), '6.0.0' );
+	public function __wakeup()
+	{
+		_doing_it_wrong(__FUNCTION__, esc_html__('Cheatin&#8217; huh?', 'google-analytics-dashboard-for-wp'), '6.0.0');
 	}
 
 	/**
@@ -280,18 +283,20 @@ final class ExactMetrics_Lite {
 	 * the API & Auth frontend, so it's only loaded if user is using a plugin
 	 * that requires it.
 	 *
+	 * @return void
 	 * @since 6.0.0
 	 * @access public
 	 *
-	 * @return void
 	 */
-	public function __get( $key ) {
-		if ( $key === 'auth' ) {
-			if ( empty( self::$instance->auth ) ) {
+	public function __get($key)
+	{
+		if ($key === 'auth') {
+			if (empty(self::$instance->auth)) {
 				// LazyLoad Auth for Frontend
 				require_once EXACTMETRICS_PLUGIN_DIR . 'includes/auth.php';
 				self::$instance->auth = new ExactMetrics_Auth();
 			}
+
 			return self::$instance->$key;
 		} else {
 			return self::$instance->$key;
@@ -299,43 +304,67 @@ final class ExactMetrics_Lite {
 	}
 
 	/**
+	 * Check compatibility with PHP and WP, and display notices if necessary
+	 *
+	 * @return bool
+	 * @since 7.0.0
+	 */
+	private function check_compatibility()
+	{
+		if (defined('EXACTMETRICS_FORCE_ACTIVATION') && EXACTMETRICS_FORCE_ACTIVATION) {
+			return true;
+		}
+
+		require_once plugin_dir_path(__FILE__) . 'includes/compatibility-check.php';
+		$compatibility = ExactMetrics_Compatibility_Check::get_instance();
+		$compatibility->maybe_display_notice();
+
+		return $compatibility->is_php_compatible() && $compatibility->is_wp_compatible();
+	}
+
+	/**
 	 * Define ExactMetrics constants.
 	 *
 	 * This function defines all of the ExactMetrics PHP constants.
 	 *
+	 * @return void
 	 * @since 6.0.0
 	 * @access public
 	 *
-	 * @return void
 	 */
-	public function define_globals() {
+	public function define_globals()
+	{
 
-		if ( ! defined( 'EXACTMETRICS_VERSION' ) ) {
-			define( 'EXACTMETRICS_VERSION', $this->version );
+		if (!defined('EXACTMETRICS_VERSION')) {
+			define('EXACTMETRICS_VERSION', $this->version);
 		}
 
-		if ( ! defined( 'EXACTMETRICS_LITE_VERSION' ) ) {
-			define( 'EXACTMETRICS_LITE_VERSION', EXACTMETRICS_VERSION );
+		if (!defined('EXACTMETRICS_VERSION')) {
+			define('EXACTMETRICS_VERSION', $this->version);
 		}
 
-		if ( ! defined( 'EXACTMETRICS_PLUGIN_NAME' ) ) {
-			define( 'EXACTMETRICS_PLUGIN_NAME', $this->plugin_name );
+		if (!defined('EXACTMETRICS_LITE_VERSION')) {
+			define('EXACTMETRICS_LITE_VERSION', EXACTMETRICS_VERSION);
 		}
 
-		if ( ! defined( 'EXACTMETRICS_PLUGIN_SLUG' ) ) {
-			define( 'EXACTMETRICS_PLUGIN_SLUG', $this->plugin_slug );
+		if (!defined('EXACTMETRICS_PLUGIN_NAME')) {
+			define('EXACTMETRICS_PLUGIN_NAME', $this->plugin_name);
 		}
 
-		if ( ! defined( 'EXACTMETRICS_PLUGIN_FILE' ) ) {
-			define( 'EXACTMETRICS_PLUGIN_FILE', $this->file );
+		if (!defined('EXACTMETRICS_PLUGIN_SLUG')) {
+			define('EXACTMETRICS_PLUGIN_SLUG', $this->plugin_slug);
 		}
 
-		if ( ! defined( 'EXACTMETRICS_PLUGIN_DIR' ) ) {
-			define( 'EXACTMETRICS_PLUGIN_DIR', plugin_dir_path( $this->file )  );
+		if (!defined('EXACTMETRICS_PLUGIN_FILE')) {
+			define('EXACTMETRICS_PLUGIN_FILE', $this->file);
 		}
 
-		if ( ! defined( 'EXACTMETRICS_PLUGIN_URL' ) ) {
-			define( 'EXACTMETRICS_PLUGIN_URL', plugin_dir_url( $this->file )  );
+		if (!defined('EXACTMETRICS_PLUGIN_DIR')) {
+			define('EXACTMETRICS_PLUGIN_DIR', plugin_dir_path($this->file));
+		}
+
+		if (!defined('EXACTMETRICS_PLUGIN_URL')) {
+			define('EXACTMETRICS_PLUGIN_URL', plugin_dir_url($this->file));
 		}
 	}
 
@@ -343,20 +372,21 @@ final class ExactMetrics_Lite {
 	 * Loads the plugin textdomain for translation.
 	 *
 	 * @access public
+	 * @return void
 	 * @since 6.0.0
 	 *
-	 * @return void
 	 */
-	public function load_plugin_textdomain() {
+	public function load_plugin_textdomain()
+	{
 
 		$mi_locale = get_locale();
-		if ( function_exists( 'get_user_locale' ) ) {
+		if (function_exists('get_user_locale')) {
 			$mi_locale = get_user_locale();
 		}
 
 		// Traditional WordPress plugin locale filter.
-		$mi_locale  = apply_filters( 'plugin_locale',  $mi_locale, 'google-analytics-dashboard-for-wp' );
-		$mi_mofile  = sprintf( '%1$s-%2$s.mo', 'google-analytics-dashboard-for-wp', $mi_locale );
+		$mi_locale = apply_filters('plugin_locale', $mi_locale, 'google-analytics-dashboard-for-wp');
+		$mi_mofile = sprintf('%1$s-%2$s.mo', 'google-analytics-dashboard-for-wp', $mi_locale);
 
 		// Look for wp-content/languages/google-analytics-dashboard-for-wp/google-analytics-dashboard-for-wp-{lang}_{country}.mo
 		$mi_mofile1 = WP_LANG_DIR . '/google-analytics-dashboard-for-wp/' . $mi_mofile;
@@ -368,71 +398,45 @@ final class ExactMetrics_Lite {
 		$mi_mofile3 = WP_LANG_DIR . '/plugins/' . $mi_mofile;
 
 		// Look in wp-content/plugins/google-analytics-dashboard-for-wp/languages/google-analytics-dashboard-for-wp-{lang}_{country}.mo
-		$mi_mofile4 = dirname( plugin_basename( EXACTMETRICS_PLUGIN_FILE ) ) . '/languages/';
-		$mi_mofile4 = apply_filters( 'exactmetrics_lite_languages_directory', $mi_mofile4 );
+		$mi_mofile4 = dirname(plugin_basename(EXACTMETRICS_PLUGIN_FILE)) . '/languages/';
+		$mi_mofile4 = apply_filters('exactmetrics_lite_languages_directory', $mi_mofile4);
 
-		if ( file_exists( $mi_mofile1 ) ) {
-			load_textdomain( 'google-analytics-dashboard-for-wp', $mi_mofile1 );
-		} elseif ( file_exists( $mi_mofile2 ) ) {
-			load_textdomain( 'google-analytics-dashboard-for-wp', $mi_mofile2 );
-		} elseif ( file_exists( $mi_mofile3 ) ) {
-			load_textdomain( 'google-analytics-dashboard-for-wp', $mi_mofile3 );
+		if (file_exists($mi_mofile1)) {
+			load_textdomain('google-analytics-dashboard-for-wp', $mi_mofile1);
+		} elseif (file_exists($mi_mofile2)) {
+			load_textdomain('google-analytics-dashboard-for-wp', $mi_mofile2);
+		} elseif (file_exists($mi_mofile3)) {
+			load_textdomain('google-analytics-dashboard-for-wp', $mi_mofile3);
 		} else {
-			load_plugin_textdomain( 'google-analytics-dashboard-for-wp', false, $mi_mofile4 );
+			load_plugin_textdomain('google-analytics-dashboard-for-wp', false, $mi_mofile4);
 		}
-
-	}
-
-	/**
-	 * Output a nag notice if the user has an out of date WP version installed
-	 *
-	 * @access public
-	 * @since 6.0.0
-	 *
-	 * @return 	void
-	 */
-	public function exactmetrics_wp_notice() {
-		$url = admin_url( 'plugins.php' );
-		// Check for MS dashboard
-		if( is_network_admin() ) {
-			$url = network_admin_url( 'plugins.php' );
-		}
-		?>
-		<div class="error">
-			<p>
-				<?php
-				// Translators: Make version number bold and add a link to return to the plugins page.
-				echo sprintf( esc_html__( 'Sorry, but your version of WordPress does not meet ExactMetrics\'s required version of %1$s3.8%2$s to run properly. The plugin not been activated. %3$sClick here to return to the Dashboard%4$s.', 'google-analytics-dashboard-for-wp' ), '<strong>', '</strong>', '<a href="' . $url . '">', '</a>' );
-				?>
-			</p>
-		</div>
-		<?php
 	}
 
 	/**
 	 * Output a nag notice if the user has both Lite and Pro activated
 	 *
 	 * @access public
+	 * @return    void
 	 * @since 6.0.0
 	 *
-	 * @return 	void
 	 */
-	public function exactmetrics_pro_notice() {
-		$url = admin_url( 'plugins.php' );
+	public function exactmetrics_pro_notice()
+	{
+		$url = admin_url('plugins.php');
 		// Check for MS dashboard
-		if( is_network_admin() ) {
-			$url = network_admin_url( 'plugins.php' );
+		if (is_network_admin()) {
+			$url = network_admin_url('plugins.php');
 		}
-		?>
+?>
 		<div class="error">
 			<p>
 				<?php
 				// Translators: Adds a link to the plugins page.
-				echo sprintf( esc_html__( 'Please %1$suninstall%2$s the ExactMetrics Lite Plugin. Your Pro version of ExactMetrics may not work as expected until the Lite version is uninstalled.', 'google-analytics-dashboard-for-wp' ), '<a href="' . $url . '">', '</a>' );
+				echo sprintf(esc_html__('Please %1$suninstall%2$s the ExactMetrics Lite Plugin. Your Pro version of ExactMetrics may not work as expected until the Lite version is uninstalled.', 'google-analytics-dashboard-for-wp'), '<a href="' . $url . '">', '</a>'); // phpcs:ignore
 				?>
 			</p>
 		</div>
-		<?php
+<?php
 
 	}
 
@@ -441,17 +445,18 @@ final class ExactMetrics_Lite {
 	 *
 	 * Adds the items to the base object, and adds the helper functions.
 	 *
+	 * @return void
 	 * @since 6.0.0
 	 * @access public
 	 *
-	 * @return void
 	 */
-	public function load_settings() {
+	public function load_settings()
+	{
 		global $exactmetrics_settings;
 		require_once EXACTMETRICS_PLUGIN_DIR . 'includes/options.php';
 		require_once EXACTMETRICS_PLUGIN_DIR . 'includes/helpers.php';
 		require_once EXACTMETRICS_PLUGIN_DIR . 'includes/deprecated.php';
-		$exactmetrics_settings  = exactmetrics_get_options();
+		$exactmetrics_settings = exactmetrics_get_options();
 	}
 
 
@@ -460,13 +465,14 @@ final class ExactMetrics_Lite {
 	 *
 	 * Loads license class used by ExactMetrics
 	 *
+	 * @return void
 	 * @since 6.0.0
 	 * @access public
 	 *
-	 * @return void
 	 */
-	public function load_licensing(){
-		if ( is_admin() || ( defined( 'DOING_CRON' ) && DOING_CRON ) ) {
+	public function load_licensing()
+	{
+		if (is_admin() || (defined('DOING_CRON') && DOING_CRON)) {
 			require_once EXACTMETRICS_PLUGIN_DIR . 'lite/includes/license-compat.php';
 			self::$instance->license = new ExactMetrics_License_Compat();
 		}
@@ -477,13 +483,14 @@ final class ExactMetrics_Lite {
 	 *
 	 * Loads auth used by ExactMetrics
 	 *
+	 * @return void
 	 * @since 6.0.0
 	 * @access public
 	 *
-	 * @return void
 	 */
-	public function load_auth() {
-		if ( is_admin() || ( defined( 'DOING_CRON' ) && DOING_CRON ) ) {
+	public function load_auth()
+	{
+		if (is_admin() || (defined('DOING_CRON') && DOING_CRON)) {
 			require_once EXACTMETRICS_PLUGIN_DIR . 'includes/auth.php';
 			self::$instance->auth = new ExactMetrics_Auth();
 		}
@@ -493,15 +500,16 @@ final class ExactMetrics_Lite {
 	 * Loads all files into scope.
 	 *
 	 * @access public
+	 * @return    void
 	 * @since 6.0.0
 	 *
-	 * @return 	void
 	 */
-	public function require_files() {
+	public function require_files()
+	{
 
 		require_once EXACTMETRICS_PLUGIN_DIR . 'includes/capabilities.php';
 
-		if ( is_admin() || ( defined( 'DOING_CRON' ) && DOING_CRON ) ) {
+		if (is_admin() || (defined('DOING_CRON') && DOING_CRON)) {
 
 			// Lite and Pro files
 			require_once EXACTMETRICS_PLUGIN_DIR . 'assets/lib/pandora/class-am-deactivation-survey.php';
@@ -545,9 +553,12 @@ final class ExactMetrics_Lite {
 			require_once EXACTMETRICS_PLUGIN_DIR . 'includes/admin/notifications/notification-events.php';
 		}
 
+		require_once EXACTMETRICS_PLUGIN_DIR . 'includes/admin/exclude-page-metabox.php';
+		require_once EXACTMETRICS_PLUGIN_DIR . 'includes/frontend/verified-badge/Controller.php';
+		require_once EXACTMETRICS_PLUGIN_DIR . 'includes/admin/site-notes/Controller.php';
 		require_once EXACTMETRICS_PLUGIN_DIR . 'includes/api-request.php';
 
-		if ( is_admin() || ( defined( 'DOING_CRON' ) && DOING_CRON ) ) {
+		if (is_admin() || (defined('DOING_CRON') && DOING_CRON)) {
 			// Late loading classes (self instantiating)
 			require_once EXACTMETRICS_PLUGIN_DIR . 'includes/admin/tracking.php';
 		}
@@ -555,18 +566,21 @@ final class ExactMetrics_Lite {
 		require_once EXACTMETRICS_PLUGIN_DIR . 'includes/frontend/frontend.php';
 		require_once EXACTMETRICS_PLUGIN_DIR . 'includes/frontend/seedprod.php';
 		require_once EXACTMETRICS_PLUGIN_DIR . 'includes/measurement-protocol.php';
+		require_once EXACTMETRICS_PLUGIN_DIR . 'includes/measurement-protocol-v4.php';
 	}
 
 	/**
 	 * Get the tracking mode for the frontend scripts.
 	 *
 	 * @return string
+	 * @deprecated Since 8.3 with the removal of ga compatibility
 	 */
-	public function get_tracking_mode() {
+	public function get_tracking_mode()
+	{
 
-		if ( ! isset( $this->tracking_mode ) ) {
+		if (!isset($this->tracking_mode)) {
 			// This will already be set to 'analytics' to anybody already using the plugin before 7.15.0.
-			$this->tracking_mode = exactmetrics_get_option( 'tracking_mode', 'gtag' );
+			$this->tracking_mode = exactmetrics_get_option('tracking_mode', 'gtag');
 		}
 
 		return $this->tracking_mode;
@@ -577,48 +591,48 @@ final class ExactMetrics_Lite {
  * Fired when the plugin is activated.
  *
  * @access public
- * @since 6.0.0
  *
- * @global int $wp_version      The version of WordPress for this install.
- * @global object $wpdb         The WordPress database object.
  * @param boolean $network_wide True if WPMU superadmin uses "Network Activate" action, false otherwise.
  *
  * @return void
+ * @global object $wpdb The WordPress database object.
+ * @since 6.0.0
+ *
+ * @global int $wp_version The version of WordPress for this install.
  */
-function exactmetrics_lite_activation_hook( $network_wide ) {
-
-	global $wp_version;
-
-	$url = admin_url( 'plugins.php' );
+function exactmetrics_lite_activation_hook($network_wide)
+{
+	$url = admin_url('plugins.php');
 	// Check for MS dashboard
-	if ( is_network_admin() ) {
-		$url = network_admin_url( 'plugins.php' );
+	if (is_network_admin()) {
+		$url = network_admin_url('plugins.php');
 	}
 
-	if ( version_compare( $wp_version, '3.8', '<' ) && ( ! defined( 'EXACTMETRICS_FORCE_ACTIVATION' ) || ! EXACTMETRICS_FORCE_ACTIVATION ) ) {
-		deactivate_plugins( plugin_basename( __FILE__ ) );
-		wp_die( sprintf( esc_html__( 'Sorry, but your version of WordPress does not meet MonsterInsight\'s required version of %1$s3.8%2$s to run properly. The plugin not been activated. %3$sClick here to return to the Dashboard%4$s.', 'google-analytics-by-wordpress' ), '<strong>', '</strong>', '<a href="' . $url . '">', '</a>' ) );
+	if (class_exists('ExactMetrics')) {
+		deactivate_plugins(plugin_basename(__FILE__));
+		wp_die(sprintf(esc_html__('Please uninstall and remove ExactMetrics Pro before activating Google Analytics Dashboard for WP (GADWP). The Lite version has not been activated. %1$sClick here to return to the Dashboard%2$s.', 'google-analytics-by-wordpress'), '<a href="' . $url . '">', '</a>')); // phpcs:ignore
 	}
 
-	if ( class_exists( 'ExactMetrics' ) ) {
-		deactivate_plugins( plugin_basename( __FILE__ ) );
-		wp_die( sprintf( esc_html__( 'Please uninstall and remove ExactMetrics Pro before activating Google Analytics Dashboard for WP (GADWP). The Lite version has not been activated. %1$sClick here to return to the Dashboard%2$s.', 'google-analytics-by-wordpress' ), '<a href="' . $url . '">', '</a>' ) );
-	}
+	require_once plugin_dir_path(__FILE__) . 'includes/compatibility-check.php';
+	$compatibility = ExactMetrics_Compatibility_Check::get_instance();
+	$compatibility->maybe_deactivate_plugin(plugin_basename(__FILE__));
 
 	// Add transient to trigger redirect.
-	set_transient( '_exactmetrics_activation_redirect', 1, 30 );
+	set_transient('_exactmetrics_activation_redirect', 1, 30);
 }
-register_activation_hook( __FILE__, 'exactmetrics_lite_activation_hook' );
+
+register_activation_hook(__FILE__, 'exactmetrics_lite_activation_hook');
 
 /**
  * Fired when the plugin is uninstalled.
  *
  * @access public
+ * @return    void
  * @since 6.0.0
  *
- * @return 	void
  */
-function exactmetrics_lite_uninstall_hook() {
+function exactmetrics_lite_uninstall_hook()
+{
 	wp_cache_flush();
 
 	// Note, if both MI Pro and Lite are active, this is an MI Pro instance
@@ -627,25 +641,28 @@ function exactmetrics_lite_uninstall_hook() {
 	// has that method.
 	$instance = ExactMetrics();
 
+    $instance->define_globals();
+    $instance->load_settings();
+
 	// If uninstalling via wp-cli load admin-specific files only here.
-	if ( defined( 'WP_CLI' ) && WP_CLI ) {
-		define( 'WP_ADMIN', true );
+	if (defined('WP_CLI') && WP_CLI) {
+		define('WP_ADMIN', true);
 		$instance->require_files();
 		$instance->load_auth();
-		$instance->notices         = new ExactMetrics_Notice_Admin();
-		$instance->reporting       = new ExactMetrics_Reporting();
-		$instance->api_auth        = new ExactMetrics_API_Auth();
+		$instance->notices   = new ExactMetrics_Notice_Admin();
+		$instance->reporting = new ExactMetrics_Reporting();
+		$instance->api_auth  = new ExactMetrics_API_Auth();
 	}
 
 	// Don't delete any data if the PRO version is already active.
-	if ( exactmetrics_is_pro_version() ) {
+	if (exactmetrics_is_pro_version()) {
 		return;
 	}
 
-	if ( is_multisite() ) {
+	if (is_multisite()) {
 		$site_list = get_sites();
-		foreach ( (array) $site_list as $site ) {
-			switch_to_blog( $site->blog_id );
+		foreach ((array) $site_list as $site) {
+			switch_to_blog($site->blog_id);
 
 			// Delete auth
 			$instance->api_auth->delete_auth();
@@ -671,17 +688,17 @@ function exactmetrics_lite_uninstall_hook() {
 	// Clear notification cron schedules
 	$schedules = wp_get_schedules();
 
-	if  ( is_array( $schedules ) && ! empty( $schedules ) ) {
-		foreach ( $schedules as $key => $value ) {
-			if ( 0 === strpos($key, "exactmetrics_notification_") ) {
-				$cron_hook = implode("_", explode( "_", $key, -2 ) ) . '_cron';
-				wp_clear_scheduled_hook( $cron_hook );
+	if (is_array($schedules) && !empty($schedules)) {
+		foreach ($schedules as $key => $value) {
+			if (0 === strpos($key, "exactmetrics_notification_")) {
+				$cron_hook = implode("_", explode("_", $key, -2)) . '_cron';
+				wp_clear_scheduled_hook($cron_hook);
 			}
 		}
 	}
-
 }
-register_uninstall_hook( __FILE__, 'exactmetrics_lite_uninstall_hook' );
+
+register_uninstall_hook(__FILE__, 'exactmetrics_lite_uninstall_hook');
 
 /**
  * The main function responsible for returning the one true ExactMetrics_Lite
@@ -692,13 +709,14 @@ register_uninstall_hook( __FILE__, 'exactmetrics_lite_uninstall_hook' );
  *
  * Example: <?php $exactmetrics = ExactMetrics_Lite(); ?>
  *
- * @since 6.0.0
- *
+ * @return ExactMetrics_Lite The singleton ExactMetrics_Lite instance.
  * @uses ExactMetrics_Lite::get_instance() Retrieve ExactMetrics_Lite instance.
  *
- * @return ExactMetrics_Lite The singleton ExactMetrics_Lite instance.
+ * @since 6.0.0
+ *
  */
-function ExactMetrics_Lite() {
+function ExactMetrics_Lite()
+{
 	return ExactMetrics_Lite::get_instance();
 }
 
@@ -709,28 +727,30 @@ function ExactMetrics_Lite() {
  * that can be done automatically, behind the scenes without the need for user interaction
  * (for example pagination or user input required), as well as the initial install.
  *
- * @since 6.0.0
- * @access public
- *
+ * @return void
  * @global string $wp_version WordPress version (provided by WordPress core).
  * @uses ExactMetrics_Lite::load_settings() Loads ExactMetrics settings
  * @uses ExactMetrics_Install::init() Runs upgrade process
  *
- * @return void
+ * @since 6.0.0
+ * @access public
+ *
  */
-function exactmetrics_lite_install_and_upgrade() {
-	global $wp_version;
+function exactmetrics_lite_install_and_upgrade()
+{
+	require_once plugin_dir_path(__FILE__) . 'includes/compatibility-check.php';
+	$compatibility = ExactMetrics_Compatibility_Check::get_instance();
 
-	// If the WordPress site doesn't meet the correct WP version requirements, don't activate ExactMetrics
-	if ( version_compare( $wp_version, '3.8', '<' ) ) {
-		if ( is_plugin_active( plugin_basename( __FILE__ ) ) ) {
+	// If the WordPress site doesn't meet the correct WP or PHP version requirements, don't activate ExactMetrics
+	if (!$compatibility->is_php_compatible() || !$compatibility->is_wp_compatible()) {
+		if (is_plugin_active(plugin_basename(__FILE__))) {
 			return;
 		}
 	}
 
 	// Don't run if ExactMetrics Pro is installed
-	if ( class_exists( 'ExactMetrics' ) ) {
-		if ( is_plugin_active( plugin_basename( __FILE__ ) ) ) {
+	if (class_exists('ExactMetrics')) {
+		if (is_plugin_active(plugin_basename(__FILE__))) {
 			return;
 		}
 	}
@@ -758,15 +778,16 @@ function exactmetrics_lite_install_and_upgrade() {
  * checks to see if there are any update procedures to be run, and if
  * so runs them. Also installs ExactMetrics for the first time.
  *
+ * @return void
+ * @uses ExactMetrics_Install() Runs install and upgrade process.
+ *
  * @since 6.0.0
  * @access public
  *
- * @uses ExactMetrics_Install() Runs install and upgrade process.
- *
- * @return void
  */
-function exactmetrics_lite_call_install_and_upgrade(){
-	add_action( 'wp_loaded', 'exactmetrics_lite_install_and_upgrade' );
+function exactmetrics_lite_call_install_and_upgrade()
+{
+	add_action('wp_loaded', 'exactmetrics_lite_install_and_upgrade');
 }
 
 /**
@@ -785,16 +806,18 @@ function exactmetrics_lite_call_install_and_upgrade(){
  *
  * Example: <?php $exactmetrics = ExactMetrics(); ?>
  *
- * @since 6.0.0
- *
+ * @return ExactMetrics The singleton ExactMetrics instance.
  * @uses ExactMetrics::get_instance() Retrieve ExactMetrics Pro instance.
  * @uses ExactMetrics_Lite::get_instance() Retrieve ExactMetrics Lite instance.
  *
- * @return ExactMetrics The singleton ExactMetrics instance.
+ * @since 6.0.0
+ *
  */
-if ( ! function_exists( 'ExactMetrics' ) ) {
-	function ExactMetrics() {
-		return ( class_exists( 'ExactMetrics' ) ? ExactMetrics_Pro() : ExactMetrics_Lite() );
+if (!function_exists('ExactMetrics')) {
+	function ExactMetrics()
+	{
+		return (class_exists('ExactMetrics') ? ExactMetrics_Pro() : ExactMetrics_Lite());
 	}
-	add_action( 'plugins_loaded', 'ExactMetrics' );
+
+	add_action('plugins_loaded', 'ExactMetrics');
 }

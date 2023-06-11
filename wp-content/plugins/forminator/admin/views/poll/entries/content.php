@@ -8,7 +8,26 @@ $custom_votes = $this->map_custom_votes();
 ?>
 
 <?php if ( $this->error_message() ) : ?>
-	<span class="sui-notice sui-notice-error"><p><?php echo esc_html( $this->error_message() ); ?></p></span>
+	<div
+		role="alert"
+		class="sui-notice sui-notice-red sui-active"
+		style="display: block; text-align: left;"
+		aria-live="assertive"
+	>
+
+		<div class="sui-notice-content">
+
+			<div class="sui-notice-message">
+
+				<span class="sui-notice-icon sui-icon-info" aria-hidden="true"></span>
+
+				<p><?php echo esc_html( $this->error_message() ); ?></p></span>
+
+			</div>
+
+		</div>
+
+	</div>
 <?php endif; ?>
 
 <?php if ( $count > 0 ) : ?>
@@ -22,13 +41,13 @@ $custom_votes = $this->map_custom_votes();
 			<div class="sui-block-content-center">
 				<?php if ( ! empty( $poll_question ) ) { ?>
 
-					<h2><?php echo $poll_question; // WPCS: XSS ok. ?></h2>
+					<h2><?php echo wp_kses_post( $poll_question ); ?></h2>
 
 				<?php } ?>
 
 				<?php if ( ! empty( $poll_description ) ) { ?>
 
-					<p><?php echo $poll_description; // WPCS: XSS ok. ?></p>
+					<p><?php echo wp_kses_post( $poll_description ); ?></p>
 
 				<?php } ?>
 			</div>
@@ -46,7 +65,7 @@ $custom_votes = $this->map_custom_votes();
 
 					echo '<div style="margin-top: 30px;">';
 
-						echo '<label class="sui-label">' . $this->get_field_title( $element_id ) . '</label>'; // phpcs:ignore
+						echo '<label class="sui-label">' . esc_html( $this->get_field_title( $element_id ) ) . '</label>';
 
 						echo '<div style="margin-top: 10px;">';
 

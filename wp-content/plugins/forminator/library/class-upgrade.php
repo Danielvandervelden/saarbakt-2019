@@ -30,12 +30,14 @@ class Forminator_Upgrade {
 			$version_changed = true;
 		}
 		if ( $version_changed ) {
-			// Update tables if required
+			// Update tables if required.
 			Forminator_Database_Tables::install_database_tables();
+
+			Forminator_Database_Tables::insert_default_entries();
 
 			add_action( 'admin_init', array( __CLASS__, 'flush_rewrite' ) );
 
-			// Update version
+			// Update version.
 			update_option( 'forminator_version', FORMINATOR_VERSION );
 
 			add_action(
@@ -45,19 +47,19 @@ class Forminator_Upgrade {
 					 * Triggered when Forminator version is updated
 					 *
 					 * @param string FORMINATOR_VERSION New plugin version
-					 * @param string $old_version Old plugin version
+					 * @param string $old_version Old plugin version.
 					 */
 					do_action( 'forminator_update_version', FORMINATOR_VERSION, $old_version );
 				}
 			);
 		}
 
-		// cleanup ip address on views
+		// cleanup ip address on views.
 		self::cleanup_views_ip_address();
 	}
 
 	public static function flush_rewrite() {
-		// Flush rewrite rules
+		// Flush rewrite rules.
 		flush_rewrite_rules();
 	}
 

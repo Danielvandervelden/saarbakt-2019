@@ -44,7 +44,6 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 	 *
 	 * @since 1.6.2
 	 * @var Forminator_Addon_Quiz_Settings_Abstract|null
-	 *
 	 */
 	protected $quiz_settings_instance;
 
@@ -61,7 +60,6 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 	 *
 	 * @since 1.6.2
 	 * @var Forminator_Addon_Quiz_Settings_Abstract|null
-	 *
 	 */
 	protected $lead_settings_instance;
 
@@ -99,7 +97,7 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 	public function __construct( Forminator_Addon_Abstract $addon, $quiz_id ) {
 		$this->addon   = $addon;
 		$this->quiz_id = $quiz_id;
-		$this->quiz    = Forminator_Quiz_Model::model()->load( $this->quiz_id );
+		$this->quiz    = Forminator_Base_Form_Model::get_model( $this->quiz_id );
 		if ( ! $this->quiz ) {
 			/* translators: ... */
 			throw new Forminator_Addon_Exception( sprintf( __( 'Quiz with id %d could not be found', 'forminator' ), $this->quiz_id ) );
@@ -107,12 +105,12 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 
 		$this->_submit_quiz_error_message = __( 'Failed to submit quiz because of an addon, please check your quiz and try again' );
 
-		// get quiz settings instance to be available throughout cycle
-		$this->quiz_settings_instance = $this->addon->get_addon_quiz_settings( $this->quiz_id );
+		// get quiz settings instance to be available throughout cycle.
+		$this->quiz_settings_instance = $this->addon->get_addon_settings( $this->quiz_id, 'quiz' );
 
 		if ( isset( $this->quiz->settings['hasLeads'] ) && $this->quiz->settings['hasLeads'] ) {
-			$this->lead_model             = Forminator_Form_Model::model()->load( $this->quiz->settings['leadsId'] );
-			$this->lead_settings_instance = $this->addon->get_addon_form_settings( $this->quiz->settings['leadsId'] );
+			$this->lead_model             = Forminator_Base_Form_Model::get_model( $this->quiz->settings['leadsId'] );
+			$this->lead_settings_instance = $this->addon->get_addon_settings( $this->quiz->settings['leadsId'], 'form' );
 		}
 	}
 
@@ -142,8 +140,8 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.2
 		 *
-		 * @param int                                          $quiz_id                current Quiz ID
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings
+		 * @param int                                          $quiz_id                current Quiz ID.
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings.
 		 */
 		do_action(
 			'forminator_addon_' . $addon_slug . '_on_before_render_quiz_questions',
@@ -177,8 +175,8 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.2
 		 *
-		 * @param int                                          $quiz_id                current Form ID
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings
+		 * @param int                                          $quiz_id                current Form ID.
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings.
 		 */
 		do_action(
 			'forminator_addon_' . $addon_slug . '_on_after_render_quiz_questions',
@@ -212,8 +210,8 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.2
 		 *
-		 * @param int                                          $quiz_id                current quiz ID
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings
+		 * @param int                                          $quiz_id                current quiz ID.
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings.
 		 */
 		do_action(
 			'forminator_addon_' . $addon_slug . '_on_after_render_quiz',
@@ -251,8 +249,8 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.6.2
 		 *
 		 * @param array                                        $submitted_data
-		 * @param int                                          $quiz_id                current Quiz ID
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance Addon Quiz Settings instance
+		 * @param int                                          $quiz_id                current Quiz ID.
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance Addon Quiz Settings instance.
 		 */
 		$submitted_data = apply_filters(
 			'forminator_addon_' . $addon_slug . '_quiz_submitted_data',
@@ -274,9 +272,9 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.6.2
 		 *
 		 * @param bool                                         $is_success
-		 * @param int                                          $quiz_id                current quiz ID
+		 * @param int                                          $quiz_id                current quiz ID.
 		 * @param array                                        $submitted_data
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance Addon quiz Settings instance
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance Addon quiz Settings instance.
 		 */
 		$is_success = apply_filters(
 			'forminator_addon_' . $addon_slug . '_on_quiz_submit_result',
@@ -286,9 +284,9 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 			$quiz_settings_instance
 		);
 
-		// process filter
+		// process filter.
 		if ( true !== $is_success ) {
-			// only update `_submit_quiz_error_message` when not empty
+			// only update `_submit_quiz_error_message` when not empty.
 			if ( ! empty( $is_success ) ) {
 				$this->_submit_quiz_error_message = (string) $is_success;
 			}
@@ -318,7 +316,6 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 	 * @param array $current_entry_fields
 	 *
 	 * @return array
-	 *
 	 */
 	public function add_entry_fields( $submitted_data, $current_entry_fields = array() ) {
 		$addon_slug             = $this->addon->get_slug();
@@ -336,8 +333,8 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.6.2
 		 *
 		 * @param array                                        $submitted_data
-		 * @param int                                          $quiz_id                current Quiz ID
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance Addon Quiz Settings instance
+		 * @param int                                          $quiz_id                current Quiz ID.
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance Addon Quiz Settings instance.
 		 */
 		$submitted_data = apply_filters(
 			'forminator_addon_' . $addon_slug . '_quiz_submitted_data',
@@ -360,8 +357,8 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @param array                                        $quiz_entry_fields
 		 * @param array                                        $submitted_data
-		 * @param int                                          $quiz_id                current Quiz ID
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance Addon Quiz Settings instance
+		 * @param int                                          $quiz_id                current Quiz ID.
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance Addon Quiz Settings instance.
 		 */
 		$quiz_entry_fields = apply_filters(
 			'forminator_addon_' . $addon_slug . '_quiz_entry_fields',
@@ -378,10 +375,10 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.6.2
 		 *
 		 * @param array                                        $entry_fields
-		 * @param int                                          $quiz_id                current quiz ID
+		 * @param int                                          $quiz_id                current quiz ID.
 		 * @param array                                        $submitted_data
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance Addon Quiz Settings instance
-		 * @param array                                        $quiz_entry_fields      Current entry fields of the quiz
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance Addon Quiz Settings instance.
+		 * @param array                                        $quiz_entry_fields      Current entry fields of the quiz.
 		 */
 		$entry_fields = apply_filters(
 			'forminator_addon_quiz_' . $addon_slug . '_entry_fields',
@@ -420,9 +417,9 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.2
 		 *
-		 * @param int                                          $quiz_id                current Quiz ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings
+		 * @param int                                          $quiz_id                current Quiz ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model.
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings.
 		 */
 		do_action(
 			'forminator_addon_quiz_' . $addon_slug . '_after_entry_saved',
@@ -448,7 +445,7 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 	 * @since 1.6.2
 	 *
 	 * @param Forminator_Form_Entry_Model $entry_model
-	 * @param     array                   $addon_meta_data specific meta_data that added by current addon from @see: add_entry_fields()
+	 * @param     array                       $addon_meta_data specific meta_data that added by current addon from @see: add_entry_fields().
 	 *
 	 * @return array
 	 */
@@ -469,9 +466,9 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.6.2
 		 *
 		 * @param array                                        $addon_meta_data
-		 * @param int                                          $quiz_id                current Quiz ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings
+		 * @param int                                          $quiz_id                current Quiz ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model.
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_quiz_' . $addon_slug . '_metadata',
@@ -492,11 +489,11 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.2
 		 *
-		 * @param array                                        $entry_items            row(s) to be displayed on entries page
-		 * @param int                                          $quiz_id                current Quiz ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Form Entry Model
-		 * @param array                                        $addon_meta_data        meta data saved by addon on entry fields
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings
+		 * @param array                                        $entry_items            row(s) to be displayed on entries page.
+		 * @param int                                          $quiz_id                current Quiz ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Form Entry Model.
+		 * @param array                                        $addon_meta_data        meta data saved by addon on entry fields.
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings.
 		 */
 		$entry_items = apply_filters(
 			'forminator_addon_quiz_' . $addon_slug . '_entry_items',
@@ -541,9 +538,9 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.2
 		 *
-		 * @param array                                        $export_headers         headers to be displayed on export file
-		 * @param int                                          $quiz_id                current Quiz ID
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings
+		 * @param array                                        $export_headers         headers to be displayed on export file.
+		 * @param int                                          $quiz_id                current Quiz ID.
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings.
 		 */
 		$export_headers = apply_filters(
 			'forminator_addon_quiz_' . $addon_slug . '_export_headers',
@@ -591,9 +588,9 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.6.2
 		 *
 		 * @param array                                        $addon_meta_data
-		 * @param int                                          $quiz_id                current quiz ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings
+		 * @param int                                          $quiz_id                current quiz ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model.
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_quiz_' . $addon_slug . '_metadata',
@@ -615,11 +612,11 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.2
 		 *
-		 * @param array                                        $export_columns         column to be exported
-		 * @param int                                          $quiz_id                current Quiz ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Form Entry Model
-		 * @param array                                        $addon_meta_data        meta data saved by addon on entry fields
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings
+		 * @param array                                        $export_columns         column to be exported.
+		 * @param int                                          $quiz_id                current Quiz ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Form Entry Model.
+		 * @param array                                        $addon_meta_data        meta data saved by addon on entry fields.
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings.
 		 */
 		$export_columns = apply_filters(
 			'forminator_addon_quiz_' . $addon_slug . '_export_columns',
@@ -655,9 +652,9 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.2
 		 *
-		 * @param array                                        $export_columns         column to be exported
-		 * @param int                                          $quiz_id                current quiz ID
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon quiz Settings
+		 * @param array                                        $export_columns         column to be exported.
+		 * @param int                                          $quiz_id                current quiz ID.
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon quiz Settings.
 		 */
 		$error_message = apply_filters(
 			'forminator_addon_' . $addon_slug . '_submit_quiz_error_message',
@@ -699,9 +696,9 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.6.2
 		 *
 		 * @param array                                        $addon_meta_data
-		 * @param int                                          $quiz_id                current Quiz ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings
+		 * @param int                                          $quiz_id                current Quiz ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model.
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon Quiz Settings.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_quiz_' . $addon_slug . '_metadata',
@@ -721,10 +718,10 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.2
 		 *
-		 * @param int                                          $quiz_id                current quiz ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model
-		 * @param array                                        $addon_meta_data        addon meta data
-		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon quiz Settings
+		 * @param int                                          $quiz_id                current quiz ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model.
+		 * @param array                                        $addon_meta_data        addon meta data.
+		 * @param Forminator_Addon_Quiz_Settings_Abstract|null $quiz_settings_instance of Addon quiz Settings.
 		 */
 		do_action(
 			'forminator_addon_quiz_' . $addon_slug . '_on_before_delete_submission',
@@ -742,7 +739,7 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 	 *
 	 * @param        $addon_meta_data
 	 * @param        $key
-	 * @param string $default
+	 * @param string          $default
 	 *
 	 * @return string
 	 */
@@ -754,15 +751,15 @@ abstract class Forminator_Addon_Quiz_Hooks_Abstract extends Forminator_Addon_Hoo
 
 		$addon_meta_data = $addon_meta_data[0];
 
-		// make sure its `status`, because we only add this
+		// make sure its `status`, because we only add this.
 		if ( 'status' !== $addon_meta_data['name'] ) {
 			if ( stripos( $addon_meta_data['name'], 'status-' ) === 0 ) {
 				$meta_data = array();
 				foreach ( $addon_meta_datas as $addon_meta_data ) {
-					// make it like single value so it will be processed like single meta data
+					// make it like single value so it will be processed like single meta data.
 					$addon_meta_data['name'] = 'status';
 
-					// add it on an array for next recursive process
+					// add it on an array for next recursive process.
 					$meta_data[] = $this->get_from_addon_meta_data( array( $addon_meta_data ), $key, $default );
 				}
 

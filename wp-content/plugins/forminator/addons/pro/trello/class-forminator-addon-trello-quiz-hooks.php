@@ -52,7 +52,7 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 	 *
 	 * @return array
 	 */
-	public function add_entry_fields( $submitted_data, $current_entry_fields = array() ) {
+	public function add_entry_fields( $submitted_data, $current_entry_fields = array(), $entry = null ) {
 
 		$quiz_id                = $this->quiz_id;
 		$quiz_settings_instance = $this->quiz_settings_instance;
@@ -64,8 +64,8 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 		 *
 		 * @param array                                 $submitted_data
 		 * @param array                                 $current_entry_fields
-		 * @param int                                   $quiz_id                current Quiz ID
-		 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance
+		 * @param int                                   $quiz_id                current Quiz ID.
+		 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance.
 		 */
 		$submitted_data = apply_filters(
 			'forminator_addon_trello_quiz_submitted_data',
@@ -82,8 +82,8 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 		 *
 		 * @param array                                 $current_entry_fields
 		 * @param array                                 $submitted_data
-		 * @param int                                   $quiz_id                current quiz ID
-		 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance
+		 * @param int                                   $quiz_id                current quiz ID.
+		 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance.
 		 */
 		$current_entry_fields = apply_filters(
 			'forminator_addon_trello_quiz_current_entry_fields',
@@ -102,19 +102,19 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 		 *
 		 * @since 1.6.2
 		 *
-		 * @param int                                   $quiz_id                current Quiz ID
+		 * @param int                                   $quiz_id                current Quiz ID.
 		 * @param array                                 $submitted_data
-		 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance
+		 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance.
 		 */
 		do_action( 'forminator_addon_trello_quiz_before_create_card', $quiz_id, $submitted_data, $quiz_settings_instance );
 
 		foreach ( $addon_setting_values as $key => $addon_setting_value ) {
-			// save it on entry field, with name `status-$MULTI_ID`, and value is the return result on sending data to trello
+			// save it on entry field, with name `status-$MULTI_ID`, and value is the return result on sending data to trello.
 			if ( $quiz_settings_instance->is_multi_quiz_settings_complete( $key ) ) {
-				// exec only on completed connection
+				// exec only on completed connection.
 				$data[] = array(
 					'name'  => 'status-' . $key,
-					'value' => $this->get_status_on_create_card( $key, $submitted_data, $addon_setting_value, $current_entry_fields ),
+					'value' => $this->get_status_on_create_card( $key, $submitted_data, $addon_setting_value, $current_entry_fields, $entry ),
 				);
 			}
 		}
@@ -126,10 +126,10 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 		 * @since 1.6.2
 		 *
 		 * @param array                                 $entry_fields
-		 * @param int                                   $quiz_id                current Quiz ID
+		 * @param int                                   $quiz_id                current Quiz ID.
 		 * @param array                                 $submitted_data
 		 * @param array                                 $current_entry_fields
-		 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance
+		 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance.
 		 */
 		$data = apply_filters(
 			'forminator_addon_trello_quiz_entry_fields',
@@ -156,8 +156,8 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 	 *
 	 * @return array `is_sent` true means its success send data to Trello, false otherwise
 	 */
-	private function get_status_on_create_card( $connection_id, $submitted_data, $connection_settings, $current_entry_fields ) {
-		// initialize as null
+	private function get_status_on_create_card( $connection_id, $submitted_data, $connection_settings, $current_entry_fields, $entry = null ) {
+		// initialize as null.
 		$api = null;
 
 		$quiz_id                = $this->quiz_id;
@@ -181,13 +181,13 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 
 			if ( isset( $connection_settings['card_name'] ) ) {
 				$card_name = $connection_settings['card_name'];
-				// disable all_fields here
-				$card_name = forminator_replace_variables( $card_name );
-				// {quizname_replace} //phpcs:ignore
+				// disable all_fields here.
+				$card_name = forminator_replace_variables( $card_name, $quiz_id, $entry );
+				// {quizname_replace}.
 				$card_name = str_ireplace( '{quiz_name}', forminator_get_name_from_model( $this->quiz ), $card_name );
 
 				if ( isset( $quiz_settings['hasLeads'] ) && $quiz_settings['hasLeads'] ) {
-					$card_name = forminator_addon_replace_custom_vars( $card_name, $lead_submitted_data, $this->lead_model, $form_entry_fields );
+					$card_name = forminator_addon_replace_custom_vars( $card_name, $lead_submitted_data, $this->lead_model, $form_entry_fields, $entry );
 				}
 
 				/**
@@ -196,13 +196,13 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 				 * @since 1.6.2
 				 *
 				 * @param string                                $card_name
-				 * @param int                                   $quiz_id                Current Quiz id
-				 * @param string                                $connection_id          ID of current connection
+				 * @param int                                   $quiz_id                Current Quiz id.
+				 * @param string                                $connection_id          ID of current connection.
 				 * @param array                                 $submitted_data
-				 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc
-				 * @param array                                 $current_entry_fields   default entry fields of quiz
-				 * @param array                                 $quiz_settings          Displayed Quiz settings
-				 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance
+				 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc.
+				 * @param array                                 $current_entry_fields   default entry fields of quiz.
+				 * @param array                                 $quiz_settings          Displayed Quiz settings.
+				 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance.
 				 */
 				$card_name    = apply_filters(
 					'forminator_addon_trello_quiz_card_name',
@@ -226,9 +226,9 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 				$card_description         = str_ireplace( '{quiz_name}', '#' . forminator_get_name_from_model( $this->quiz ), $card_description );
 				$card_description         = str_ireplace( '{quiz_answer}', $quiz_answers_to_markdown, $card_description );
 				$card_description         = str_ireplace( '{quiz_result}', $quiz_result_to_markdown, $card_description );
-				$card_description         = forminator_replace_variables( $card_description );
+				$card_description         = forminator_replace_variables( $card_description, $quiz_id, $entry );
 				if ( isset( $quiz_settings['hasLeads'] ) && $quiz_settings['hasLeads'] ) {
-					$card_description = forminator_addon_replace_custom_vars( $card_description, $lead_submitted_data, $this->lead_model, $form_entry_fields );
+					$card_description = forminator_addon_replace_custom_vars( $card_description, $lead_submitted_data, $this->lead_model, $form_entry_fields, false, $entry );
 				}
 
 				/**
@@ -237,13 +237,13 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 				 * @since 1.6.2
 				 *
 				 * @param string                                $card_description
-				 * @param int                                   $quiz_id                Current Quiz id
-				 * @param string                                $connection_id          ID of current connection
+				 * @param int                                   $quiz_id                Current Quiz id.
+				 * @param string                                $connection_id          ID of current connection.
 				 * @param array                                 $submitted_data
-				 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc
-				 * @param array                                 $current_entry_fields   default entry fields of quiz
-				 * @param array                                 $quiz_settings          Displayed Quiz settings
-				 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance
+				 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc.
+				 * @param array                                 $current_entry_fields   default entry fields of quiz.
+				 * @param array                                 $quiz_settings          Displayed Quiz settings.
+				 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance.
 				 */
 				$card_description = apply_filters(
 					'forminator_addon_trello_quiz_card_description',
@@ -258,7 +258,7 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 				);
 				$args['desc']     = $card_description;
 			}
-			if ( isset( $connection_settings['due_date'] ) && ! empty( $connection_settings['due_date'] ) ) {
+			if ( ! empty( $quiz_settings['hasLeads'] ) && ! empty( $connection_settings['due_date'] ) ) {
 				$due_date    = forminator_addon_replace_custom_vars( $connection_settings['due_date'], $lead_submitted_data, $this->lead_model, $form_entry_fields, false );
 				$args['due'] = $due_date;
 			}
@@ -287,12 +287,12 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 			 * @since 1.6.2
 			 *
 			 * @param array                                 $args
-			 * @param int                                   $quiz_id                Current Quiz id
-			 * @param string                                $connection_id          ID of current connection
+			 * @param int                                   $quiz_id                Current Quiz id.
+			 * @param string                                $connection_id          ID of current connection.
 			 * @param array                                 $submitted_data
-			 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc
-			 * @param array                                 $quiz_settings          Displayed Quiz settings
-			 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance
+			 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc.
+			 * @param array                                 $quiz_settings          Displayed Quiz settings.
+			 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance.
 			 */
 			$args = apply_filters(
 				'forminator_addon_trello_quiz_create_card_args',
@@ -309,9 +309,14 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 
 			forminator_addon_maybe_log( __METHOD__, 'Success Send Data' );
 
+			$multi_global_ids = $this->addon->get_multi_global_ids();
+			$name_suffix      = ! empty( $this->addon->multi_global_id )
+					&& ! empty( $multi_global_ids[ $this->addon->multi_global_id ] )
+					? ' - ' . $multi_global_ids[ $this->addon->multi_global_id ] : '';
+
 			return array(
 				'is_sent'         => true,
-				'connection_name' => $connection_settings['name'],
+				'connection_name' => $connection_settings['name'] . $name_suffix,
 				'description'     => __( 'Successfully send data to Trello', 'forminator' ),
 				'data_sent'       => $api->get_last_data_sent(),
 				'data_received'   => $api->get_last_data_received(),
@@ -387,7 +392,7 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 		 * @since 1.6.2
 		 *
 		 * @param string $markdown
-		 * @param array  $quiz_entry_fields Entry Fields
+		 * @param array  $quiz_entry_fields Entry Fields.
 		 */
 		$markdown = apply_filters(
 			'forminator_addon_trello_quiz_answer_markdown',
@@ -458,7 +463,7 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 		 * @since 1.6.2
 		 *
 		 * @param string $markdown
-		 * @param array  $quiz_entry_fields Entry Fields
+		 * @param array  $quiz_entry_fields Entry Fields.
 		 */
 		$markdown = apply_filters(
 			'forminator_addon_trello_quiz_result_markdown',
@@ -490,9 +495,9 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 		 *
 		 * @since 1.6.2
 		 *
-		 * @param array                                 $export_headers         headers to be displayed on export file
-		 * @param int                                   $quiz_id                current Quiz ID
-		 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance
+		 * @param array                                 $export_headers         headers to be displayed on export file.
+		 * @param int                                   $quiz_id                current Quiz ID.
+		 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance.
 		 */
 		$export_headers = apply_filters(
 			'forminator_addon_trello_quiz_export_headers',
@@ -527,8 +532,8 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 		 * @since 1.6.2
 		 *
 		 * @param array                                 $addon_meta_data
-		 * @param int                                   $quiz_id                current Quiz ID
-		 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance
+		 * @param int                                   $quiz_id                current Quiz ID.
+		 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_trello_quiz_metadata',
@@ -546,11 +551,11 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 		 *
 		 * @since 1.6.2
 		 *
-		 * @param array                                 $export_columns         column to be exported
-		 * @param int                                   $quiz_id                current Quiz ID
-		 * @param Forminator_Form_Entry_Model           $entry_model            Form Entry Model
-		 * @param array                                 $addon_meta_data        meta data saved by addon on entry fields
-		 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance
+		 * @param array                                 $export_columns         column to be exported.
+		 * @param int                                   $quiz_id                current Quiz ID.
+		 * @param Forminator_Form_Entry_Model           $entry_model            Form Entry Model.
+		 * @param array                                 $addon_meta_data        meta data saved by addon on entry fields.
+		 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance.
 		 */
 		$export_columns = apply_filters(
 			'forminator_addon_trello_quiz_export_columns',
@@ -587,8 +592,8 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 		 * @since 1.6.2
 		 *
 		 * @param array                                $addon_meta_data
-		 * @param int                                  $quiz_id                current Quiz ID
-		 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance
+		 * @param int                                  $quiz_id                current Quiz ID.
+		 * @param Forminator_Addon_Trello_Quiz_Settings $quiz_settings_instance Trello Addon Quiz Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_quiz_trello_metadata',
@@ -676,7 +681,7 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 		}
 
 		if ( Forminator_Addon_Trello::is_show_full_log() ) {
-			// too long to be added on entry data enable this with `define('FORMINATOR_ADDON_TRELLO_SHOW_FULL_LOG', true)`
+			// too long to be added on entry data enable this with `define('FORMINATOR_ADDON_TRELLO_SHOW_FULL_LOG', true)`.
 			if ( isset( $status['url_request'] ) ) {
 				$sub_entries[] = array(
 					'label' => __( 'API URL', 'forminator' ),
@@ -701,7 +706,7 @@ class Forminator_Addon_Trello_Quiz_Hooks extends Forminator_Addon_Quiz_Hooks_Abs
 
 		$additional_entry_item['sub_entries'] = $sub_entries;
 
-		// return single array
+		// return single array.
 		return $additional_entry_item;
 	}
 }

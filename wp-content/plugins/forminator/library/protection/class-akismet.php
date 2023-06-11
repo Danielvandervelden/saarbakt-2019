@@ -41,7 +41,7 @@ class Forminator_Akismet extends Forminator_Spam_Protection {
 	 * @return bool
 	 */
 	public function is_enabled() {
-		// Akismet v3.0+
+		// Akismet v3.0+.
 		if ( is_callable( array( 'Akismet', 'get_api_key' ) ) ) {
 			return (bool) Akismet::get_api_key();
 		}
@@ -59,56 +59,63 @@ class Forminator_Akismet extends Forminator_Spam_Protection {
 	 * @see _handle_spam_protection
 	 *
 	 * @since 1.0
-	 * @param bool $is_spam - if the data is spam
-	 * @param array $posted_params - the posted parameters
-	 * @param int $form_id - the form id
-	 * @param string $form_type - the form type
+	 * @param bool   $is_spam - if the data is spam.
+	 * @param array  $posted_params - the posted parameters.
+	 * @param int    $form_id - the form id.
+	 * @param string $form_type - the form type.
 	 *
 	 * @return bool $is_spam
 	 */
 	protected function handle_spam_protection( $is_spam, $posted_params, $form_id, $form_type ) {
-		// Check Akismet integration
+		// Check Akismet integration.
 		if ( ! self::is_protection_enabled( $form_id ) ) {
 			return $is_spam;
 		}
 
-		$post_data = array(
-			'blog' 			=> get_option( 'home' ),
-			'user_ip' 		=> Forminator_Geo::get_user_ip(),
-			'user_agent' 	=> $_SERVER['HTTP_USER_AGENT'],
-			'referrer' 		=> $_SERVER['HTTP_REFERER'],
-			'comment_type'	=> $form_type,
-			'content'		=> ''
+		$post_data        = array(
+			'blog'         => get_option( 'home' ),
+			'user_ip'      => Forminator_Geo::get_user_ip(),
+			'user_agent'   => Forminator_Core::sanitize_text_field( $_SERVER['HTTP_USER_AGENT'] ),
+			'referrer'     => Forminator_Core::sanitize_text_field( $_SERVER['HTTP_REFERER'] ),
+			'comment_type' => $form_type,
+			'content'      => '',
 		);
 		$has_akismet_data = false;
 		foreach ( $posted_params as $param ) {
 			if ( isset( $param['name'] ) && isset( $param['value'] ) ) {
-				$has_akismet_data 	= true;
+				$has_akismet_data = true;
 				if ( filter_var( $param['value'], FILTER_VALIDATE_EMAIL ) ) {
-					$post_data['comment_author_email'] 	= $param['value'];
+					$post_data['comment_author_email'] = $param['value'];
 				}
 				if ( is_array( $param['value'] ) ) {
-					$post_data['content'] .= "\n\n" . implode( ", ", $param['value'] );
+					if (
+						isset( $param['field_type'] ) &&
+						'signature' === $param['field_type'] &&
+						! empty( $param['value']['file']['file_url'] )
+					) {
+						$post_data['content'] .= "\n\n" . $param['value']['file']['file_url'];
+					} else {
+						$post_data['content'] .= "\n\n" . implode( ', ', $param['value'] );
+					}
 				} else {
 					$post_data['content'] .= "\n\n" . $param['value'];
 				}
-
 			}
 		}
 
 		if ( $has_akismet_data ) {
 			if ( is_user_logged_in() ) {
-				$current_user 	= wp_get_current_user();
-				if ( !empty( $current_user->user_firstname ) ) {
-					$user_name 	= $current_user->user_firstname . ' ' . $current_user->user_lastname;
-				} elseif ( !empty( $current_user->display_name ) ) {
-					$user_name 	= $current_user->display_name;
+				$current_user = wp_get_current_user();
+				if ( ! empty( $current_user->user_firstname ) ) {
+					$user_name = $current_user->user_firstname . ' ' . $current_user->user_lastname;
+				} elseif ( ! empty( $current_user->display_name ) ) {
+					$user_name = $current_user->display_name;
 				} else {
-					$user_name 	= $current_user->user_login;
+					$user_name = $current_user->user_login;
 				}
 
-				$post_data['comment_author_email'] 	= $current_user->user_email;
-				$post_data['comment_author'] 		= $user_name;
+				$post_data['comment_author_email'] = $current_user->user_email;
+				$post_data['comment_author']       = $user_name;
 			}
 			$post_data['content'] = trim( $post_data['content'] );
 
@@ -121,7 +128,7 @@ class Forminator_Akismet extends Forminator_Spam_Protection {
 
 			foreach ( $_SERVER as $key => $value ) {
 				if ( ! in_array( $key, (array) $ignore, true ) ) {
-					$post_data["$key"] = $value;
+					$post_data[ "$key" ] = $value;
 				}
 			}
 
@@ -149,23 +156,23 @@ class Forminator_Akismet extends Forminator_Spam_Protection {
 	 * Check akismet if the data is spam
 	 *
 	 * @since 1.0
-	 * @param array $post_data - the post data
-	 * @param int $form_id - the form id
+	 * @param array $post_data - the post data.
+	 * @param int   $form_id - the form id.
 	 *
 	 * @return bool
 	 */
 	private function _akismet_check( $post_data, $form_id ) {
 		global $akismet_api_host, $akismet_api_port;
-		$is_spam 	= false;
-		$query 		= $this->_build_query( $post_data );
+		$is_spam = false;
+		$query   = $this->_build_query( $post_data );
 
-		if ( is_callable( array( 'Akismet', 'http_post' ) ) ) { // Akismet v3.0+
+		if ( is_callable( array( 'Akismet', 'http_post' ) ) ) { // Akismet v3.0+.
 			$response = Akismet::http_post( $query, 'comment-check' );
 		} else {
 			$response = akismet_http_post( $query, $akismet_api_host, '/1.1/comment-check', $akismet_api_port );
 		}
 
-		//Response will always be an array of array( $response['headers'], $response['body'] )
+		// Response will always be an array of array( $response['headers'], $response['body'] ).
 		if ( 'true' === $response[1] ) {
 			$is_spam = true;
 		}
@@ -179,7 +186,7 @@ class Forminator_Akismet extends Forminator_Spam_Protection {
 	 * The default build_query function misses out alot of things
 	 *
 	 * @since 1.0
-	 * @param array $args - the arguments
+	 * @param array  $args - the arguments.
 	 * @param string $key
 	 *
 	 * @return string

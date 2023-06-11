@@ -1,6 +1,6 @@
 <?php
 
-// File generated from our OpenAPI spec
+// File generated from our OpenAPI spec.
 
 namespace Forminator\Stripe\Service;
 
@@ -57,7 +57,7 @@ class FileService extends \Forminator\Stripe\Service\AbstractService
             $opts->apiBase = $this->getClient()->getFilesBase();
         }
 
-        // Manually flatten params, otherwise curl's multipart encoder will
+        // Manually flatten params, otherwise curl's multipart encoder will.
         // choke on nested null|arrays.
         $flatParams = \array_column(\Forminator\Stripe\Util\Util::flattenParams($params), 1, 0);
 

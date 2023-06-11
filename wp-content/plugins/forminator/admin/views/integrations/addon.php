@@ -6,60 +6,65 @@ if ( empty( $module_id ) ) {
 }
 
 $show_action = false;
-
-$icon_class_action = 'sui-icon-plus';
-$tooltip           = __( 'Configure Integration', 'forminator' );
-$action            = 'forminator_addon_settings';
+$action      = 'forminator_addon_settings';
 
 $multi_id   = 0;
 $multi_name = false;
 
 if ( ! empty( $module_id ) ) {
-	$action            = 'forminator_addon_module_settings';
-	$icon_class_action = 'sui-icon-plus';
-	if ( ! empty( $addon['is_' . $module_slug . '_settings_available'] ) && true === $addon['is_' . $module_slug . '_settings_available'] ) {
+	$action = 'forminator_addon_module_settings';
+	if ( ! empty( $addon[ 'is_' . $module_slug . '_settings_available' ] ) && true === $addon[ 'is_' . $module_slug . '_settings_available' ] ) {
 		$show_action = true;
-		if ( $addon['is_allow_multi_on_' . $module_slug ] ) {
+		if ( $addon[ 'is_allow_multi_on_' . $module_slug ] ) {
 			if ( isset( $addon['multi_name'] ) ) {
-				$icon_class_action = 'sui-icon-widget-settings-config';
-				$tooltip           = __( 'Configure App', 'forminator' );
-				$multi_id          = $addon['multi_id'];
-				$multi_name        = $addon['multi_name'];
+				$multi_id   = $addon['multi_id'];
+				$multi_name = $addon['multi_name'];
+				$activated  = true;
 			} else {
 
 				if ( isset( $addon['multi_id'] ) ) {
 					$multi_id = $addon['multi_id'];
 				}
 
-				$icon_class_action = 'sui-icon-plus';
-				$tooltip           = __( 'Activate App', 'forminator' );
+				$activated = false;
 
 			}
 		} else {
-			if ( $addon['is_' . $module_slug . '_connected'] ) {
-				$icon_class_action = 'sui-icon-widget-settings-config';
-				$tooltip           = __( 'Configure App', 'forminator' );
-			} else {
-				$icon_class_action = 'sui-icon-plus';
-				$tooltip           = __( 'Activate App', 'forminator' );
-			}
+			$activated = (bool) $addon[ 'is_' . $module_slug . '_connected' ];
 		}
 	}
 } else {
 
-	// on integrations page
-	if ( isset( $addon['is_settings_available'] ) && ! empty( $addon['is_settings_available'] ) && true === $addon['is_settings_available'] ) {
+	// on integrations page.
+	if ( ! empty( $addon['is_settings_available'] ) && true === $addon['is_settings_available'] ) {
+		$is_integrations_page = true;
 
 		$show_action = true;
 
 		if ( $addon['is_connected'] ) {
-			$icon_class_action = 'sui-icon-widget-settings-config';
-			$tooltip           = __( 'Configure App', 'forminator' );
+			$activated = true;
 		} else {
-			$icon_class_action = 'sui-icon-plus';
-			$tooltip           = __( 'Connect App', 'forminator' );
+			$activated = false;
+			$tooltip   = __( 'Connect App', 'forminator' );
 		}
 	}
+}
+
+$icon_class_action = empty( $activated ) ? 'sui-icon-plus' : 'sui-icon-widget-settings-config';
+if ( empty( $tooltip ) ) {
+	if ( ! isset( $activated ) ) {
+		$tooltip = __( 'Configure Integration', 'forminator' );
+	} else {
+		$tooltip = empty( $activated ) ? __( 'Activate App', 'forminator' ) : __( 'Configure App', 'forminator' );
+	}
+}
+
+$conditions_button = '';
+$unique_id         = ! empty( $addon['global_id'] ) ? esc_attr( $addon['global_id'] ) : esc_attr( $multi_id );
+if ( empty( $is_integrations_page ) && ! empty( $activated ) && 'form' === $module_slug ) {
+	$conditions_button = '<button class="sui-button sui-button-ghost conditions-integration"
+			data-title="' . esc_attr( $addon['title'] ) . '"  data-multi-id="' . $unique_id . '">' .
+		__( 'Conditions', 'forminator' ) . '</button>';
 }
 
 $action_available = false;
@@ -72,7 +77,7 @@ if ( ! empty( $show_pro_info ) && $show_pro_info ) {
 
 $advertising = false;
 
-if ( 'zapier' === $addon['slug'] ) {
+if ( 'webhook' === $addon['slug'] ) {
 	$advertising = true;
 }
 
@@ -84,7 +89,7 @@ $show_pro_info = false;
 $pro_url        = 'https://wpmudev.com';
 $pro_url_target = '_blank';
 
-// MULTI NAME (SAMPLE)
+// MULTI NAME (SAMPLE).
 // To be added in the table later when design is ready.
 /*
 <td><?php if ( ! empty( $multi_name ) ): ?>
@@ -100,6 +105,9 @@ $pro_url_target = '_blank';
 	<?php echo( $is_active ? 'fui-integration-enabled' : '' ); ?>">
 
 	<td class="sui-table-item-title">
+		<?php if ( ! empty( $activated ) && 'form' === $module_slug ) { ?>
+			<span class="fui-conditions sui-tooltip sui-tooltip-left sui-tooltip-top-right-mobile" data-tooltip="" data-integration-id="<?php echo esc_attr( $unique_id ); ?>" aria-hidden="true"><i class="sui-icon-link sui-sm"></i></span>
+		<?php } ?>
 
 		<div class="fui-app--wrapper">
 
@@ -140,6 +148,7 @@ $pro_url_target = '_blank';
 						<?php } ?>
 
 						<?php if ( $show_action ) : ?>
+							<?php echo $conditions_button; ?>
 							<button class="sui-button-icon sui-tooltip sui-tooltip-top-right connect-integration"
 									data-tooltip="<?php echo esc_attr( $tooltip ); ?>"
 									data-slug="<?php echo esc_attr( $addon['slug'] ); ?>"
@@ -183,13 +192,20 @@ $pro_url_target = '_blank';
 					/>
 				<?php } ?>
 
-				<span><?php echo esc_html( $addon['title'] ); ?><?php if ( $show_pro_info && $addon['is_pro'] ) : ?>
+				<span><?php echo esc_html( $addon['title'] ); ?><?php echo ! empty( $addon['global_identifier'] ) ? ' - ' . esc_html( $addon['global_identifier'] ) : ''; ?><?php if ( $show_pro_info && $addon['is_pro'] ) : ?>
 						<span class="sui-tag sui-tag-pro">
 						<?php esc_html_e( 'PRO', 'forminator' ); ?>
 					</span>
-					<?php endif; ?></span>
+					<?php endif; ?>
+					<?php
+					if ( ! empty( $addon['identifier'] ) ) {
+						echo ' - ' . esc_html( $addon['identifier'] );
+					}
+					?>
+				</span>
 
 				<?php if ( $show_action ) : ?>
+					<?php echo $conditions_button; ?>
 				<button class="sui-button-icon sui-tooltip sui-tooltip-top-right connect-integration"
 						data-tooltip="<?php echo esc_attr( $tooltip ); ?>"
 						data-slug="<?php echo esc_attr( $addon['slug'] ); ?>"
@@ -199,6 +215,7 @@ $pro_url_target = '_blank';
 						data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_addon_action' ) ); ?>"
 						data-action="<?php echo esc_attr( $action ); ?>"
 						data-<?php echo esc_attr( $module_slug ); ?>-id="<?php echo esc_attr( $module_id ); ?>"
+						data-multi-global-id="<?php echo ! empty( $addon['global_id'] ) ? esc_attr( $addon['global_id'] ) : ''; ?>"
 						data-multi-id="<?php echo esc_attr( $multi_id ); ?>">
 					<i class="<?php echo esc_attr( $icon_class_action ); ?>" aria-hidden="true"></i>
 					<span class="sui-screen-reader-text"><?php esc_html_e( 'Connect this integration', 'forminator' ); ?></span>

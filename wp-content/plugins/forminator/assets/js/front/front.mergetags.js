@@ -33,7 +33,7 @@
 		this.settings          = $.extend({}, defaults, options);
 		this._defaults         = defaults;
 		this._name             = pluginName;
-		this.formFields        = [];
+		ForminatorFront.MergeTags = ForminatorFront.MergeTags || [];
 		this.init();
 	}
 
@@ -42,13 +42,41 @@
 		init: function () {
 			var self = this;
 			var fields = this.$el.find('.forminator-merge-tags');
+			const formId = this.getFormId();
+
+			ForminatorFront.MergeTags[ formId ] = ForminatorFront.MergeTags[ formId ] || [];
 
 			if (fields.length > 0) {
 				fields.each(function () {
-					self.formFields.push({
+					let html = $(this).html(),
+						fieldId = $(this).data('field');
+
+					if ( self.$el.hasClass( 'forminator-grouped-fields' ) ) {
+						// Get origin HTML during cloningGroup fields.
+						const suffix = self.$el.data( 'suffix' );
+						if ( ForminatorFront.MergeTags[ formId ][ fieldId ] ) {
+							html = ForminatorFront.MergeTags[ formId ][ fieldId ]['value'];
+							// get Fields in the current Group.
+							const groupFields = self.$el.find( '[name]' ).map(function() {
+								return this.name;
+							}).get();
+							$.each( groupFields, function( index, item ) {
+								var fieldWithoutSuffix = item.replace( '-' + suffix, '' );
+								if ( fieldWithoutSuffix === item ) {
+									return; // continue.
+								}
+								const regexp = new RegExp( `{${fieldWithoutSuffix}}`, 'g' );
+								html = html.replace( regexp, '{' + item + '}' );
+							});
+						}
+
+						fieldId += '-' + suffix;
+					}
+
+					ForminatorFront.MergeTags[ formId ][ fieldId ] = {
 						$input: $(this),
-						value: $(this).html(),
-					});
+						value: html,
+					};
 				});
 			}
 
@@ -56,11 +84,22 @@
 			this.attachEvents();
 		},
 
+		getFormId: function () {
+			let formId = '';
+			if ( this.$el.hasClass( 'forminator-grouped-fields' ) ) {
+				formId = this.$el.closest( 'form.forminator-ui' ).data( 'form-id' );
+			} else {
+				formId = this.$el.data( 'form-id' );
+			}
+
+			return formId;
+		},
+
 		attachEvents: function () {
 			var self = this;
 
 			this.$el.find(
-				'input.forminator-input, .forminator-checkbox, .forminator-radio, .forminator-input-file, select.forminator-select2, .forminator-multiselect input'
+				'.forminator-textarea, input.forminator-input, .forminator-checkbox, .forminator-radio, .forminator-input-file, select.forminator-select2, .forminator-multiselect input'
 			).each(function () {
 				$(this).on('change', function () {
 					// Give jquery sometime to apply changes
@@ -72,8 +111,13 @@
 		},
 
 		replaceAll: function () {
-			for (var i = 0; i < this.formFields.length; i++) {
-				this.replace(this.formFields[i]);
+			const self = this,
+					formId = this.getFormId(),
+					formFields = ForminatorFront.MergeTags[ formId ];
+
+			for ( const key in formFields ) {
+				const formField = formFields[key];
+				self.replace( formField );
 			}
 		},
 
@@ -87,7 +131,7 @@
 		maybeReplaceValue: function (value) {
 			var joinedFieldTypes      = this.settings.forminatorFields.join('|');
 			var incrementFieldPattern = "(" + joinedFieldTypes + ")-\\d+";
-			var pattern               = new RegExp('\\{(' + incrementFieldPattern + ')(\\-[A-Za-z-_]+)?\\}', 'g');
+			var pattern               = new RegExp('\\{(' + incrementFieldPattern + ')(\\-[0-9A-Za-z-_]+)?\\}', 'g');
 			var parsedValue           = value;
 
 			var matches;
@@ -112,18 +156,22 @@
 
 		// taken from forminatorFrontCondition
 		get_form_field: function (element_id) {
+			let $form = this.$el;
+			if ( $form.hasClass( 'forminator-grouped-fields' ) ) {
+				$form = $form.closest( 'form.forminator-ui' );
+			}
 			//find element by suffix -field on id input (default behavior)
-			var $element = this.$el.find('#' + element_id + '-field');
+			var $element = $form.find('#' + element_id + '-field');
 			if ($element.length === 0) {
 				//find element by its on name
-				$element = this.$el.find('[name=' + element_id + ']');
+				$element = $form.find('[name=' + element_id + ']');
 				if ($element.length === 0) {
 					//find element by its on name[] (for checkbox on multivalue)
-					$element = this.$el.find('input[name="' + element_id + '[]"]');
+					$element = $form.find('input[name="' + element_id + '[]"]');
 					if ($element.length === 0) {
 						//find element by direct id (for name field mostly)
 						//will work for all field with element_id-[somestring]
-						$element = this.$el.find('#' + element_id);
+						$element = $form.find('#' + element_id);
 					}
 				}
 			}
@@ -169,7 +217,9 @@
 					if ( this.settings.print_value ) {
 						value = checked.val();
 					} else {
-						value = checked.siblings('span:last-child').text();
+						value = 0 === checked.siblings( '.forminator-radio-label' ).length
+								? checked.siblings( '.forminator-screen-reader-only' ).text()
+								: checked.siblings( '.forminator-radio-label' ).text();
 					}
 				}
 			} else if (this.field_is_checkbox($element)) {
@@ -186,7 +236,9 @@
 						} else if ( multiselect ) {
 							value += $(this).closest('label').text();
 						} else {
-							value += $(this).siblings('span:last-child').text();
+							value += 0 === $(this).siblings( '.forminator-checkbox-label' ).length
+									 ? $(this).siblings( '.forminator-screen-reader-only' ).text()
+									 : $(this).siblings( '.forminator-checkbox-label' ).text();
 						}
 					}
 				});
@@ -202,11 +254,29 @@
 				}
 			} else if (this.field_is_upload($element)) {
 				value = $element.val().split('\\').pop();
+			} else if (this.field_has_inputMask($element)) {
+				$element.inputmask({'autoUnmask' : false});
+				value = $element.val();
+				$element.inputmask({'autoUnmask' : true});
 			} else {
 				value = $element.val();
 			}
 
 			return value;
+		},
+
+		field_has_inputMask: function ( $element ) {
+			var hasMask = false;
+
+			$element.each(function () {
+				if ( undefined !== $( this ).attr( 'data-inputmask' ) ) {
+					hasMask = true;
+					//break
+					return false;
+				}
+			});
+
+			return hasMask;
 		},
 
 		field_is_radio: function ($element) {

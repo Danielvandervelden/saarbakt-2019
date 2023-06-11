@@ -15,7 +15,7 @@ class Forminator_Upgrade_Page extends Forminator_Admin_Page {
 		$this->template(
 			'upgrade/upgrade-content',
 			array(
-				'modules' => $modules
+				'modules' => $modules,
 			)
 		);
 	}

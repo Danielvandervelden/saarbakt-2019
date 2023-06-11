@@ -311,16 +311,16 @@ class Forminator_PayPal_Express extends Forminator_Payment_Gateway {
 	 * @return array
 	 */
 	public function api_request( $request, $mode, $args = array(), $method = 'GET' ) {
-		// Add request to the api URL
+		// Add request to the api URL.
 		$api_url	= $this->get_api_url( $mode );
 		$url     = $api_url . $request;
 
-		// If method is GET we have to add the args as URL params
+		// If method is GET we have to add the args as URL params.
 		if ( 'GET' === $method ) {
 			$url = add_query_arg( $args, $url );
 		}
 
-		// Determinate client ID & Secret from mode
+		// Determinate client ID & Secret from mode.
 		$client_id     = 'live' === $mode ? $this->live_id : $this->sandbox_id;
 		$client_secret = 'live' === $mode ? $this->live_secret : $this->sandbox_secret;
 
@@ -332,7 +332,7 @@ class Forminator_PayPal_Express extends Forminator_Payment_Gateway {
 		$headers = isset( $args['headers'] ) ? wp_parse_args( $args['headers'], $headers ) : $headers;
 		$body    = isset( $args['body'] ) ? $args['body'] : $args;
 
-		// If request is POST then we have to encode the body
+		// If request is POST then we have to encode the body.
 		if ( ! empty ( $body ) && 'POST' === $method ) {
 			if ( $headers['Content-Type'] === 'application/json' ) {
 				$body = json_encode( $body );

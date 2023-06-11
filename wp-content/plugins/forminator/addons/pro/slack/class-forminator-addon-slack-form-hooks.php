@@ -63,8 +63,8 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 		 * @since 1.4
 		 *
 		 * @param array                                $submitted_data
-		 * @param int                                  $form_id                current Form ID
-		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance
+		 * @param int                                  $form_id                current Form ID.
+		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance.
 		 */
 		$submitted_data = apply_filters(
 			'forminator_addon_slack_form_submitted_data',
@@ -82,16 +82,16 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 		 *
 		 * @since 1.4
 		 *
-		 * @param int                                  $form_id                current Form ID
+		 * @param int                                  $form_id                current Form ID.
 		 * @param array                                $submitted_data
-		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance
+		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance.
 		 */
 		do_action( 'forminator_addon_slack_before_send_message', $form_id, $submitted_data, $form_settings_instance );
 
 		foreach ( $addon_setting_values as $key => $addon_setting_value ) {
-			// save it on entry field, with name `status-$MULTI_ID`, and value is the return result on sending data to slack
+			// save it on entry field, with name `status-$MULTI_ID`, and value is the return result on sending data to slack.
 			if ( $form_settings_instance->is_multi_form_settings_complete( $key ) ) {
-				// exec only on completed connection
+				// exec only on completed connection.
 				$data[] = array(
 					'name'  => 'status-' . $key,
 					'value' => $this->get_status_on_send_message( $key, $submitted_data, $addon_setting_value, $form_entry_fields ),
@@ -106,9 +106,9 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 		 * @since 1.4
 		 *
 		 * @param array                                $entry_fields
-		 * @param int                                  $form_id                current Form ID
+		 * @param int                                  $form_id                current Form ID.
 		 * @param array                                $submitted_data
-		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance
+		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance.
 		 */
 		$data = apply_filters(
 			'forminator_addon_slack_entry_fields',
@@ -135,7 +135,7 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 	 * @return array `is_sent` true means its success send data to Slack, false otherwise
 	 */
 	private function get_status_on_send_message( $connection_id, $submitted_data, $connection_settings, $form_entry_fields ) {
-		// initialize as null
+		// initialize as null.
 		$api = null;
 
 		$form_id                = $this->form_id;
@@ -148,11 +148,11 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 			$args = array();
 
 			if ( ! isset( $connection_settings['target_id'] ) ) {
-				throw new Forminator_Addon_Slack_Exception( __( 'Target ID not properly setup.', 'forminator' ) );
+				throw new Forminator_Addon_Slack_Exception( __( 'Target ID not properly set up.', 'forminator' ) );
 			}
 
 			if ( ! isset( $connection_settings['message'] ) ) {
-				throw new Forminator_Addon_Slack_Exception( __( 'Message not properly setup.', 'forminator' ) );
+				throw new Forminator_Addon_Slack_Exception( __( 'Message not properly set up.', 'forminator' ) );
 			}
 			$text_message = $connection_settings['message'];
 			$text_message = forminator_addon_replace_custom_vars( $text_message, $submitted_data, $this->custom_form, $form_entry_fields, false );
@@ -165,13 +165,13 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 			 * @since 1.4
 			 *
 			 * @param string                               $card_name
-			 * @param int                                  $form_id                Current Form id
-			 * @param string                               $connection_id          ID of current connection
+			 * @param int                                  $form_id                Current Form id.
+			 * @param string                               $connection_id          ID of current connection.
 			 * @param array                                $submitted_data
-			 * @param array                                $connection_settings    current connection setting, contains options of like `name`, `target_id` etc
-			 * @param array                                $form_entry_fields      default entry fields of form
-			 * @param array                                $form_settings          Displayed Form settings
-			 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance
+			 * @param array                                $connection_settings    current connection setting, contains options of like `name`, `target_id` etc.
+			 * @param array                                $form_entry_fields      default entry fields of form.
+			 * @param array                                $form_settings          Displayed Form settings.
+			 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance.
 			 */
 			$attachments = apply_filters(
 				'forminator_addon_slack_message_attachments',
@@ -196,13 +196,13 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 			 * @since 1.3
 			 *
 			 * @param array                                $args
-			 * @param int                                  $form_id                Current Form id
-			 * @param string                               $connection_id          ID of current connection
+			 * @param int                                  $form_id                Current Form id.
+			 * @param string                               $connection_id          ID of current connection.
 			 * @param array                                $submitted_data
-			 * @param array                                $connection_settings    current connection setting, contains options of like `name`, `target_id` etc
-			 * @param array                                $form_entry_fields      default entry fields of form
-			 * @param array                                $form_settings          Displayed Form settings
-			 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance
+			 * @param array                                $connection_settings    current connection setting, contains options of like `name`, `target_id` etc.
+			 * @param array                                $form_entry_fields      default entry fields of form.
+			 * @param array                                $form_settings          Displayed Form settings.
+			 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance.
 			 */
 			$args = apply_filters(
 				'forminator_addon_slack_send_message_args',
@@ -230,8 +230,8 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 				'data_sent'       => $api->get_last_data_sent(),
 				'data_received'   => $api->get_last_data_received(),
 				'url_request'     => $api->get_last_url_request(),
-				'ts'              => $ts, // for delete reference
-				'target_id'       => $connection_settings['target_id'], // for delete reference
+				'ts'              => $ts, // for delete reference.
+				'target_id'       => $connection_settings['target_id'], // for delete reference.
 			);
 
 		} catch ( Forminator_Addon_Slack_Exception $e ) {
@@ -242,8 +242,8 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 				'data_sent'       => ( ( $api instanceof Forminator_Addon_Slack_Wp_Api ) ? $api->get_last_data_sent() : array() ),
 				'data_received'   => ( ( $api instanceof Forminator_Addon_Slack_Wp_Api ) ? $api->get_last_data_received() : array() ),
 				'url_request'     => ( ( $api instanceof Forminator_Addon_Slack_Wp_Api ) ? $api->get_last_url_request() : '' ),
-				'ts'              => '', // for delete reference,
-				'target_id'       => '', // for delete reference,
+				'ts'              => '', // for delete reference,.
+				'target_id'       => '', // for delete reference,.
 			);
 
 			return $addon_entry_fields;
@@ -287,7 +287,7 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 				}
 				$post_element_id = str_ireplace( '-post-image', '', $post_element_id );
 
-				// only add postdata as single
+				// only add postdata as single.
 				if ( in_array( $post_element_id, $post_element_ids, true ) ) {
 					continue;
 				}
@@ -361,8 +361,8 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 		 * @since 1.4
 		 *
 		 * @param array                                $addon_meta_data
-		 * @param int                                  $form_id                current Form ID
-		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance
+		 * @param int                                  $form_id                current Form ID.
+		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_slack_metadata',
@@ -450,7 +450,7 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 		}
 
 		if ( Forminator_Addon_Slack::is_show_full_log() ) {
-			// too long to be added on entry data enable this with `define('FORMINATOR_ADDON_SLACK_SHOW_FULL_LOG', true)`
+			// too long to be added on entry data enable this with `define('FORMINATOR_ADDON_SLACK_SHOW_FULL_LOG', true)`.
 			if ( isset( $status['url_request'] ) ) {
 				$sub_entries[] = array(
 					'label' => __( 'API URL', 'forminator' ),
@@ -475,7 +475,7 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 
 		$additional_entry_item['sub_entries'] = $sub_entries;
 
-		// return single array
+		// return single array.
 		return $additional_entry_item;
 	}
 
@@ -500,9 +500,9 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 		 *
 		 * @since 1.2
 		 *
-		 * @param array                                $export_headers         headers to be displayed on export file
-		 * @param int                                  $form_id                current Form ID
-		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance
+		 * @param array                                $export_headers         headers to be displayed on export file.
+		 * @param int                                  $form_id                current Form ID.
+		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance.
 		 */
 		$export_headers = apply_filters(
 			'forminator_addon_slack_export_headers',
@@ -537,8 +537,8 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 		 * @since 1.4
 		 *
 		 * @param array                                $addon_meta_data
-		 * @param int                                  $form_id                current Form ID
-		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance
+		 * @param int                                  $form_id                current Form ID.
+		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_slack_metadata',
@@ -556,11 +556,11 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 		 *
 		 * @since 1.4
 		 *
-		 * @param array                                $export_columns         column to be exported
-		 * @param int                                  $form_id                current Form ID
-		 * @param Forminator_Form_Entry_Model          $entry_model            Form Entry Model
-		 * @param array                                $addon_meta_data        meta data saved by addon on entry fields
-		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance
+		 * @param array                                $export_columns         column to be exported.
+		 * @param int                                  $form_id                current Form ID.
+		 * @param Forminator_Form_Entry_Model          $entry_model            Form Entry Model.
+		 * @param array                                $addon_meta_data        meta data saved by addon on entry fields.
+		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance.
 		 */
 		$export_columns = apply_filters(
 			'forminator_addon_slack_export_columns',
@@ -593,15 +593,15 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 
 		$addon_meta_data = $addon_meta_data[0];
 
-		// make sure its `status`, because we only add this
+		// make sure its `status`, because we only add this.
 		if ( 'status' !== $addon_meta_data['name'] ) {
 			if ( stripos( $addon_meta_data['name'], 'status-' ) === 0 ) {
 				$meta_data = array();
 				foreach ( $addon_meta_datas as $addon_meta_data ) {
-					// make it like single value so it will be processed like single meta data
+					// make it like single value so it will be processed like single meta data.
 					$addon_meta_data['name'] = 'status';
 
-					// add it on an array for next recursive process
+					// add it on an array for next recursive process.
 					$meta_data[] = $this->get_from_addon_meta_data( array( $addon_meta_data ), $key, $default );
 				}
 
@@ -641,7 +641,7 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 	 * @return bool
 	 */
 	public function on_before_delete_entry( Forminator_Form_Entry_Model $entry_model, $addon_meta_data ) {
-		// attach hook first
+		// attach hook first.
 		$form_id                = $this->form_id;
 		$form_settings_instance = $this->form_settings_instance;
 
@@ -652,9 +652,9 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 		 * @since 1.4
 		 *
 		 * @param array                                $addon_meta_data
-		 * @param int                                  $form_id                current Form ID
-		 * @param Forminator_Form_Entry_Model          $entry_model            Forminator Entry Model
-		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance
+		 * @param int                                  $form_id                current Form ID.
+		 * @param Forminator_Form_Entry_Model          $entry_model            Forminator Entry Model.
+		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_slack_metadata',
@@ -669,10 +669,10 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 		 *
 		 * @since 1.1
 		 *
-		 * @param int                                  $form_id                current Form ID
-		 * @param Forminator_Form_Entry_Model          $entry_model            Forminator Entry Model
-		 * @param array                                $addon_meta_data        addon meta data
-		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance
+		 * @param int                                  $form_id                current Form ID.
+		 * @param Forminator_Form_Entry_Model          $entry_model            Forminator Entry Model.
+		 * @param array                                $addon_meta_data        addon meta data.
+		 * @param Forminator_Addon_Slack_Form_Settings $form_settings_instance Slack Addon Form Settings instance.
 		 */
 		do_action(
 			'forminator_addon_slack_on_before_delete_submission',
@@ -693,7 +693,7 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 
 				foreach ( $addon_meta_data as $addon_meta_datum ) {
 
-					// basic data validation
+					// basic data validation.
 					if ( ! isset( $addon_meta_datum['value'] ) || ! is_array( $addon_meta_datum['value'] ) ) {
 						continue;
 					}
@@ -724,12 +724,12 @@ class Forminator_Addon_Slack_Form_Hooks extends Forminator_Addon_Form_Hooks_Abst
 			return true;
 
 		} catch ( Forminator_Addon_Slack_Exception $e ) {
-			// handle all internal addon exceptions with `Forminator_Addon_Slack_Exception`
+			// handle all internal addon exceptions with `Forminator_Addon_Slack_Exception`.
 
-			// use wp_error, for future usage it can be returned to page entries
+			// use wp_error, for future usage it can be returned to page entries.
 			$wp_error
 				= new WP_Error( 'forminator_addon_slack_delete_chat', $e->getMessage() );
-			// handle this in addon by self, since page entries cant handle error messages on delete yet
+			// handle this in addon by self, since page entries cant handle error messages on delete yet.
 			wp_die(
 				esc_html( $wp_error->get_error_message() ),
 				esc_html( $this->addon->get_title() ),

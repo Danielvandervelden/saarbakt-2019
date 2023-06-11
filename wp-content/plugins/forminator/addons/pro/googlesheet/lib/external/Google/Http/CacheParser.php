@@ -44,8 +44,8 @@ class Forminator_Google_Http_CacheParser
     }
 
     // Don't cache authorized requests/responses.
-    // [rfc2616-14.8] When a shared cache receives a request containing an
-    // Authorization field, it MUST NOT return the corresponding response
+    // [rfc2616-14.8] When a shared cache receives a request containing an.
+    // Authorization field, it MUST NOT return the corresponding response.
     // as a reply to any other request...
     if ($resp->getRequestHeader("authorization")) {
       return false;
@@ -64,7 +64,7 @@ class Forminator_Google_Http_CacheParser
    */
   public static function isResponseCacheable(Forminator_Google_Http_Request $resp)
   {
-    // First, check if the HTTP request was cacheable before inspecting the
+    // First, check if the HTTP request was cacheable before inspecting the.
     // HTTP response.
     if (false == self::isRequestCacheable($resp)) {
       return false;
@@ -75,30 +75,30 @@ class Forminator_Google_Http_CacheParser
       return false;
     }
 
-    // The resource is uncacheable if the resource is already expired and
+    // The resource is uncacheable if the resource is already expired and.
     // the resource doesn't have an ETag for revalidation.
     $etag = $resp->getResponseHeader("etag");
     if (self::isExpired($resp) && $etag == false) {
       return false;
     }
 
-    // [rfc2616-14.9.2]  If [no-store is] sent in a response, a cache MUST NOT
+    // [rfc2616-14.9.2]  If [no-store is] sent in a response, a cache MUST NOT.
     // store any part of either this response or the request that elicited it.
     $cacheControl = $resp->getParsedCacheControl();
     if (isset($cacheControl['no-store'])) {
       return false;
     }
 
-    // Pragma: no-cache is an http request directive, but is occasionally
+    // Pragma: no-cache is an http request directive, but is occasionally.
     // used as a response header incorrectly.
     $pragma = $resp->getResponseHeader('pragma');
     if ($pragma == 'no-cache' || strpos($pragma, 'no-cache') !== false) {
       return false;
     }
 
-    // [rfc2616-14.44] Vary: * is extremely difficult to cache. "It implies that
-    // a cache cannot determine from the request headers of a subsequent request
-    // whether this response is the appropriate representation."
+    // [rfc2616-14.44] Vary: * is extremely difficult to cache. "It implies that.
+    // a cache cannot determine from the request headers of a subsequent request.
+    // whether this response is the appropriate representation.".
     // Given this, we deem responses with the Vary header as uncacheable.
     $vary = $resp->getResponseHeader('vary');
     if ($vary) {
@@ -116,7 +116,7 @@ class Forminator_Google_Http_CacheParser
    */
   public static function isExpired(Forminator_Google_Http_Request $resp)
   {
-    // HTTP/1.1 clients and caches MUST treat other invalid date formats,
+    // HTTP/1.1 clients and caches MUST treat other invalid date formats,.
     // especially including the value “0”, as in the past.
     $parsedExpires = false;
     $responseHeaders = $resp->getResponseHeaders();
@@ -146,8 +146,8 @@ class Forminator_Google_Http_CacheParser
     $parsedDate = strtotime($rawDate);
 
     if (empty($rawDate) || false == $parsedDate) {
-      // We can't default this to now, as that means future cache reads
-      // will always pass with the logic below, so we will require a
+      // We can't default this to now, as that means future cache reads.
+      // will always pass with the logic below, so we will require a.
       // date be injected if not supplied.
       throw new Forminator_Google_Exception("All cacheable requests must have creation dates.");
     }
@@ -177,8 +177,8 @@ class Forminator_Google_Http_CacheParser
    */
   public static function mustRevalidate(Forminator_Google_Http_Request $response)
   {
-    // [13.3] When a cache has a stale entry that it would like to use as a
-    // response to a client's request, it first has to check with the origin
+    // [13.3] When a cache has a stale entry that it would like to use as a.
+    // response to a client's request, it first has to check with the origin.
     // server to see if its cached entry is still usable.
     return self::isExpired($response);
   }

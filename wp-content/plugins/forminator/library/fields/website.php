@@ -101,19 +101,20 @@ class Forminator_Website extends Forminator_Field {
 	 * @since 1.0
 	 *
 	 * @param $field
-	 * @param $settings
+	 * @param Forminator_Render_Form $views_obj Forminator_Render_Form object.
 	 *
 	 * @return mixed
 	 */
-	public function markup( $field, $settings = array() ) {
+	public function markup( $field, $views_obj, $draft_value = null ) {
 
+		$settings    = $views_obj->model->settings;
 		$this->field = $field;
 
 		$html        = '';
 		$id          = self::get_property( 'element_id', $field );
 		$name        = $id;
 		$ariaid      = $id;
-		$id          = 'forminator-field-' . $id;
+		$id          = 'forminator-field-' . $id . '_' . Forminator_CForm_Front::$uid;
 		$required    = $this->get_property( 'required', $field, false );
 		$ariareq     = 'false';
 		$placeholder = $this->sanitize_value( $this->get_property( 'placeholder', $field ) );
@@ -126,9 +127,12 @@ class Forminator_Website extends Forminator_Field {
 			$ariareq = 'true';
 		}
 
-		// Check if Pre-fill parameter used
-		if ( $this->has_prefill( $field ) ) {
-			// We have pre-fill parameter, use its value or $value
+		if ( isset( $draft_value['value'] ) ) {
+
+			$value = esc_attr( $draft_value['value'] );
+
+		} elseif ( $this->has_prefill( $field ) ) {
+			// We have pre-fill parameter, use its value or $value.
 			$value = $this->get_prefill( $field, $value );
 		}
 
@@ -218,7 +222,10 @@ class Forminator_Website extends Forminator_Field {
 		$id                 = $this->get_id( $field );
 		$validation_enabled = self::get_property( 'validation', $field, false, 'bool' );
 		$validation_message = self::get_property( 'validation_message', $field, self::FIELD_PROPERTY_VALUE_NOT_EXIST );
-		$required_message   = self::get_property( 'required_message', $field, __( 'This field is required. Please input a valid URL', 'forminator' ) );
+		$required_message   = self::get_property( 'required_message', $field );
+		if ( empty( $required_message ) ) {
+			$required_message = __( 'This field is required. Please input a valid URL', 'forminator' );
+		}
 		if ( self::FIELD_PROPERTY_VALUE_NOT_EXIST === $validation_message ) {
 			$validation_message = self::get_property( 'validation_text', $field, '' );
 		}
@@ -270,9 +277,8 @@ class Forminator_Website extends Forminator_Field {
 	 *
 	 * @param array        $field
 	 * @param array|string $data
-	 * @param array        $post_data
 	 */
-	public function validate( $field, $data, $post_data = array() ) {
+	public function validate( $field, $data ) {
 		$id                 = self::get_property( 'element_id', $field );
 		$validation_enabled = self::get_property( 'validation', $field, false, 'bool' );
 		$validation_message = self::get_property( 'validation_message', $field, self::FIELD_PROPERTY_VALUE_NOT_EXIST );
@@ -314,14 +320,14 @@ class Forminator_Website extends Forminator_Field {
 	 * @since 1.0.2
 	 *
 	 * @param array        $field
-	 * @param array|string $data - the data to be sanitized
+	 * @param array|string $data - the data to be sanitized.
 	 *
 	 * @return array|string $data - the data after sanitization
 	 */
 	public function sanitize( $field, $data ) {
 		$original_data = $data;
-		// Sanitize
-		$data = forminator_sanitize_field( $data );
+		// Sanitize.
+		$data = esc_url_raw( $data );
 
 		return apply_filters( 'forminator_field_website_sanitize', $data, $field, $original_data );
 	}

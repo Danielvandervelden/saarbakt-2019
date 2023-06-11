@@ -36,7 +36,7 @@ abstract class Util
     /**
      * Converts a response from the Stripe API to the corresponding PHP object.
      *
-     * @param array $resp the response from the Stripe API
+     * @param array $resp the response from the Stripe API.
      * @param array $opts
      *
      * @return array|StripeObject
@@ -66,7 +66,7 @@ abstract class Util
     }
 
     /**
-     * @param mixed|string $value a string to UTF8-encode
+     * @param mixed|string $value a string to UTF8-encode.
      *
      * @return mixed|string the UTF8-encoded string, or the object passed in if
      *    it wasn't a string
@@ -95,8 +95,8 @@ abstract class Util
      * Compares two strings for equality. The time taken is independent of the
      * number of characters that match.
      *
-     * @param string $a one of the strings to compare
-     * @param string $b the other string to compare
+     * @param string $a one of the strings to compare.
+     * @param string $b the other string to compare.
      *
      * @return bool true if the strings are equal, false otherwise
      */
@@ -224,7 +224,7 @@ abstract class Util
     }
 
     /**
-     * @param string $key a string to URL-encode
+     * @param string $key a string to URL-encode.
      *
      * @return string the URL-encoded string
      */
@@ -232,8 +232,8 @@ abstract class Util
     {
         $s = \urlencode((string) $key);
 
-        // Don't use strict form encoding by changing the square bracket control
-        // characters back to their literals. This is fine by the server, and
+        // Don't use strict form encoding by changing the square bracket control.
+        // characters back to their literals. This is fine by the server, and.
         // makes these parameter strings easier to read.
         $s = \str_replace('%5B', '[', $s);
 

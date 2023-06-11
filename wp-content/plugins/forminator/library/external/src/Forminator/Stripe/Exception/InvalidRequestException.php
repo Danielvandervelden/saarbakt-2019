@@ -13,13 +13,13 @@ class InvalidRequestException extends ApiErrorException
     /**
      * Creates a new InvalidRequestException exception.
      *
-     * @param string $message the exception message
-     * @param null|int $httpStatus the HTTP status code
-     * @param null|string $httpBody the HTTP body as a string
-     * @param null|array $jsonBody the JSON deserialized body
-     * @param null|array|\Forminator\Stripe\Util\CaseInsensitiveArray $httpHeaders the HTTP headers array
-     * @param null|string $stripeCode the Stripe error code
-     * @param null|string $stripeParam the parameter related to the error
+     * @param string $message the exception message.
+     * @param null|int $httpStatus the HTTP status code.
+     * @param null|string $httpBody the HTTP body as a string.
+     * @param null|array $jsonBody the JSON deserialized body.
+     * @param null|array|\Forminator\Stripe\Util\CaseInsensitiveArray $httpHeaders the HTTP headers array.
+     * @param null|string $stripeCode the Stripe error code.
+     * @param null|string $stripeParam the parameter related to the error.
      *
      * @return InvalidRequestException
      */

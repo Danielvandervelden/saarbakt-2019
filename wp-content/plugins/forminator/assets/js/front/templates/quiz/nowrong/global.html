@@ -30,13 +30,13 @@
 <?php include('global/content/questions-description.html') ?>
 <?php include('global/content/questions-result.html') ?>
 <?php include('global/content/answers-text.html') ?>
+<?php include('global/content/field-image-size.html') ?>
 
 /* =============== */
 /* SECTION: Footer */
 <?php include('global/footer/quiz-footer.html') ?>
 <?php include('global/footer/submit-button.html') ?>
 <?php include('global/footer/navigation-button.html') ?>
-<?php include('global/footer/back-to-question.html') ?>
 <?php include('global/footer/social-share.html') ?>
 
 
@@ -50,8 +50,10 @@
 	<?php } ?>
 	<?php if ( in_array( $properties['forminator-quiz-theme'], array( 'material' ), true ) ) { ?>
 		<?php include( $properties['forminator-quiz-theme'] . '/retake-button.html') ?>
+		<?php include( $properties['forminator-quiz-theme'] . '/back-to-question.html') ?>
 	<?php } else { ?>
 		<?php include('global/footer/retake-button.html') ?>
+		<?php include('global/footer/back-to-question.html') ?>
 	<?php } ?>
 <?php } ?>
 

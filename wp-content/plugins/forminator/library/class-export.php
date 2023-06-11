@@ -66,7 +66,7 @@ class Forminator_Export {
 	public function __construct() {
 		add_action( 'wp_loaded', array( &$this, 'listen_for_csv_export' ) );
 		add_action( 'wp_loaded', array( &$this, 'listen_for_saving_export_schedule' ) );
-		//schedule for check and send export
+		// schedule for check and send export.
 		add_action( 'wp_footer', array( &$this, 'schedule_entries_exporter' ) );
 
 		add_action( 'forminator_send_export', array( &$this, 'maybe_send_export' ) );
@@ -105,7 +105,8 @@ class Forminator_Export {
 	 * @since 1.0
 	 */
 	public function listen_for_csv_export() {
-		if ( ! isset( $_POST['forminator_export'] ) ) {
+		$forminator_export = Forminator_Core::sanitize_text_field( 'forminator_export' );
+		if ( ! $forminator_export ) {
 			return;
 		}
 
@@ -113,13 +114,14 @@ class Forminator_Export {
 			return;
 		}
 
-		if ( ! wp_verify_nonce( $_POST['_forminator_nonce'], 'forminator_export' ) ) {
+		$nonce = Forminator_Core::sanitize_text_field( '_forminator_nonce' );
+		if ( ! wp_verify_nonce( $nonce, 'forminator_export' ) ) {
 			return;
 		}
 
-		$form_id     = isset( $_POST['form_id'] ) ? $_POST['form_id'] : 0;
-		$type        = isset( $_POST['form_type'] ) ? $_POST['form_type'] : null;
-		$filter      = isset( $_POST['submission-filter'] ) ? $_POST['submission-filter'] : '';
+		$form_id     = filter_input( INPUT_POST, 'form_id', FILTER_VALIDATE_INT );
+		$type        = Forminator_Core::sanitize_text_field( 'form_type' );
+		$filter      = filter_input( INPUT_POST, 'submission-filter', FILTER_VALIDATE_BOOLEAN );
 		$form_id     = intval( $form_id );
 		$export_data = $this->_prepare_export_data( $form_id, $type, 0, $filter );
 		if ( ! $export_data instanceof Forminator_Export_Result ) {
@@ -129,7 +131,7 @@ class Forminator_Export {
 		$data  = $export_data->data;
 		$model = $export_data->model;
 		$count = $export_data->entries_count;
-		//save the time for later uses
+		// save the time for later uses.
 		$logs = get_option( 'forminator_exporter_log', array() );
 		if ( ! isset( $logs[ $model->id ] ) ) {
 			$logs[ $model->id ] = array();
@@ -154,11 +156,11 @@ class Forminator_Export {
 		header( 'Content-type: text/csv; charset=UTF-8' );
 		header( 'Content-Disposition: attachment; filename="' . $filename . '";' );
 
-		// print BOM Char for Excel Compatible
-		echo chr( 239 ) . chr( 187 ) . chr( 191 );// wpcs xss ok. excel generated content
+		// print BOM Char for Excel Compatible.
+		echo chr( 239 ) . chr( 187 ) . chr( 191 ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 
-		// make php send the generated csv lines to the browser
-		exit( $output );
+		// make php send the generated csv lines to the browser.
+		exit( $output ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 
 	/**
@@ -167,11 +169,10 @@ class Forminator_Export {
 	 * @since 1.0
 	 */
 	public function listen_for_saving_export_schedule() {
-		$post_data = $_POST;// wpcs csrf ok.
-
-		if ( isset( $post_data['action'] ) && 'forminator_export_entries' === $post_data['action'] ) {
-
-			if ( ! isset( $_POST['_forminator_nonce'] ) || ! wp_verify_nonce( $_POST['_forminator_nonce'], 'forminator_export' ) ) {
+		$action = Forminator_Core::sanitize_text_field( 'action' );
+		if ( 'forminator_export_entries' === $action ) {
+			$nonce = Forminator_Core::sanitize_text_field( '_forminator_nonce' );
+			if ( ! $nonce || ! wp_verify_nonce( $nonce, 'forminator_export' ) ) {
 
 				$redirect = add_query_arg(
 					array(
@@ -185,12 +186,8 @@ class Forminator_Export {
 
 			$data = $this->get_entries_export_schedule();
 
-			$enabled = false;
-			if ( isset( $_POST['enabled'] ) ) {
-				$enabled = filter_var( $_POST['enabled'], FILTER_VALIDATE_BOOLEAN );
-			}
-
-			if ( ! isset( $post_data['form_id'] ) || empty( $post_data['form_id'] ) ) {
+			$form_id = filter_input( INPUT_POST, 'form_id', FILTER_VALIDATE_INT );
+			if ( ! $form_id ) {
 				$redirect = add_query_arg(
 					array(
 						'err_msg' => rawurlencode( __( 'Invalid form ID.', 'forminator' ) ),
@@ -200,7 +197,8 @@ class Forminator_Export {
 				wp_safe_redirect( $redirect );
 				exit;
 			}
-			if ( ! isset( $post_data['form_type'] ) || empty( $post_data['form_type'] ) ) {
+			$form_type = Forminator_Core::sanitize_text_field( 'form_type' );
+			if ( ! $form_type ) {
 				$redirect = add_query_arg(
 					array(
 						'err_msg' => rawurlencode( __( 'Invalid form type.', 'forminator' ) ),
@@ -211,7 +209,9 @@ class Forminator_Export {
 				exit;
 			}
 
-			if ( $enabled && ( ! isset( $post_data['email'] ) || empty( $post_data['email'] ) ) ) {
+			$enabled = filter_input( INPUT_POST, 'enabled', FILTER_VALIDATE_BOOLEAN );
+			$email   = filter_input( INPUT_POST, 'email', FILTER_VALIDATE_EMAIL, FILTER_REQUIRE_ARRAY );
+			if ( $enabled && ! $email ) {
 				$redirect = add_query_arg(
 					array(
 						'err_msg' => rawurlencode( __( 'Invalid email.', 'forminator' ) ),
@@ -222,25 +222,26 @@ class Forminator_Export {
 				exit;
 			}
 
-			$key                 = $post_data['form_id'] . $post_data['form_type'];
+			$key                 = $form_id . $form_type;
 			$current_form_export = isset( $data[ $key ] ) ? $data[ $key ] : array();
 			$last_sent           = current_time( 'timestamp' );
 
-			if ( 'daily' === $post_data['interval'] ) {
+			$interval = Forminator_Core::sanitize_text_field( 'interval' );
+			if ( 'daily' === $interval ) {
 				$last_sent = strtotime( '-24 hours', current_time( 'timestamp' ) );
 			}
 
 			$data[ $key ] = array(
 				'enabled'          => $enabled,
-				'form_id'          => $post_data['form_id'],
-				'form_type'        => $post_data['form_type'],
-				'email'            => ! empty( $post_data['email'] ) ? $post_data['email'] : '',
-				'interval'         => $post_data['interval'],
-				'month_day'        => $post_data['month_day'],
-				'day'              => $post_data['day'],
-				'hour'             => $post_data['hour'],
+				'form_id'          => $form_id,
+				'form_type'        => $form_type,
+				'email'            => $email ? $email : '',
+				'interval'         => $interval,
+				'month_day'        => Forminator_Core::sanitize_text_field( 'month_day' ),
+				'day'              => Forminator_Core::sanitize_text_field( 'day' ),
+				'hour'             => Forminator_Core::sanitize_text_field( 'hour' ),
 				'last_sent'        => $last_sent,
-				'if_new'           => isset( $post_data['if_new'] ) ? filter_var( $post_data['if_new'], FILTER_VALIDATE_BOOLEAN ) : false,
+				'if_new'           => (bool) filter_input( INPUT_POST, 'if_new', FILTER_VALIDATE_BOOLEAN ),
 				'last_sent_row_id' => isset( $current_form_export['last_sent_row_id'] ) ? $current_form_export['last_sent_row_id'] : 0,
 			);
 
@@ -251,21 +252,21 @@ class Forminator_Export {
 
 			$referer = wp_get_referer();
 			if ( empty( $referer ) ) {
-				// on same request uri `wp_get_referer` return false
+				// on same request uri `wp_get_referer` return false.
 				$referer = wp_get_raw_referer();
 			}
 			if ( ! empty( $referer ) && ! headers_sent() ) {
-				// probably header sent so skip this logic to avoid erro
+				// probably header sent so skip this logic to avoid erro.
 				$referer_query = wp_parse_url( $referer, PHP_URL_QUERY );
 				if ( ! empty( $referer_query ) ) {
 					wp_parse_str( $referer_query, $query_strings );
 					if ( ! empty( $query_strings ) && isset( $query_strings['page'] ) && 'forminator-entries' === $query_strings['page'] ) {
 
-						// additional redirect parameter on global entries page
+						// additional redirect parameter on global entries page.
 
 						$redirect = add_query_arg(
 							array(
-								'form_id' => $post_data['form_id'],
+								'form_id' => $form_id,
 							),
 							$redirect
 						);
@@ -283,7 +284,7 @@ class Forminator_Export {
 	 * @since 1.0
 	 * @since 1.5.4 add force param
 	 *
-	 * @param bool $force force send, ignore last_sent timestamp
+	 * @param bool $force force send, ignore last_sent timestamp.
 	 */
 	public function maybe_send_export( $force = false ) {
 		$export_schedules = $this->get_entries_export_schedule();
@@ -297,7 +298,7 @@ class Forminator_Export {
 				continue;
 			}
 			$last_sent = $row['last_sent'];
-			//check the next sent
+			// check the next sent.
 			$next_sent = null;
 			switch ( $row['interval'] ) {
 				case 'daily':
@@ -305,13 +306,12 @@ class Forminator_Export {
 					$next_sent = date( 'Y-m-d', $next_sent ) . ' ' . $row['hour'];
 					break;
 				case 'weekly':
-					$next_sent = strtotime( '+7 days', $last_sent );
+					$day = isset( $row['day'] ) ? $row['day'] : 'mon';
+					$next_sent = strtotime( 'next ' . $day, $last_sent );
 					$next_sent = date( 'Y-m-d', $next_sent ) . ' ' . $row['hour'];
 					break;
 				case 'monthly':
-					$month_date = isset( $row['month_day'] ) ? $row['month_day'] : 1;
-					$next_sent  = $this->get_monthly_export_date( $last_sent, $month_date );
-					$next_sent  = date( 'Y-m-d', $next_sent ) . ' ' . $row['hour'];
+					$next_sent = $this->get_monthly_export_date( $last_sent, $row );
 					break;
 				default:
 					break;
@@ -323,7 +323,7 @@ class Forminator_Export {
 			}
 			if ( $is_send ) {
 				$last_entry_id = isset( $row['last_sent_row_id'] ) ? intval( $row['last_sent_row_id'] ) : 0;
-				//queue to prevent spam
+				// queue to prevent spam.
 				$info = $this->_prepare_attachment( $row['form_id'], $row['form_type'], $row['email'], $last_entry_id );
 
 				if ( ! $info instanceof Forminator_Export_Result || empty( $info->file_path ) ) {
@@ -342,8 +342,8 @@ class Forminator_Export {
 			}
 		}
 
-		$files = [];
-		//now start to send
+		$files = array();
+		// now start to send.
 		foreach ( $receipts as $email => $info ) {
 			$current_files  = array();
 			$export_results = array();
@@ -355,14 +355,14 @@ class Forminator_Export {
 				$last_row_id     = isset( $export_schedule['last_sent_row_id'] ) ? intval( $export_schedule['last_sent_row_id'] ) : 0;
 				$if_new          = isset( $export_schedule['if_new'] ) ? filter_var( $export_schedule['if_new'], FILTER_VALIDATE_BOOLEAN ) : false;
 
-				// update last sent,
-				// this options need to updated so it marked as email sent, and scheduled for next time
+				// update last sent,.
+				// this options need to updated so it marked as email sent, and scheduled for next time.
 				$export_schedules[ $schedule_key ]['last_sent']        = current_time( 'timestamp' );
 				$export_schedules[ $schedule_key ]['last_sent_row_id'] = $export_result->latest_entry_id;
 
-				// only send email when new entry avail
+				// only send email when new entry avail.
 				if ( $if_new ) {
-					// skip sending this email
+					// skip sending this email.
 					if ( $last_row_id >= $export_result->latest_entry_id ) {
 						forminator_maybe_log(
 							__METHOD__,
@@ -378,7 +378,7 @@ class Forminator_Export {
 					}
 				}
 
-				// files reference needed for future deletion
+				// files reference needed for future deletion.
 				$current_files[]  = $export_result->file_path;
 				$export_results[] = $export_result;
 			}
@@ -390,12 +390,11 @@ class Forminator_Export {
 				$mail_headers = $this->get_mail_headers( $email, $export_results );
 				wp_mail( $email, $subject, $mail_content, $mail_headers, $current_files );
 			}
-
 		}
 
 		$files = array_unique( $files );
 		foreach ( $files as $file ) {
-			@unlink( $file ); // phpcs:ignore
+			@unlink( $file );
 		}
 		if ( $receipts ) {
 			update_option( 'forminator_entries_export_schedule', $export_schedules );
@@ -409,13 +408,12 @@ class Forminator_Export {
 	 * @since 1.5
 	 * @since 1.5.4 add `$latest_exported_entry_id` param to get new entries count
 	 *
-	 * @param int $form_id
+	 * @param int    $form_id
 	 * @param string $type
-	 * @param int $latest_exported_entry_id
+	 * @param int    $latest_exported_entry_id
 	 * @param string $filter
 	 *
 	 * @return Forminator_Export_Result
-	 *
 	 */
 	private function _prepare_export_data( $form_id, $type, $latest_exported_entry_id = 0, $filter = '' ) {
 		$model                    = null;
@@ -426,7 +424,7 @@ class Forminator_Export {
 
 		switch ( $type ) {
 			case 'quiz':
-				$model = Forminator_Quiz_Model::model()->load( $form_id );
+				$model = Forminator_Base_Form_Model::get_model( $form_id );
 				if ( ! is_object( $model ) ) {
 					return null;
 				}
@@ -454,8 +452,8 @@ class Forminator_Export {
 				$leads_id  = isset( $model->settings['leadsId'] ) ? $model->settings['leadsId'] : 0;
 
 				if ( $has_leads && $leads_id ) {
-					$form_model = Forminator_Form_Model::model()->load( $leads_id );
-					if ( is_object( $model ) ) {
+					$form_model = Forminator_Base_Form_Model::get_model( $leads_id );
+					if ( is_object( $form_model ) ) {
 						$mappers = $this->get_custom_form_export_mappers( $form_model );
 						foreach ( $mappers as $mapper ) {
 							if ( 'entry_time_created' === $mapper['type'] ) {
@@ -489,9 +487,9 @@ class Forminator_Export {
 									'question' => '',
 									'answer'   => '',
 									'result'   => array(
-										'title' => ''
-									)
-								)
+										'title' => '',
+									),
+								),
 							);
 						}
 						if ( isset( $meta['answers'] ) ) {
@@ -501,7 +499,9 @@ class Forminator_Export {
 								$row[] = 1 === $i ? $entry->time_created : '';
 								$row[] = ! empty( $answer['question'] ) ? sprintf( '"%s"', $answer['question'] ) : '';
 								$row[] = $answer['answer'];
-								$row[] = $meta['result']['title'];
+								if ( isset( $meta['result'] ) && isset( $meta['result']['title'] ) ) {
+									$row[] = $meta['result']['title'];
+								}
 
 								if ( ! empty( $lead_data ) ) {
 									foreach ( $lead_headers as $headers_id => $lead_header ) {
@@ -529,8 +529,8 @@ class Forminator_Export {
 								array(
 									'question'  => '',
 									'answer'    => '',
-									'isCorrect' => ''
-								)
+									'isCorrect' => '',
+								),
 							);
 						}
 						if ( ! empty( $meta ) ) {
@@ -572,7 +572,7 @@ class Forminator_Export {
 				$export_result->data = $data;
 				break;
 			case 'poll':
-				$model = Forminator_Poll_Model::model()->load( $form_id );
+				$model = Forminator_Base_Form_Model::get_model( $form_id );
 				if ( ! is_object( $model ) ) {
 					return null;
 				}
@@ -624,7 +624,7 @@ class Forminator_Export {
 				$export_result->data = $data;
 				break;
 			case 'cform':
-				$model = Forminator_Form_Model::model()->load( $form_id );
+				$model = Forminator_Base_Form_Model::get_model( $form_id );
 				if ( ! is_object( $model ) ) {
 					return null;
 				}
@@ -646,39 +646,21 @@ class Forminator_Export {
 					$data = array();
 					// traverse from fields to be correctly mapped with updated form fields.
 					foreach ( $mappers as $mapper ) {
-						//its from model's property
+						// its from model's property.
 						if ( isset( $mapper['property'] ) ) {
 							if ( property_exists( $entry, $mapper['property'] ) ) {
 								$property = $mapper['property'];
-								// casting property to string
+								// casting property to string.
 								$data[] = (string) $entry->$property;
 							} else {
 								$data[] = '';
 							}
 						} else {
-							// meta_key based
-							$meta_value = $entry->get_meta( $mapper['meta_key'], '' );
-							if ( ! isset( $mapper['sub_metas'] ) ) {
-								$data[] = Forminator_Form_Entry_Model::meta_value_to_string( $mapper['type'], $meta_value );
-							} else {
-
-								// sub_metas available
-								foreach ( $mapper['sub_metas'] as $sub_meta ) {
-									$sub_key = $sub_meta['key'];
-									if ( isset( $meta_value[ $sub_key ] ) && ! empty( $meta_value[ $sub_key ] ) ) {
-										$value      = $meta_value[ $sub_key ];
-										$field_type = $mapper['type'] . '.' . $sub_key;
-										$data[]     = Forminator_Form_Entry_Model::meta_value_to_string( $field_type, $value );
-									} else {
-										$data[] = '';
-									}
-								}
-							}
+							$data = self::add_meta_value( $data, $mapper, $entry );
 						}
-
 					}
 
-					// Addon columns
+					// Addon columns.
 					$addon_data = $this->attach_form_addons_on_export_render_entry_row( $form_id, $entry );
 
 					foreach ( $addon_mappers as $mapper_id => $mapper ) {
@@ -689,7 +671,7 @@ class Forminator_Export {
 					$result[ (string) $entry->entry_id ] = $data;
 				}
 
-				//flatten mappers to headers
+				// flatten mappers to headers.
 				$headers = array();
 				foreach ( $mappers as $mapper ) {
 					if ( ! isset( $mapper['sub_metas'] ) ) {
@@ -701,12 +683,12 @@ class Forminator_Export {
 					}
 				}
 
-				//additional addon headers
+				// additional addon headers.
 				foreach ( $addon_mappers as $mapper ) {
 					$headers[] = $mapper;
 				}
 
-				$data = array_merge( array( 'headers' => $headers ), $result );
+				$data                = array_merge( array( 'headers' => $headers ), $result );
 				$export_result->data = $data;
 				break;
 			default:
@@ -715,7 +697,7 @@ class Forminator_Export {
 
 		$export_result->entries_count = count( $entries );
 
-		// DESC order, latest entry will be first
+		// DESC order, latest entry will be first.
 		if ( isset( $entries[0] ) && $entries[0] instanceof Forminator_Form_Entry_Model ) {
 			$latest_entry                   = $entries[0];
 			$export_result->latest_entry_id = $latest_entry->entry_id;
@@ -725,15 +707,67 @@ class Forminator_Export {
 	}
 
 	/**
+	 * Add meta value
+	 *
+	 * @param array  $data Saved data.
+	 * @param array  $mapper Mapper.
+	 * @param object $entry Entry object.
+	 * @return array Updated data.
+	 */
+	private static function add_meta_value( $data, $mapper, $entry ) {
+		$copies = array_filter(
+			$entry->meta_data,
+			function( $key ) use ( $mapper ) {
+				return strpos( $key, $mapper['meta_key'] . '-' ) === 0 || $mapper['meta_key'] === $key;
+			},
+			ARRAY_FILTER_USE_KEY
+		);
+
+		if ( ! $copies ) {
+			$data[] = '';
+			return $data;
+		}
+
+		$temp_data = array();
+		foreach ( $copies as $slug => $copy ) {
+			// meta_key based.
+			$meta_value = $entry->get_meta( $slug, '' );
+			if ( ! isset( $mapper['sub_metas'] ) ) {
+				$temp_data[ $mapper['type'] ][] = Forminator_Form_Entry_Model::meta_value_to_string( $mapper['type'], $meta_value );
+			} else {
+
+				// sub_metas available.
+				foreach ( $mapper['sub_metas'] as $sub_meta ) {
+					$sub_key = $sub_meta['key'];
+					if ( ! empty( $meta_value[ $sub_key ] ) ) {
+						$value      = $meta_value[ $sub_key ];
+						$field_type = $mapper['type'] . '.' . $sub_key;
+
+						$temp_data[ $sub_key ][] = Forminator_Form_Entry_Model::meta_value_to_string( $field_type, $value );
+					} else {
+						$temp_data[ $sub_key ][] = '';
+					}
+				}
+			}
+		}
+
+		foreach ( $temp_data as $t_data ) {
+			$data[] = implode( ' / ', $t_data );
+		}
+
+		return $data;
+	}
+
+	/**
 	 * Prepare mail attachment
 	 *
 	 * @since 1.0
 	 * @since 1.5.4 add `$last_entry_id` to calculate new entries count
 	 *
-	 * @param int $form_id
+	 * @param int    $form_id
 	 * @param string $type
 	 * @param string $email
-	 * @param int $last_entry_id
+	 * @param int    $last_entry_id
 	 *
 	 * @return Forminator_Export_Result|boolean
 	 */
@@ -747,7 +781,7 @@ class Forminator_Export {
 		$data  = $export_result->data;
 
 		$upload_dirs = wp_upload_dir();
-		//temp write to uploads
+		// temp write to uploads.
 		$tmp_path = $upload_dirs['basedir'] . '/forminator/';
 
 		require_once ABSPATH . 'wp-admin/includes/file.php';
@@ -801,40 +835,27 @@ class Forminator_Export {
 			$output[] = rtrim( $csv_line );
 		}
 
-		// prepend BOM Character for excel compatible
+		// prepend BOM Character for excel compatible.
 		return chr( 239 ) . chr( 187 ) . chr( 191 ) . implode( PHP_EOL, $output );
 	}
 
-	private function get_monthly_export_date( $last_sent, $month_day ) {
-		// Array [0] = year. [1] = month. [2] = day.
-		$old_date  = gmdate( 'Y-m-d', intval( $last_sent ) );
-		$month_day = (int) $month_day;
-		if ( $old_date ) {
-			list( $old_year, $old_month, $old_day ) = explode( '-', $old_date );
+	private function get_monthly_export_date( $last_sent, $settings ) {
 
-			$year  = ( '12' === $old_month ) ? $old_year + 1 : $old_year;
-			$month = ( '12' === $old_month ) ? 1 : $old_month + 1;
-			$day   = ( 0 < $month_day ) && ( 32 > $month_day ) ? $month_day : 1;
+		$month_date = isset( $settings['month_day'] ) ? $settings['month_day'] : 1;
+		$hour       = isset( $settings['hour'] ) ? $settings['hour'] : '00:00';
+		// Maybe $month_date will be in the future this month.
+		$next_sent = strtotime( date( "Y-m-{$month_date} {$hour}", $last_sent ) );
 
-			$is_valid_date = checkdate( $month, $day, $year );
-
-			while ( ! $is_valid_date && $day > 0 ) {
-				$day--;
-				$is_valid_date = checkdate( $month, $day, $year );
+		if ( $last_sent >= $next_sent ) {
+			// If not - next month.
+			$next_sent = strtotime( '+1 month', $next_sent );
+			while ( date( 'm', $next_sent ) > date( 'm', $last_sent ) + 1 ) {
+				// remove 1 day if 31, 30, 29 day doesn't exist in this month.
+				$next_sent = strtotime( '-1 day', $next_sent );
 			}
 		}
 
-		if ( ! empty( $is_valid_date ) ) {
-			$next_sent = strtotime( "$year-$month-$day" );
-		} else {
-			$year  = gmdate( 'Y' );
-			$month = gmdate( 'm' );
-			$day   = gmdate( 'd' );
-
-			$next_sent = strtotime( '-1 day', strtotime( "$year-$month-$day" ) );
-		}
-
-		return $next_sent;
+		return date( 'Y-m-d H:i:s', $next_sent );
 	}
 
 
@@ -863,29 +884,50 @@ class Forminator_Export {
 	 */
 	private function get_custom_form_export_mappers( $model ) {
 		/** @var  Forminator_Form_Model $model */
-		$fields              = $model->get_fields();
-		$ignored_field_types = Forminator_Form_Entry_Model::ignored_fields();
-		$visible_fields      = array();
-		if ( isset( $_REQUEST['field'] ) ) {
-			$visible_fields = $_REQUEST['field']; // wpcs XSRF ok, via GET
-		}
+		$fields = $model->get_grouped_real_fields();
 
-		/** @var  Forminator_Form_Field_Model $fields */
-		$mappers = array(
+		$field_mappers = self::get_mappers( $fields, $model );
+		$mappers       = array_merge(
 			array(
-				// read form model's property
-				'property' => 'time_created', // must be on export
-				'label'    => __( 'Submission Time', 'forminator' ),
-				'type'     => 'entry_time_created',
+				array(
+					// read form model's property.
+					'property' => 'time_created', // must be on export.
+					'label'    => __( 'Submission Time', 'forminator' ),
+					'type'     => 'entry_time_created',
+				),
 			),
+			$field_mappers
 		);
 
+		/**
+		 * Filter column mappers to be used on export custom form
+		 *
+		 * @since 1.6.3
+		 *
+		 * @param array $mappers
+		 * @param int $form_id
+		 * @param Forminator_Form_Model $model
+		 *
+		 * @return array
+		 */
+		$mappers = apply_filters( 'forminator_custom_form_export_mappers', $mappers, $model->id, $model );
+
+		return $mappers;
+	}
+
+	/**
+	 * Get mappers
+	 *
+	 * @param array  $fields Fields array.
+	 * @param object $model Model object.
+	 * @param object $group_field Group field.
+	 * @return array
+	 */
+	private static function get_mappers( $fields, $model, $group_field = null ) {
+		$visible_fields = isset( $_GET['field'] ) ? Forminator_Core::sanitize_array( $_GET['field'] ) : array();
+		$mappers        = array();
 		foreach ( $fields as $field ) {
 			$field_type = $field->__get( 'type' );
-
-			if ( in_array( $field_type, $ignored_field_types, true ) ) {
-				continue;
-			}
 
 			if ( ! empty( $visible_fields ) ) {
 				if ( ! in_array( $field->slug, $visible_fields, true ) ) {
@@ -893,14 +935,17 @@ class Forminator_Export {
 				}
 			}
 
-			// base mapper for every field
+			// base mapper for every field.
 			$mapper             = array();
 			$mapper['meta_key'] = $field->slug;
 			$mapper['label']    = $field->get_label_for_entry();
 			$mapper['type']     = $field_type;
 
+			if ( $group_field ) {
+				$mapper['label'] = $group_field->get_label_for_entry() . ' - ' . $mapper['label'];
+			}
 
-			// fields that should be displayed as multi column (sub_metas)
+			// fields that should be displayed as multi column (sub_metas).
 			if ( 'name' === $field_type ) {
 				$is_multiple_name = filter_var( $field->__get( 'multiple_name' ), FILTER_VALIDATE_BOOLEAN );
 				if ( $is_multiple_name ) {
@@ -908,9 +953,9 @@ class Forminator_Export {
 					$first_name_enabled  = filter_var( $field->__get( 'fname' ), FILTER_VALIDATE_BOOLEAN );
 					$middle_name_enabled = filter_var( $field->__get( 'mname' ), FILTER_VALIDATE_BOOLEAN );
 					$last_name_enabled   = filter_var( $field->__get( 'lname' ), FILTER_VALIDATE_BOOLEAN );
-					// at least one sub field enabled
+					// at least one sub field enabled.
 					if ( $prefix_enabled || $first_name_enabled || $middle_name_enabled || $last_name_enabled ) {
-						// sub metas
+						// sub metas.
 						$mapper['sub_metas'] = array();
 						if ( $prefix_enabled ) {
 							$default_label         = Forminator_Form_Entry_Model::translate_suffix( 'prefix' );
@@ -946,13 +991,11 @@ class Forminator_Export {
 								'label' => $mapper['label'] . ' - ' . ( $label ? $label : $default_label ),
 							);
 						}
-
 					} else {
-						// if no subfield enabled when multiple name remove mapper (means dont show it on export)
+						// if no subfield enabled when multiple name remove mapper (means dont show it on export).
 						$mapper = array();
 					}
 				}
-
 			} elseif ( 'address' === $field_type ) {
 				$street_enabled  = filter_var( $field->__get( 'street_address' ), FILTER_VALIDATE_BOOLEAN );
 				$line_enabled    = filter_var( $field->__get( 'address_line' ), FILTER_VALIDATE_BOOLEAN );
@@ -1011,7 +1054,7 @@ class Forminator_Export {
 						);
 					}
 				} else {
-					// if no subfield enabled when multiple name remove mapper (means dont show it on export)
+					// if no subfield enabled when multiple name remove mapper (means dont show it on export).
 					$mapper = array();
 				}
 			} elseif ( 'stripe' === $field_type || 'paypal' === $field_type ) {
@@ -1021,8 +1064,12 @@ class Forminator_Export {
 					'label' => $mapper['label'] . ' - ' . __( 'Mode', 'forminator' ),
 				);
 				$mapper['sub_metas'][] = array(
-					'key'   => 'status',
-					'label' => $mapper['label'] . ' - ' . __( 'Status', 'forminator' ),
+					'key'   => 'product_name',
+					'label' => $mapper['label'] . ' - ' . __( 'Product / Plan Name', 'forminator' ),
+				);
+				$mapper['sub_metas'][] = array(
+					'key'   => 'payment_type',
+					'label' => $mapper['label'] . ' - ' . __( 'Payment type', 'forminator' ),
 				);
 				$mapper['sub_metas'][] = array(
 					'key'   => 'amount',
@@ -1033,28 +1080,32 @@ class Forminator_Export {
 					'label' => $mapper['label'] . ' - ' . __( 'Currency', 'forminator' ),
 				);
 				$mapper['sub_metas'][] = array(
+					'key'   => 'quantity',
+					'label' => $mapper['label'] . ' - ' . __( 'Quantity', 'forminator' ),
+				);
+				$mapper['sub_metas'][] = array(
 					'key'   => 'transaction_id',
 					'label' => $mapper['label'] . ' - ' . __( 'Transaction ID', 'forminator' ),
 				);
+				$mapper['sub_metas'][] = array(
+					'key'   => 'status',
+					'label' => $mapper['label'] . ' - ' . __( 'Status', 'forminator' ),
+				);
+				$mapper['sub_metas'][] = array(
+					'key'   => 'subscription_id',
+					'label' => $mapper['label'] . ' - ' . __( 'Manage', 'forminator' ),
+				);
+			} elseif ( 'group' === $field_type ) {
+				$group_fields  = $model->get_grouped_real_fields( $field->slug );
+				$group_mappers = self::get_mappers( $group_fields, $model, $field );
+				$mappers       = array_merge( $mappers, $group_mappers );
+				continue;
 			}
 
 			if ( ! empty( $mapper ) ) {
 				$mappers[] = $mapper;
 			}
 		}
-
-		/**
-		 * Filter column mappers to be used on export custom form
-		 *
-		 * @since 1.6.3
-		 *
-		 * @param array $mappers
-		 * @param int $form_id
-		 * @param Forminator_Form_Model $model
-		 *
-		 * @return array
-		 */
-		$mappers = apply_filters( 'forminator_custom_form_export_mappers', $mappers, $model->id, $model );
 
 		return $mappers;
 	}
@@ -1075,7 +1126,7 @@ class Forminator_Export {
 	 */
 	private function attach_form_addons_on_export_render_title_row( $form_id, $entries = array() ) {
 		$additional_headers = array();
-		//find all registered addons, so history can be shown even for deactivated addons
+		// find all registered addons, so history can be shown even for deactivated addons.
 		$registered_addons = $this->get_form_registered_addons( $form_id, $entries );
 
 		foreach ( $registered_addons as $registered_addon ) {
@@ -1087,7 +1138,6 @@ class Forminator_Export {
 			} catch ( Exception $e ) {
 				forminator_addon_maybe_log( $registered_addon->get_slug(), 'failed to on_export_render_title_row', $e->getMessage() );
 			}
-
 		}
 
 		return $additional_headers;
@@ -1112,10 +1162,10 @@ class Forminator_Export {
 
 		foreach ( $addon_headers as $title_id => $title ) {
 			if ( ! is_scalar( $title ) || empty( $title ) ) {
-				continue; // skip on empty title
+				continue; // skip on empty title.
 			}
 
-			// avoid collistion with other addon ids
+			// avoid collistion with other addon ids.
 			$title_id = 'forminator_addon_export_title_' . $addon->get_slug() . '_' . $title_id;
 
 			$formatted_headers[ $title_id ] = $title;
@@ -1138,7 +1188,7 @@ class Forminator_Export {
 	 */
 	private function attach_form_addons_on_export_render_entry_row( $form_id, Forminator_Form_Entry_Model $entry_model ) {
 		$additional_data = array();
-		//find all registered addons, so history can be shown even for deactivated addons
+		// find all registered addons, so history can be shown even for deactivated addons.
 		$registered_addons = $this->get_form_registered_addons( $form_id );
 
 		foreach ( $registered_addons as $registered_addon ) {
@@ -1151,7 +1201,6 @@ class Forminator_Export {
 			} catch ( Exception $e ) {
 				forminator_addon_maybe_log( $registered_addon->get_slug(), 'failed to on_export_render_entry', $e->getMessage() );
 			}
-
 		}
 
 		return $additional_data;
@@ -1177,7 +1226,7 @@ class Forminator_Export {
 		foreach ( $addon_data as $title_id => $value ) {
 			$value = Forminator_Form_Entry_Model::meta_value_to_string( 'addon_' . $addon->get_slug(), $value );
 
-			// avoid collistion with other addon ids
+			// avoid collistion with other addon ids.
 			$title_id = 'forminator_addon_export_title_' . $addon->get_slug() . '_' . $title_id;
 
 			$formatted_data[ $title_id ] = $value;
@@ -1205,14 +1254,14 @@ class Forminator_Export {
 
 			foreach ( $entries as $entry ) {
 
-				// find registered addon by slug pattern
+				// find registered addon by slug pattern.
 				$entry_addon_slugs = forminator_find_addon_slugs_from_entry_model( $entry );
 				foreach ( $entry_addon_slugs as $entry_addon_slug ) {
 
-					// check if this slug globally registered
+					// check if this slug globally registered.
 					if ( in_array( $entry_addon_slug, array_keys( $registered_addons ), true ) ) {
 
-						// check if already in static $registered_addons
+						// check if already in static $registered_addons.
 						if ( ! in_array( $entry_addon_slug, array_keys( self::$form_registered_addons ), true ) ) {
 							$addon = forminator_get_addon( $entry_addon_slug );
 							if ( $addon instanceof Forminator_Addon_Abstract ) {
@@ -1252,7 +1301,7 @@ class Forminator_Export {
 
 		foreach ( $validated_opt as $key => $value ) {
 			if ( ! $value['form_id'] || ! $value['form_type'] ) {
-				// unschedule no form id exist
+				// unschedule no form id exist.
 				unset( $validated_opt[ $key ] );
 			}
 		}
@@ -1277,7 +1326,7 @@ class Forminator_Export {
 	 *
 	 * @since 1.5.4
 	 *
-	 * @param string $email
+	 * @param string                     $email
 	 * @param Forminator_Export_Result[] $export_results
 	 *
 	 * @return array
@@ -1296,8 +1345,8 @@ class Forminator_Export {
 		 * @since 1.5.4
 		 *
 		 * @param array $mail_headers
-		 * @param string $email email address which export mail will be sent
-		 * @param Forminator_Export_Result[] $export_results export results @see Forminator_Export_Result
+		 * @param string $email email address which export mail will be sent.
+		 * @param Forminator_Export_Result[] $export_results export results @see Forminator_Export_Result.
 		 */
 		$mail_headers = apply_filters( 'forminator_export_email_headers', $mail_headers, $email, $export_results );
 
@@ -1324,7 +1373,7 @@ class Forminator_Export {
 			}
 		}
 
-		$subject = sprintf( __( "Submissions data for %s", 'forminator' ), implode( ', ', $form_names ) );
+		$subject = sprintf( __( 'Submissions data for %s', 'forminator' ), implode( ', ', $form_names ) );
 
 		/**
 		 * Filter mail subject used for scheduled export email
@@ -1332,8 +1381,8 @@ class Forminator_Export {
 		 * @since 1.5.4
 		 *
 		 * @param string $subject
-		 * @param array $form_names form names
-		 * @param Forminator_Export_Result[] $export_results Export results @see Forminator_Export_Result
+		 * @param array $form_names form names.
+		 * @param Forminator_Export_Result[] $export_results Export results @see Forminator_Export_Result.
 		 *
 		 * @return string
 		 */
@@ -1387,41 +1436,39 @@ class Forminator_Export {
 		$total_entries     = array_sum( $entries_counts );
 		$total_new_entries = array_sum( $new_entries_counts );
 
-
 		$mail_content = '<p>' . sprintf( __( 'Hi %s,', 'forminator' ), $blog_name ) . '</p>' . PHP_EOL;
 
 		$mail_content .= '<p>' . sprintf(
-				__(
-					'Your scheduled exports have arrived! Forminator has captured %1$s new submission(s) and packaged %2$s total submissions from %3$s since the last scheduled export sent.',
-					'forminator'
-				),
-				'<strong>' . (int) $total_new_entries . '</strong>',
-				'<strong>' . (int) $total_entries . '</strong>',
-				implode( ', ', $form_names )
-			) . '</p>' . PHP_EOL;
+			__(
+				'Your scheduled exports have arrived! Forminator has captured %1$s new submission(s) and packaged %2$s total submissions from %3$s since the last scheduled export sent.',
+				'forminator'
+			),
+			'<strong>' . (int) $total_new_entries . '</strong>',
+			'<strong>' . (int) $total_entries . '</strong>',
+			implode( ', ', $form_names )
+		) . '</p>' . PHP_EOL;
 
 		$mail_content .= '<ul>' . PHP_EOL;
 		foreach ( $submission_links as $key => $submission_link ) {
 			$mail_content
 				.= sprintf(
-					   '<li><strong>%1$s</strong>:
+					'<li><strong>%1$s</strong>:
 						<ul>
 							<li>%2$s : %3$d</li>
 							<li>%4$s : %5$d</li>
 							<li><a href="%6$s">%7$s</a></li>
 						</ul>
 					</li>',
-					   $form_names[ $key ],
-					   __( 'New Submissions', 'forminator' ),
-					   (int) $new_entries_counts[ $key ],
-					   __( 'Total Submissions', 'forminator' ),
-					   (int) $entries_counts[ $key ],
-					   $submission_links[ $key ],
-					   __( 'View Submissions', 'forminator' )
-				   ) . PHP_EOL;
+					$form_names[ $key ],
+					__( 'New Submissions', 'forminator' ),
+					(int) $new_entries_counts[ $key ],
+					__( 'Total Submissions', 'forminator' ),
+					(int) $entries_counts[ $key ],
+					$submission_links[ $key ],
+					__( 'View Submissions', 'forminator' )
+				) . PHP_EOL;
 		}
 		$mail_content .= '</ul>' . PHP_EOL;
-
 
 		$mail_content .= '<p>' . __( 'Cheers,', 'forminator' ) . '</p>' . PHP_EOL;
 		$mail_content .= '<p>' . __( 'Forminator', 'forminator' ) . '</p>';
@@ -1431,9 +1478,9 @@ class Forminator_Export {
 		 *
 		 * @since 1.5.4
 		 *
-		 * @param string $mail_content html formatted mail content
-		 * @param array $form_names form names
-		 * @param Forminator_Export_Result[] $export_results Export results @see Forminator_Export_Result
+		 * @param string $mail_content html formatted mail content.
+		 * @param array $form_names form names.
+		 * @param Forminator_Export_Result[] $export_results Export results @see Forminator_Export_Result.
 		 *
 		 * @return string
 		 */
@@ -1523,14 +1570,14 @@ class Forminator_Export {
 
 			foreach ( $entries as $entry ) {
 
-				// find registered addon by slug pattern
+				// find registered addon by slug pattern.
 				$entry_addon_slugs = forminator_find_addon_slugs_from_entry_model( $entry );
 				foreach ( $entry_addon_slugs as $entry_addon_slug ) {
 
-					// check if this slug globally registered
+					// check if this slug globally registered.
 					if ( in_array( $entry_addon_slug, array_keys( $registered_addons ), true ) ) {
 
-						// check if already in static $registered_addons
+						// check if already in static $registered_addons.
 						if ( ! in_array( $entry_addon_slug, array_keys( self::$poll_registered_addons ), true ) ) {
 							$addon = forminator_get_addon( $entry_addon_slug );
 							if ( $addon instanceof Forminator_Addon_Abstract ) {
@@ -1566,7 +1613,7 @@ class Forminator_Export {
 	 */
 	private function attach_poll_addons_on_export_render_title_row( $poll_id, $entries = array() ) {
 		$additional_headers = array();
-		//find all registered addons, so history can be shown even for deactivated addons
+		// find all registered addons, so history can be shown even for deactivated addons.
 		$registered_addons = $this->get_poll_registered_addons( $poll_id, $entries );
 
 		foreach ( $registered_addons as $registered_addon ) {
@@ -1578,7 +1625,6 @@ class Forminator_Export {
 			} catch ( Exception $e ) {
 				forminator_addon_maybe_log( $registered_addon->get_slug(), 'failed to attach_poll_addons_on_export_render_title_row', $e->getMessage() );
 			}
-
 		}
 
 		return $additional_headers;
@@ -1597,7 +1643,7 @@ class Forminator_Export {
 	 */
 	private function attach_poll_addons_on_export_render_entry_row( $form_id, Forminator_Form_Entry_Model $entry_model ) {
 		$additional_data = array();
-		//find all registered addons, so history can be shown even for deactivated addons
+		// find all registered addons, so history can be shown even for deactivated addons.
 		$registered_addons = $this->get_poll_registered_addons( $form_id );
 
 		foreach ( $registered_addons as $registered_addon ) {
@@ -1610,7 +1656,6 @@ class Forminator_Export {
 			} catch ( Exception $e ) {
 				forminator_addon_maybe_log( $registered_addon->get_slug(), 'failed to attach_poll_addons_on_export_render_entry_row', $e->getMessage() );
 			}
-
 		}
 
 		return $additional_data;
@@ -1634,14 +1679,14 @@ class Forminator_Export {
 
 			foreach ( $entries as $entry ) {
 
-				// find registered addon by slug pattern
+				// find registered addon by slug pattern.
 				$entry_addon_slugs = forminator_find_addon_slugs_from_entry_model( $entry );
 				foreach ( $entry_addon_slugs as $entry_addon_slug ) {
 
-					// check if this slug globally registered
+					// check if this slug globally registered.
 					if ( in_array( $entry_addon_slug, array_keys( $registered_addons ), true ) ) {
 
-						// check if already in static $registered_addons
+						// check if already in static $registered_addons.
 						if ( ! in_array( $entry_addon_slug, array_keys( self::$quiz_registered_addons ), true ) ) {
 							$addon = forminator_get_addon( $entry_addon_slug );
 							if ( $addon instanceof Forminator_Addon_Abstract ) {
@@ -1677,7 +1722,7 @@ class Forminator_Export {
 	 */
 	private function attach_quiz_addons_on_export_render_title_row( $quiz_id, $entries = array() ) {
 		$additional_headers = array();
-		//find all registered addons, so history can be shown even for deactivated addons
+		// find all registered addons, so history can be shown even for deactivated addons.
 		$registered_addons = $this->get_quiz_registered_addons( $quiz_id, $entries );
 
 		foreach ( $registered_addons as $registered_addon ) {
@@ -1689,7 +1734,6 @@ class Forminator_Export {
 			} catch ( Exception $e ) {
 				forminator_addon_maybe_log( $registered_addon->get_slug(), 'failed to attach_quiz_addons_on_export_render_title_row', $e->getMessage() );
 			}
-
 		}
 
 		return $additional_headers;
@@ -1708,7 +1752,7 @@ class Forminator_Export {
 	 */
 	private function attach_quiz_addons_on_export_render_entry_row( $form_id, Forminator_Form_Entry_Model $entry_model ) {
 		$additional_data = array();
-		//find all registered addons, so history can be shown even for deactivated addons
+		// find all registered addons, so history can be shown even for deactivated addons.
 		$registered_addons = $this->get_quiz_registered_addons( $form_id );
 
 		foreach ( $registered_addons as $registered_addon ) {
@@ -1721,7 +1765,6 @@ class Forminator_Export {
 			} catch ( Exception $e ) {
 				forminator_addon_maybe_log( $registered_addon->get_slug(), 'failed to attach_quiz_addons_on_export_render_entry_row', $e->getMessage() );
 			}
-
 		}
 
 		return $additional_data;
@@ -1743,22 +1786,22 @@ class Forminator_Export {
 				if ( 'entry_time_created' === $mapper['type'] ) {
 					continue;
 				}
-				//its from model's property
+				// its from model's property.
 				if ( isset( $mapper['property'] ) ) {
 					if ( property_exists( $entry, $mapper['property'] ) ) {
 						$property = $mapper['property'];
-						// casting property to string
+						// casting property to string.
 						$data[] = (string) $entry->$property;
 					} else {
 						$data[] = '';
 					}
 				} else {
-					// meta_key based
+					// meta_key based.
 					$meta_value = $entry->get_meta( $mapper['meta_key'], '' );
 					if ( ! isset( $mapper['sub_metas'] ) ) {
 						$data[ $mapper['meta_key'] ] = Forminator_Form_Entry_Model::meta_value_to_string( $mapper['type'], $meta_value );
 					} else {
-						// sub_metas available
+						// sub_metas available.
 						foreach ( $mapper['sub_metas'] as $sub_meta ) {
 							$sub_key = $sub_meta['key'];
 							if ( isset( $meta_value[ $sub_key ] ) && ! empty( $meta_value[ $sub_key ] ) ) {
@@ -1771,7 +1814,6 @@ class Forminator_Export {
 						}
 					}
 				}
-
 			}
 		}
 

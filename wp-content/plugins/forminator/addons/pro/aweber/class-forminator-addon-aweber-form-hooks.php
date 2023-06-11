@@ -4,7 +4,6 @@
  * Class Forminator_Addon_Aweber_Form_Hooks
  *
  * @since 1.0 Aweber Addon
- *
  */
 class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstract {
 
@@ -63,8 +62,8 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 * @since 1.3
 		 *
 		 * @param array                                 $submitted_data
-		 * @param int                                   $form_id                current Form ID
-		 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance
+		 * @param int                                   $form_id                current Form ID.
+		 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance.
 		 */
 		$submitted_data = apply_filters(
 			'forminator_addon_aweber_form_submitted_data',
@@ -82,16 +81,16 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 *
 		 * @since 1.3
 		 *
-		 * @param int                                   $form_id                current Form ID
+		 * @param int                                   $form_id                current Form ID.
 		 * @param array                                 $submitted_data
-		 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance
+		 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance.
 		 */
 		do_action( 'forminator_addon_aweber_before_add_subscriber', $form_id, $submitted_data, $form_settings_instance );
 
 		foreach ( $addon_setting_values as $key => $addon_setting_value ) {
-			// save it on entry field, with name `status-$MULTI_ID`, and value is the return result on sending data to aweber
+			// save it on entry field, with name `status-$MULTI_ID`, and value is the return result on sending data to aweber.
 			if ( $form_settings_instance->is_multi_form_settings_complete( $key ) ) {
-				// exec only on completed connection
+				// exec only on completed connection.
 				$data[] = array(
 					'name'  => 'status-' . $key,
 					'value' => $this->get_status_on_add_subscriber( $key, $submitted_data, $addon_setting_value, $form_entry_fields ),
@@ -106,9 +105,9 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 * @since 1.3
 		 *
 		 * @param array                                 $entry_fields
-		 * @param int                                   $form_id                current Form ID
+		 * @param int                                   $form_id                current Form ID.
 		 * @param array                                 $submitted_data
-		 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance
+		 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance.
 		 */
 		$data = apply_filters(
 			'forminator_addon_aweber_entry_fields',
@@ -135,20 +134,20 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 	 * @return array `is_sent` true means its success send data to AWeber, false otherwise
 	 */
 	private function get_status_on_add_subscriber( $connection_id, $submitted_data, $connection_settings, $form_entry_fields ) {
-		// initialize as null
+		// initialize as null.
 		$api = null;
 
 		$form_id                = $this->form_id;
 		$form_settings_instance = $this->form_settings_instance;
 		$form_settings          = $this->form_settings_instance->get_form_settings();
 
-		//check required fields
+		// check required fields
 		try {
 			$api  = $this->addon->get_api();
 			$args = array();
 
 			if ( ! isset( $connection_settings['list_id'] ) ) {
-				throw new Forminator_Addon_Aweber_Exception( __( 'List ID not properly setup.', 'forminator' ) );
+				throw new Forminator_Addon_Aweber_Exception( __( 'List ID not properly set up.', 'forminator' ) );
 			}
 
 			$list_id = $connection_settings['list_id'];
@@ -166,20 +165,20 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 			$email         = strtolower( trim( $email ) );
 			$args['email'] = $email;
 
-			//find existing subscriber first
+			// find existing subscriber first
 			/**
 			 * Filter arguments to passed on to Find Subscriber AWeber API
 			 *
 			 * @since 1.3
 			 *
 			 * @param array                                 $args
-			 * @param int                                   $form_id                Current Form id
-			 * @param string                                $connection_id          ID of current connection
+			 * @param int                                   $form_id                Current Form id.
+			 * @param string                                $connection_id          ID of current connection.
 			 * @param array                                 $submitted_data
-			 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc
-			 * @param array                                 $form_entry_fields      default entry fields of form
-			 * @param array                                 $form_settings          Displayed Form settings
-			 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance
+			 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc.
+			 * @param array                                 $form_entry_fields      default entry fields of form.
+			 * @param array                                 $form_settings          Displayed Form settings.
+			 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance.
 			 */
 			$args = apply_filters(
 				'forminator_addon_aweber_find_subscriber_args',
@@ -195,8 +194,9 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 
 			$subscriber_is_exist = false;
 			$existing_subscriber = null;
+			$setting_values      = $this->addon->get_settings_values();
 
-			$existing_subscriber_request = $api->find_account_list_subscriber( $this->addon->get_account_id(), $list_id, $args );
+			$existing_subscriber_request = $api->find_account_list_subscriber( $setting_values['account_id'], $list_id, $args );
 
 			if ( isset( $existing_subscriber_request->entries ) && is_array( $existing_subscriber_request->entries ) ) {
 				$existing_subscriber_entries = $existing_subscriber_request->entries;
@@ -204,7 +204,7 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 					$existing_subscriber = $existing_subscriber_entries[0];
 					if ( isset( $existing_subscriber->id ) ) {
 						$subscriber_is_exist = true;
-						// https://labs.aweber.com/docs/reference/1.0#subscriber_entry
+						// https://labs.aweber.com/docs/reference/1.0#subscriber_entry.
 						// you can not modify or delete Subscribers with a status of 'unconfirmed'.
 						if ( isset( $existing_subscriber->status ) && 'unconfirmed' === $existing_subscriber->status ) {
 							throw new Forminator_Addon_Aweber_Exception( __( 'Unconfirmed subscriber can\'t be modified.', 'forminator' ) );
@@ -213,52 +213,26 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 				}
 			}
 
-			// processed
+			// processed.
 			unset( $fields_map['default_field_email'] );
 
 			$name_element_id = $connection_settings['fields_map']['default_field_name'];
 
-			if ( self::element_is_calculation( $name_element_id ) ) {
-				$meta_value = self::find_meta_value_from_entry_fields( $name_element_id, $form_entry_fields );
-				$name       = Forminator_Form_Entry_Model::meta_value_to_string( 'calculation', $meta_value );
-			} elseif ( self::element_is_stripe( $name_element_id ) ) {
-				$meta_value = self::find_meta_value_from_entry_fields( $name_element_id, $form_entry_fields );
-				$name       = Forminator_Form_Entry_Model::meta_value_to_string( 'stripe', $meta_value );
-			} elseif ( isset( $submitted_data[ $name_element_id ] ) && ! empty( $submitted_data[ $name_element_id ] ) ) {
-				$name = $submitted_data[ $name_element_id ];
-
+			if ( isset( $submitted_data[ $name_element_id ] ) ) {
+				$args['name'] = $submitted_data[ $name_element_id ];
 			}
 
-			if ( isset( $name ) ) {
-				$args['name'] = $name;
-			}
-
-			// processed
+			// processed.
 			unset( $fields_map['default_field_name'] );
 
 			$custom_fields = array();
-			// process rest extra fields if available
+			// process rest extra fields if available.
 			foreach ( $fields_map as $field_id => $element_id ) {
-				if ( ! empty( $element_id ) ) {
-
-					if ( self::element_is_calculation( $element_id ) ) {
-						$meta_value    = self::find_meta_value_from_entry_fields( $element_id, $form_entry_fields );
-						$element_value = Forminator_Form_Entry_Model::meta_value_to_string( 'calculation', $meta_value );
-					} elseif ( self::element_is_stripe( $element_id ) ) {
-						$meta_value    = self::find_meta_value_from_entry_fields( $element_id, $form_entry_fields );
-						$element_value = Forminator_Form_Entry_Model::meta_value_to_string( 'stripe', $meta_value );
-					} elseif ( isset( $submitted_data[ $element_id ] ) && ! empty( $submitted_data[ $element_id ] ) ) {
-						$element_value = $submitted_data[ $element_id ];
-						if ( is_array( $element_value ) ) {
-							$element_value = implode( ',', $element_value );
-						}
-					}
-
-					if ( isset( $fields_mapper[ $field_id ] ) && isset( $element_value ) ) {
-						$custom_fields[ $fields_mapper[ $field_id ] ] = (string) $element_value; // custom value must be string
-						unset( $element_value ); // unset for next loop
-					}
+				if ( empty( $element_id ) || ! isset( $fields_mapper[ $field_id ] ) || ! isset( $submitted_data[ $element_id ] ) ) {
+					continue;
 				}
+
+				$custom_fields[ $fields_mapper[ $field_id ] ] = (string) $submitted_data[ $element_id ]; // custom value must be string.
 			}
 			if ( ! empty( $custom_fields ) ) {
 				$args['custom_fields'] = $custom_fields;
@@ -267,7 +241,7 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 			if ( isset( $connection_settings['ad_tracking'] ) && ! empty( $connection_settings['ad_tracking'] ) ) {
 				$ad_tracking = $connection_settings['ad_tracking'];
 
-				// disable all_fields here
+				// disable all_fields here.
 				$ad_tracking = str_ireplace( '{all_fields}', '', $ad_tracking );
 				$ad_tracking = forminator_addon_replace_custom_vars( $ad_tracking, $submitted_data, $this->custom_form, $form_entry_fields, false );
 
@@ -277,13 +251,13 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 				 * @since 1.2
 				 *
 				 * @param string                                $card_name
-				 * @param int                                   $form_id                Current Form id
-				 * @param string                                $connection_id          ID of current connection
+				 * @param int                                   $form_id                Current Form id.
+				 * @param string                                $connection_id          ID of current connection.
 				 * @param array                                 $submitted_data
-				 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc
-				 * @param array                                 $form_entry_fields      default entry fields of form
-				 * @param array                                 $form_settings          Displayed Form settings
-				 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance
+				 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc.
+				 * @param array                                 $form_entry_fields      default entry fields of form.
+				 * @param array                                 $form_settings          Displayed Form settings.
+				 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance.
 				 */
 				$ad_tracking = apply_filters(
 					'forminator_addon_aweber_subscriber_ad_tracking',
@@ -299,7 +273,7 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 
 				if ( ! empty( $ad_tracking ) && is_string( $ad_tracking ) ) {
 					if ( strlen( $ad_tracking ) > 20 ) {
-						// 20 chars max
+						// 20 chars max.
 						$ad_tracking = substr( $ad_tracking, 0, 20 );
 					}
 					$args['ad_tracking'] = $ad_tracking;
@@ -312,28 +286,20 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 					if ( stripos( $tag, '{' ) === 0
 						&& stripos( $tag, '}' ) === ( strlen( $tag ) - 1 )
 					) {
-						// translate to value
+						// translate to value.
 						$element_id = str_ireplace( '{', '', $tag );
 						$element_id = str_ireplace( '}', '', $element_id );
-						if ( self::element_is_calculation( $element_id ) ) {
-							$meta_value    = self::find_meta_value_from_entry_fields( $element_id, $form_entry_fields );
-							$element_value = Forminator_Form_Entry_Model::meta_value_to_string( 'calculation', $meta_value );
-						} elseif ( self::element_is_stripe( $element_id ) ) {
-							$meta_value    = self::find_meta_value_from_entry_fields( $element_id, $form_entry_fields );
-							$element_value = Forminator_Form_Entry_Model::meta_value_to_string( 'stripe', $meta_value );
-						} elseif ( isset( $submitted_data[ $element_id ] ) && ! empty( $submitted_data[ $element_id ] ) ) {
-							$element_value = $submitted_data[ $element_id ];
-							if ( is_array( $element_value ) ) {
-								$element_value = implode( ',', $element_value );
+
+						if ( isset( $submitted_data[ $element_id ] ) ) {
+							$field_tags = $submitted_data[ $element_id ];
+							$field_tags = explode( ',', $field_tags );
+
+							foreach ( $field_tags as $tag ) {
+								$tags[] = sanitize_title( $tag );
 							}
 						}
-
-						if ( isset( $element_value ) ) {
-							$tags[] = strtolower( (string) $element_value ); // tag must be string
-							unset( $element_value ); // unset for next loop
-						}
 					} else {
-						$tags[] = strtolower( $tag );
+						$tags[] = sanitize_title( $tag );
 					}
 				}
 
@@ -343,13 +309,13 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 				 * @since 1.2
 				 *
 				 * @param string                                $card_name
-				 * @param int                                   $form_id                Current Form id
-				 * @param string                                $connection_id          ID of current connection
+				 * @param int                                   $form_id                Current Form id.
+				 * @param string                                $connection_id          ID of current connection.
 				 * @param array                                 $submitted_data
-				 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc
-				 * @param array                                 $form_entry_fields      default entry fields of form
-				 * @param array                                 $form_settings          Displayed Form settings
-				 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance
+				 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc.
+				 * @param array                                 $form_entry_fields      default entry fields of form.
+				 * @param array                                 $form_settings          Displayed Form settings.
+				 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance.
 				 */
 				$tags = apply_filters(
 					'forminator_addon_aweber_subscriber_tags',
@@ -377,13 +343,13 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 			 * @since 1.2
 			 *
 			 * @param string                                $card_name
-			 * @param int                                   $form_id                Current Form id
-			 * @param string                                $connection_id          ID of current connection
+			 * @param int                                   $form_id                Current Form id.
+			 * @param string                                $connection_id          ID of current connection.
 			 * @param array                                 $submitted_data
-			 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc
-			 * @param array                                 $form_entry_fields      default entry fields of form
-			 * @param array                                 $form_settings          Displayed Form settings
-			 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance
+			 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc.
+			 * @param array                                 $form_entry_fields      default entry fields of form.
+			 * @param array                                 $form_settings          Displayed Form settings.
+			 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance.
 			 */
 			$ip_address = apply_filters(
 				'forminator_addon_aweber_subscriber_ip_address',
@@ -406,13 +372,13 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 				 * @since 1.3
 				 *
 				 * @param array                                 $args
-				 * @param int                                   $form_id                Current Form id
-				 * @param string                                $connection_id          ID of current connection
+				 * @param int                                   $form_id                Current Form id.
+				 * @param string                                $connection_id          ID of current connection.
 				 * @param array                                 $submitted_data
-				 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc
-				 * @param array                                 $form_entry_fields      default entry fields of form
-				 * @param array                                 $form_settings          Displayed Form settings
-				 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance
+				 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc.
+				 * @param array                                 $form_entry_fields      default entry fields of form.
+				 * @param array                                 $form_settings          Displayed Form settings.
+				 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance.
 				 */
 				$args = apply_filters(
 					'forminator_addon_aweber_add_subscriber_args',
@@ -425,14 +391,14 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 					$form_settings,
 					$form_settings_instance
 				);
-				$api->add_account_list_subscriber( $this->addon->get_account_id(), $list_id, $args );
+				$api->add_account_list_subscriber( $setting_values['account_id'], $list_id, $args );
 			} else {
 				/**
 				 * This will only update information
 				 * subscribed, unconfirmed, unsubscribed status wont be updated
 				 * use hooks @see forminator_addon_aweber_update_subscriber_args, if needed
 				 */
-				// update if exist
+				// update if exist.
 				$current_tags = array();
 				if ( isset( $existing_subscriber->tags ) && is_array( $existing_subscriber->tags ) ) {
 					$current_tags = $existing_subscriber->tags;
@@ -461,13 +427,13 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 				 * @since 1.3
 				 *
 				 * @param array                                 $args
-				 * @param int                                   $form_id                Current Form id
-				 * @param string                                $connection_id          ID of current connection
+				 * @param int                                   $form_id                Current Form id.
+				 * @param string                                $connection_id          ID of current connection.
 				 * @param array                                 $submitted_data
-				 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc
-				 * @param array                                 $form_entry_fields      default entry fields of form
-				 * @param array                                 $form_settings          Displayed Form settings
-				 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance
+				 * @param array                                 $connection_settings    current connection setting, contains options of like `name`, `list_id` etc.
+				 * @param array                                 $form_entry_fields      default entry fields of form.
+				 * @param array                                 $form_settings          Displayed Form settings.
+				 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance.
 				 */
 				$args = apply_filters(
 					'forminator_addon_aweber_update_subscriber_args',
@@ -480,7 +446,7 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 					$form_settings,
 					$form_settings_instance
 				);
-				$api->update_account_list_subscriber( $this->addon->get_account_id(), $list_id, $existing_subscriber->id, $args );
+				$api->update_account_list_subscriber( $setting_values['account_id'], $list_id, $existing_subscriber->id, $args );
 			}
 
 			return array(
@@ -490,7 +456,7 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 				'data_sent'       => $api->get_last_data_sent(),
 				'data_received'   => $api->get_last_data_received(),
 				'url_request'     => $api->get_last_url_request(),
-				'list_id'         => $list_id, // for delete reference
+				'list_id'         => $list_id, // for delete reference.
 			);
 
 		} catch ( Forminator_Addon_Aweber_Exception $e ) {
@@ -530,8 +496,8 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 * @since 1.3
 		 *
 		 * @param array                                 $addon_meta_data
-		 * @param int                                   $form_id                current Form ID
-		 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance
+		 * @param int                                   $form_id                current Form ID.
+		 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_aweber_metadata',
@@ -619,7 +585,7 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		}
 
 		if ( Forminator_Addon_Aweber::is_show_full_log() ) {
-			// too long to be added on entry data enable this with `define('FORMINATOR_ADDON_AWEBER_SHOW_FULL_LOG', true)`
+			// too long to be added on entry data enable this with `define('FORMINATOR_ADDON_AWEBER_SHOW_FULL_LOG', true)`.
 			if ( isset( $status['url_request'] ) ) {
 				$sub_entries[] = array(
 					'label' => __( 'API URL', 'forminator' ),
@@ -644,7 +610,7 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 
 		$additional_entry_item['sub_entries'] = $sub_entries;
 
-		// return single array
+		// return single array.
 		return $additional_entry_item;
 	}
 
@@ -669,9 +635,9 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 *
 		 * @since 1.3
 		 *
-		 * @param array                                 $export_headers         headers to be displayed on export file
-		 * @param int                                   $form_id                current Form ID
-		 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance
+		 * @param array                                 $export_headers         headers to be displayed on export file.
+		 * @param int                                   $form_id                current Form ID.
+		 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance.
 		 */
 		$export_headers = apply_filters(
 			'forminator_addon_aweber_export_headers',
@@ -706,8 +672,8 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 * @since 1.3
 		 *
 		 * @param array                                 $addon_meta_data
-		 * @param int                                   $form_id                current Form ID
-		 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Form Settings instance
+		 * @param int                                   $form_id                current Form ID.
+		 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Form Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_aweber_metadata',
@@ -725,11 +691,11 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 *
 		 * @since 1.3
 		 *
-		 * @param array                                 $export_columns         column to be exported
-		 * @param int                                   $form_id                current Form ID
-		 * @param Forminator_Form_Entry_Model           $entry_model            Form Entry Model
-		 * @param array                                 $addon_meta_data        meta data saved by addon on entry fields
-		 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance
+		 * @param array                                 $export_columns         column to be exported.
+		 * @param int                                   $form_id                current Form ID.
+		 * @param Forminator_Form_Entry_Model           $entry_model            Form Entry Model.
+		 * @param array                                 $addon_meta_data        meta data saved by addon on entry fields.
+		 * @param Forminator_Addon_Aweber_Form_Settings $form_settings_instance AWeber Addon Form Settings instance.
 		 */
 		$export_columns = apply_filters(
 			'forminator_addon_aweber_export_columns',
@@ -750,7 +716,7 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 	 *
 	 * @param        $addon_meta_data
 	 * @param        $key
-	 * @param string $default
+	 * @param string          $default
 	 *
 	 * @return string
 	 */
@@ -762,15 +728,15 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 
 		$addon_meta_data = $addon_meta_data[0];
 
-		// make sure its `status`, because we only add this
+		// make sure its `status`, because we only add this.
 		if ( 'status' !== $addon_meta_data['name'] ) {
 			if ( stripos( $addon_meta_data['name'], 'status-' ) === 0 ) {
 				$meta_data = array();
 				foreach ( $addon_meta_datas as $addon_meta_data ) {
-					// make it like single value so it will be processed like single meta data
+					// make it like single value so it will be processed like single meta data.
 					$addon_meta_data['name'] = 'status';
 
-					// add it on an array for next recursive process
+					// add it on an array for next recursive process.
 					$meta_data[] = $this->get_from_addon_meta_data( array( $addon_meta_data ), $key, $default );
 				}
 
@@ -799,13 +765,13 @@ class Forminator_Addon_Aweber_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		return $default;
 	}
 
-	//  /**
-	//   * DELETE NOT SUPPORTED HERE, BECAUSE AWEBER API NOT RETURNING SUBSCRIBER ID ON CREATE SUBSCRIBER
-	//   *
-	//   * @param Forminator_Form_Entry_Model $entry_model
-	//   * @param                             $addon_meta_data
-	//   */
-	//  public function on_before_delete_entry( Forminator_Form_Entry_Model $entry_model, $addon_meta_data ) {
-	//      parent::on_before_delete_entry( $entry_model, $addon_meta_data );
-	//  }
+	// /**
+	// * DELETE NOT SUPPORTED HERE, BECAUSE AWEBER API NOT RETURNING SUBSCRIBER ID ON CREATE SUBSCRIBER.
+	// *.
+	// * @param Forminator_Form_Entry_Model $entry_model.
+	// * @param                             $addon_meta_data.
+	// */.
+	// public function on_before_delete_entry( Forminator_Form_Entry_Model $entry_model, $addon_meta_data ) {.
+	// parent::on_before_delete_entry( $entry_model, $addon_meta_data );.
+	// }.
 }

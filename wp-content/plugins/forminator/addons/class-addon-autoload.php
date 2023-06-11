@@ -46,26 +46,26 @@ class Forminator_Addon_Autoload {
 		 *
 		 * @since 1.1
 		 *
-		 * @param string $pro_addons_dir current dir path of pro addons
+		 * @param string $pro_addons_dir current dir path of pro addons.
 		 */
 		$pro_addons_dir = apply_filters( 'forminator_addon_pro_addons_dir', $pro_addons_dir );
 
-		// All of Forminator Official Addons must be registered here with fallback array
-		// fallback array will be used to display pro addons on the list of addons, without files on `/pro` being available
+		// All of Forminator Official Addons must be registered here with fallback array.
+		// fallback array will be used to display pro addons on the list of addons, without files on `/pro` being available.
 		if ( empty( $pro_addons ) ) {
 			$pro_addons = forminator_get_pro_addon_list();
 		}
-		// Load Available Pro Addon
+		// Load Available Pro Addon.
 		$directory = new DirectoryIterator( $pro_addons_dir );
 		foreach ( $directory as $d ) {
 			if ( $d->isDot() || $d->isFile() ) {
 				continue;
 			}
-			// take directory name as addon name
+			// take directory name as addon name.
 			$addon_name = $d->getBasename();
 
 			// new Addon !
-			// valid addon is when addon have `addon_name.php` inside its addon directory
+			// valid addon is when addon have `addon_name.php` inside its addon directory.
 			$addon_initiator = $d->getPathname() . DIRECTORY_SEPARATOR . $addon_name . '.php';
 			if ( ! file_exists( $addon_initiator ) ) {
 				continue;
@@ -74,7 +74,7 @@ class Forminator_Addon_Autoload {
 			include_once $addon_initiator;
 		}
 
-		// Load unavailable Pro Addons
+		// Load unavailable Pro Addons.
 		$pro_slugs        = Forminator_Addon_Loader::get_instance()->get_addons()->get_slugs();
 		$unavailable_pros = array_diff( array_keys( $pro_addons ), $pro_slugs );
 

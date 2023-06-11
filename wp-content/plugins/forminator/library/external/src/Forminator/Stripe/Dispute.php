@@ -1,6 +1,6 @@
 <?php
 
-// File generated from our OpenAPI spec
+// File generated from our OpenAPI spec.
 
 namespace Forminator\Stripe;
 
@@ -70,7 +70,7 @@ class Dispute extends ApiResource
      *
      * @return \Forminator\Stripe\Dispute the closed dispute
      */
-    // TODO: add $params to standardize signature
+    // TODO: add $params to standardize signature.
     public function close($opts = null)
     {
         $url = $this->instanceUrl() . '/close';

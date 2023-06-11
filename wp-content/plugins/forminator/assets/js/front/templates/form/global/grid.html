@@ -45,6 +45,38 @@
 			#forminator-module-<?php echo $properties['form_id'] ?>[data-grid="custom"] .forminator-col-4 .forminator-row[data-multiple="true"] .forminator-col:not(:last-child) {
 				margin-bottom: <?php echo $properties['spacing'] ?>px;
 			}
+
+			#forminator-module-<?php echo $properties['form_id'] ?>[data-grid="custom"] .forminator-col-md-3 {
+				width: 25%;
+				max-width: 25%;
+				flex-basis: 25%;
+			}
+
+			#forminator-module-<?php echo $properties['form_id'] ?>[data-grid="custom"] .forminator-col-md-4 {
+				width: 33.3333333333%;
+				max-width: 33.3333333333%;
+				flex-basis: 33.3333333333%;
+			}
+
+			#forminator-module-<?php echo $properties['form_id'] ?>[data-grid="custom"] .forminator-col-md-6 {
+				width: 50%;
+				max-width: 50%;
+				flex-basis: 50%;
+			}
+
+			#forminator-module-<?php echo $properties['form_id'] ?>[data-grid="custom"] .forminator-col-md-12 {
+				width: 100%;
+				max-width: 100%;
+				flex-basis: 100%;
+			}
+
+			#forminator-module-<?php echo $properties['form_id'] ?>[data-grid="custom"] .forminator-no-margin .forminator-col {
+				margin-bottom: <?php echo $properties['spacing'] ?>px;
+			}
+
+			#forminator-module-<?php echo $properties['form_id'] ?>[data-grid="custom"] .forminator-no-margin {
+				margin-bottom: -<?php echo $properties['spacing'] ?>px;
+			}
 		}
 
 	<?php } ?>

@@ -44,7 +44,6 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 	 *
 	 * @since 1.6.1
 	 * @var Forminator_Addon_Poll_Settings_Abstract|null
-	 *
 	 */
 	protected $poll_settings_instance;
 
@@ -68,7 +67,7 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 	public function __construct( Forminator_Addon_Abstract $addon, $poll_id ) {
 		$this->addon   = $addon;
 		$this->poll_id = $poll_id;
-		$this->poll    = Forminator_Poll_Model::model()->load( $this->poll_id );
+		$this->poll    = Forminator_Base_Form_Model::get_model( $this->poll_id );
 		if ( ! $this->poll ) {
 			/* translators: ... */
 			throw new Forminator_Addon_Exception( sprintf( __( 'Poll with id %d could not be found', 'forminator' ), $this->poll_id ) );
@@ -76,8 +75,8 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 
 		$this->_submit_poll_error_message = __( 'Failed to submit poll because of an addon, please check your poll and try again' );
 
-		// get poll settings instance to be available throughout cycle
-		$this->poll_settings_instance = $this->addon->get_addon_poll_settings( $this->poll_id );
+		// get poll settings instance to be available throughout cycle.
+		$this->poll_settings_instance = $this->addon->get_addon_settings( $this->poll_id, 'poll' );
 	}
 
 	/**
@@ -106,8 +105,8 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.1
 		 *
-		 * @param int                                          $poll_id                current Poll ID
-		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings
+		 * @param int                                          $poll_id                current Poll ID.
+		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings.
 		 */
 		do_action(
 			'forminator_addon_' . $addon_slug . '_on_before_render_poll_fields',
@@ -141,8 +140,8 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.1
 		 *
-		 * @param int                                          $poll_id                current Form ID
-		 * @param Forminator_Addon_Form_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings
+		 * @param int                                          $poll_id                current Form ID.
+		 * @param Forminator_Addon_Form_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings.
 		 */
 		do_action(
 			'forminator_addon_' . $addon_slug . '_on_after_render_poll_fields',
@@ -176,8 +175,8 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.1
 		 *
-		 * @param int                                          $poll_id                current Poll ID
-		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings
+		 * @param int                                          $poll_id                current Poll ID.
+		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings.
 		 */
 		do_action(
 			'forminator_addon_' . $addon_slug . '_on_after_render_poll',
@@ -215,8 +214,8 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.6.1
 		 *
 		 * @param array                                        $submitted_data
-		 * @param int                                          $poll_id                current Poll ID
-		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance Addon Poll Settings instance
+		 * @param int                                          $poll_id                current Poll ID.
+		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance Addon Poll Settings instance.
 		 */
 		$submitted_data = apply_filters(
 			'forminator_addon_' . $addon_slug . '_poll_submitted_data',
@@ -238,9 +237,9 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.6.1
 		 *
 		 * @param bool                                         $is_success
-		 * @param int                                          $poll_id                current Poll ID
+		 * @param int                                          $poll_id                current Poll ID.
 		 * @param array                                        $submitted_data
-		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance Addon Poll Settings instance
+		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance Addon Poll Settings instance.
 		 */
 		$is_success = apply_filters(
 			'forminator_addon_' . $addon_slug . '_on_poll_submit_result',
@@ -250,9 +249,9 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 			$poll_settings_instance
 		);
 
-		// process filter
+		// process filter.
 		if ( true !== $is_success ) {
-			// only update `_submit_poll_error_message` when not empty
+			// only update `_submit_poll_error_message` when not empty.
 			if ( ! empty( $is_success ) ) {
 				$this->_submit_poll_error_message = (string) $is_success;
 			}
@@ -282,7 +281,6 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 	 * @param array $current_entry_fields
 	 *
 	 * @return array
-	 *
 	 */
 	public function add_entry_fields( $submitted_data, $current_entry_fields = array() ) {
 		$addon_slug             = $this->addon->get_slug();
@@ -300,8 +298,8 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.6.1
 		 *
 		 * @param array                                        $submitted_data
-		 * @param int                                          $poll_id                current Poll ID
-		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance Addon Poll Settings instance
+		 * @param int                                          $poll_id                current Poll ID.
+		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance Addon Poll Settings instance.
 		 */
 		$submitted_data = apply_filters(
 			'forminator_addon_' . $addon_slug . '_poll_submitted_data',
@@ -324,8 +322,8 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @param array                                        $poll_entry_fields
 		 * @param array                                        $submitted_data
-		 * @param int                                          $poll_id                current Poll ID
-		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance Addon Form Settings instance
+		 * @param int                                          $poll_id                current Poll ID.
+		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance Addon Form Settings instance.
 		 */
 		$poll_entry_fields = apply_filters(
 			'forminator_addon_' . $addon_slug . '_poll_entry_fields',
@@ -342,10 +340,10 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.6.1
 		 *
 		 * @param array                                        $entry_fields
-		 * @param int                                          $poll_id                current Poll ID
+		 * @param int                                          $poll_id                current Poll ID.
 		 * @param array                                        $submitted_data
-		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance Addon Poll Settings instance
-		 * @param array                                        $poll_entry_fields      Current entry fields of the poll
+		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance Addon Poll Settings instance.
+		 * @param array                                        $poll_entry_fields      Current entry fields of the poll.
 		 */
 		$entry_fields = apply_filters(
 			'forminator_addon_poll_' . $addon_slug . '_entry_fields',
@@ -384,9 +382,9 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.1
 		 *
-		 * @param int                                          $poll_id                current Poll ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model
-		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings
+		 * @param int                                          $poll_id                current Poll ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model.
+		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings.
 		 */
 		do_action(
 			'forminator_addon_poll_' . $addon_slug . '_after_entry_saved',
@@ -396,85 +394,85 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 		);
 	}
 
-	//  /**
-	//   * Override this function to display another sub-row on entry detail
-	//   *
-	//   * Return a multi array with this format (at least, or it will skipped)
-	//   * [
-	//   *  'label' => LABEL,
-	//   *  'value' => VALUE (string) => its output is on html mode, so you can do styling, but please don't forgot to escape its html when needed
-	//   * ],
-	//   * [
-	//   *  'label' => LABEL,
-	//   *  'value' => VALUE
-	//   * ]
-	//   *
-	//   * @since 1.1
-	//   *
-	//   * @param Forminator_Form_Entry_Model $entry_model
-	//   * @param     array                   $addon_meta_data specific meta_data that added by current addon from @see: add_entry_fields()
-	//   *
-	//   * @return array
-	//   */
-	//  public function on_render_entry( Forminator_Form_Entry_Model $entry_model, $addon_meta_data ) {
-	//      $addon_slug             = $this->addon->get_slug();
-	//      $form_id                = $this->poll_id;
-	//      $form_settings_instance = $this->poll_settings_instance;
+	// **.
+	// * Override this function to display another sub-row on entry detail.
+	// *
+	// * Return a multi array with this format (at least, or it will skipped).
+	// * [.
+	// *  'label' => LABEL,.
+	// *  'value' => VALUE (string) => its output is on html mode, so you can do styling, but please don't forgot to escape its html when needed.
+	// * ],.
+	// * [.
+	// *  'label' => LABEL,.
+	// *  'value' => VALUE.
+	// * ].
+	// *
+	// * @since 1.1.
+	// *
+	// * @param Forminator_Form_Entry_Model $entry_model.
+	// * @param     array                   $addon_meta_data specific meta_data that added by current addon from @see: add_entry_fields().
+	// *
+	// * @return array.
+	// */.
+	// public function on_render_entry( Forminator_Form_Entry_Model $entry_model, $addon_meta_data ) {.
+	// $addon_slug             = $this->addon->get_slug();.
+	// $form_id                = $this->poll_id;.
+	// $form_settings_instance = $this->poll_settings_instance;.
 	//
-	//      /**
-	//       *
-	//       * Filter addon metadata that previously saved on db to be processed
-	//       *
-	//       * Although it can be used for all addon.
-	//       * Please keep in mind that if the addon override this method,
-	//       * then this filter probably won't be applied.
-	//       * To be sure please check individual addon documentations.
-	//       *
-	//       * @since 1.1
-	//       *
-	//       * @param array                                        $addon_meta_data
-	//       * @param int                                          $form_id                current Form ID
-	//       * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model
-	//       * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings
-	//       */
-	//      $addon_meta_data = apply_filters(
-	//          'forminator_addon_' . $addon_slug . '_metadata',
-	//          $addon_meta_data,
-	//          $form_id,
-	//          $entry_model,
-	//          $form_settings_instance
-	//      );
-	//
-	//
-	//      $entry_items = array();
-	//      /**
-	//       * Filter mailchimp row(s) to be displayed on entries page
-	//       *
-	//       * Although it can be used for all addon.
-	//       * Please keep in mind that if the addon override this method,
-	//       * then this filter probably won't be applied.
-	//       * To be sure please check individual addon documentations.
-	//       *
-	//       * @since 1.1
-	//       *
-	//       * @param array                                        $entry_items            row(s) to be displayed on entries page
-	//       * @param int                                          $form_id                current Form ID
-	//       * @param Forminator_Form_Entry_Model                  $entry_model            Form Entry Model
-	//       * @param array                                        $addon_meta_data        meta data saved by addon on entry fields
-	//       * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings
-	//       */
-	//      $entry_items = apply_filters(
-	//          'forminator_addon_' . $addon_slug . '_entry_items',
-	//          $entry_items,
-	//          $form_id,
-	//          $entry_model,
-	//          $addon_meta_data,
-	//          $form_settings_instance
-	//      );
+	// **.
+	// *
+	// * Filter addon metadata that previously saved on db to be processed.
+	// *
+	// * Although it can be used for all addon.
+	// * Please keep in mind that if the addon override this method,.
+	// * then this filter probably won't be applied.
+	// * To be sure please check individual addon documentations.
+	// *
+	// * @since 1.1.
+	// *
+	// * @param array                                        $addon_meta_data.
+	// * @param int                                          $form_id                current Form ID.
+	// * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model.
+	// * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings.
+	// */.
+	// $addon_meta_data = apply_filters(.
+	// 'forminator_addon_' . $addon_slug . '_metadata',.
+	// $addon_meta_data,.
+	// $form_id,.
+	// $entry_model,.
+	// $form_settings_instance.
+	// );.
 	//
 	//
-	//      return $entry_items;
-	//  }
+	// $entry_items = array();.
+	// **.
+	// * Filter mailchimp row(s) to be displayed on entries page.
+	// *
+	// * Although it can be used for all addon.
+	// * Please keep in mind that if the addon override this method,.
+	// * then this filter probably won't be applied.
+	// * To be sure please check individual addon documentations.
+	// *
+	// * @since 1.1.
+	// *
+	// * @param array                                        $entry_items            row(s) to be displayed on entries page.
+	// * @param int                                          $form_id                current Form ID.
+	// * @param Forminator_Form_Entry_Model                  $entry_model            Form Entry Model.
+	// * @param array                                        $addon_meta_data        meta data saved by addon on entry fields.
+	// * @param Forminator_Addon_Form_Settings_Abstract|null $form_settings_instance of Addon Form Settings.
+	// */.
+	// $entry_items = apply_filters(.
+	// 'forminator_addon_' . $addon_slug . '_entry_items',.
+	// $entry_items,.
+	// $form_id,.
+	// $entry_model,.
+	// $addon_meta_data,.
+	// $form_settings_instance.
+	// );.
+	//
+	//
+	// return $entry_items;.
+	// }
 
 	/**
 	 * Override this function to Add another Column on title Row
@@ -507,9 +505,9 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.1
 		 *
-		 * @param array                                        $export_headers         headers to be displayed on export file
-		 * @param int                                          $poll_id                current poll ID
-		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings
+		 * @param array                                        $export_headers         headers to be displayed on export file.
+		 * @param int                                          $poll_id                current poll ID.
+		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings.
 		 */
 		$export_headers = apply_filters(
 			'forminator_addon_poll_' . $addon_slug . '_export_headers',
@@ -557,9 +555,9 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.6.1
 		 *
 		 * @param array                                        $addon_meta_data
-		 * @param int                                          $poll_id                current poll ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model
-		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings
+		 * @param int                                          $poll_id                current poll ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model.
+		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_poll_' . $addon_slug . '_metadata',
@@ -581,11 +579,11 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.1
 		 *
-		 * @param array                                        $export_columns         column to be exported
-		 * @param int                                          $poll_id                current Poll ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Form Entry Model
-		 * @param array                                        $addon_meta_data        meta data saved by addon on entry fields
-		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings
+		 * @param array                                        $export_columns         column to be exported.
+		 * @param int                                          $poll_id                current Poll ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Form Entry Model.
+		 * @param array                                        $addon_meta_data        meta data saved by addon on entry fields.
+		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings.
 		 */
 		$export_columns = apply_filters(
 			'forminator_addon_poll_' . $addon_slug . '_export_columns',
@@ -621,9 +619,9 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.1
 		 *
-		 * @param array                                        $export_columns         column to be exported
-		 * @param int                                          $poll_id                current poll ID
-		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings
+		 * @param array                                        $export_columns         column to be exported.
+		 * @param int                                          $poll_id                current poll ID.
+		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings.
 		 */
 		$error_message = apply_filters(
 			'forminator_addon_' . $addon_slug . '_submit_poll_error_message',
@@ -665,9 +663,9 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 		 * @since 1.6.1
 		 *
 		 * @param array                                        $addon_meta_data
-		 * @param int                                          $poll_id                current Poll ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model
-		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings
+		 * @param int                                          $poll_id                current Poll ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model.
+		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_poll_' . $addon_slug . '_metadata',
@@ -687,10 +685,10 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 		 *
 		 * @since 1.6.1
 		 *
-		 * @param int                                          $poll_id                current Poll ID
-		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model
-		 * @param array                                        $addon_meta_data        addon meta data
-		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings
+		 * @param int                                          $poll_id                current Poll ID.
+		 * @param Forminator_Form_Entry_Model                  $entry_model            Forminator Entry Model.
+		 * @param array                                        $addon_meta_data        addon meta data.
+		 * @param Forminator_Addon_Poll_Settings_Abstract|null $poll_settings_instance of Addon Poll Settings.
 		 */
 		do_action(
 			'forminator_addon_poll_' . $addon_slug . '_on_before_delete_submission',
@@ -708,7 +706,7 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 	 *
 	 * @param        $addon_meta_data
 	 * @param        $key
-	 * @param string $default
+	 * @param string          $default
 	 *
 	 * @return string
 	 */
@@ -720,15 +718,15 @@ abstract class Forminator_Addon_Poll_Hooks_Abstract extends Forminator_Addon_Hoo
 
 		$addon_meta_data = $addon_meta_data[0];
 
-		// make sure its `status`, because we only add this
+		// make sure its `status`, because we only add this.
 		if ( 'status' !== $addon_meta_data['name'] ) {
 			if ( stripos( $addon_meta_data['name'], 'status-' ) === 0 ) {
 				$meta_data = array();
 				foreach ( $addon_meta_datas as $addon_meta_data ) {
-					// make it like single value so it will be processed like single meta data
+					// make it like single value so it will be processed like single meta data.
 					$addon_meta_data['name'] = 'status';
 
-					// add it on an array for next recursive process
+					// add it on an array for next recursive process.
 					$meta_data[] = $this->get_from_addon_meta_data( array( $addon_meta_data ), $key, $default );
 				}
 

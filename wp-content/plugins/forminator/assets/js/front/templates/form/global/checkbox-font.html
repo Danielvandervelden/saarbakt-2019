@@ -1,6 +1,8 @@
 <?php if ( forminator_array_value_exists( $properties, 'form-font-family' ) ) { ?>
 
-	.forminator-ui#forminator-module-<?php echo $properties['form_id'] ?>.forminator-design--<?php echo $theme; ?> .forminator-checkbox {
+	.forminator-ui#forminator-module-<?php echo $properties['form_id'] ?>.forminator-design--<?php echo $theme; ?> .forminator-checkbox,
+	.forminator-ui#forminator-module-<?php echo $properties['form_id'] ?>.forminator-design--<?php echo $theme; ?> .forminator-checkbox__label,
+	.forminator-ui#forminator-module-<?php echo $properties['form_id'] ?>.forminator-design--<?php echo $theme; ?> .forminator-checkbox__label p {
 		<?php if ( forminator_array_value_exists( $properties, 'cform-radio-font-size' ) ) { ?>
 			font-size: <?php echo $properties['cform-radio-font-size'] ?>px;
 		<?php } else { ?>
@@ -26,7 +28,9 @@
 
 <?php } else { ?>
 
-	.forminator-ui#forminator-module-<?php echo $properties['form_id'] ?>.forminator-design--<?php echo $theme; ?> .forminator-checkbox {
+	.forminator-ui#forminator-module-<?php echo $properties['form_id'] ?>.forminator-design--<?php echo $theme; ?> .forminator-checkbox,
+	.forminator-ui#forminator-module-<?php echo $properties['form_id'] ?>.forminator-design--<?php echo $theme; ?> .forminator-checkbox__label,
+	.forminator-ui#forminator-module-<?php echo $properties['form_id'] ?>.forminator-design--<?php echo $theme; ?> .forminator-checkbox__label p {
 		font-size: 14px;
 		font-family: inherit;
 		font-weight: 400;

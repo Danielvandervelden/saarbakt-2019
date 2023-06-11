@@ -1,5 +1,5 @@
 <?php
-// defaults
+// defaults.
 $vars = array(
 	'error_message'            => '',
 	'multi_id'                 => '',
@@ -19,14 +19,34 @@ foreach ( $template_vars as $key => $val ) {
 	$vars[ $key ] = $val;
 }
 ?>
-<div class="integration-header">
 
-	<h3 class="sui-box-title" id="dialogTitle2"><?php echo esc_html( __( 'Additional Options', 'forminator' ) ); ?></h3>
+<div class="forminator-integration-popup__header">
 
-	<span class="sui-description" style="margin-top: 20px;"><?php esc_html_e( 'Configure additional options for ActiveCampaign integration.', 'forminator' ); ?></span>
+	<h3 id="forminator-integration-popup__title" class="sui-box-title sui-lg" style="overflow: initial; white-space: normal; text-overflow: initial;"><?php echo esc_html( __( 'Additional Options', 'forminator' ) ); ?></h3>
+
+	<p id="forminator-integration-popup__description" class="sui-description"><?php esc_html_e( 'Configure additional options for ActiveCampaign integration.', 'forminator' ); ?></p>
 
 	<?php if ( ! empty( $vars['error_message'] ) ) : ?>
-		<span class="sui-notice sui-notice-error"><p><?php echo esc_html( $vars['error_message'] ); ?></p></span>
+		<div
+			role="alert"
+			class="sui-notice sui-notice-red sui-active"
+			style="display: block; text-align: left;"
+			aria-live="assertive"
+		>
+
+			<div class="sui-notice-content">
+
+				<div class="sui-notice-message">
+
+					<span class="sui-notice-icon sui-icon-info" aria-hidden="true"></span>
+
+					<p><?php echo esc_html( $vars['error_message'] ); ?></p>
+
+				</div>
+
+			</div>
+
+		</div>
 	<?php endif; ?>
 
 </div>
@@ -45,13 +65,14 @@ foreach ( $template_vars as $key => $val ) {
 			data-placeholder=""
 			data-allow-clear="false"
 			id="tags"
-			class="sui-select fui-multi-select" >
+			class="sui-select"
+		>
 
 			<?php foreach ( $vars['tags_selected_fields'] as $forminator_field ) : ?>
 
 				<option value="<?php echo esc_attr( $forminator_field['element_id'] ); ?>"
 					selected="selected">
-					<?php echo esc_html( $forminator_field['field_label'] ); ?>
+					<?php echo esc_html( strip_tags( $forminator_field['field_label'] ) ); ?>
 				</option>
 
 			<?php endforeach; ?>
@@ -59,7 +80,7 @@ foreach ( $template_vars as $key => $val ) {
 			<?php foreach ( $vars['tags_fields'] as $forminator_field ) : ?>
 
 				<option value="{<?php echo esc_attr( $forminator_field['element_id'] ); ?>}">
-					<?php echo esc_html( $forminator_field['field_label'] . ' | ' . $forminator_field['element_id'] ); ?>
+					<?php echo esc_html( strip_tags( $forminator_field['field_label'] ) . ' | ' . $forminator_field['element_id'] ); ?>
 				</option>
 
 			<?php endforeach; ?>
@@ -78,8 +99,8 @@ foreach ( $template_vars as $key => $val ) {
 
 	<div class="sui-form-field <?php echo esc_attr( ! empty( $vars['double_opt_form_id_error'] ) ? 'sui-form-field-error' : '' ); ?>">
 		<label class="sui-label" for="double_opt_form_id"><?php esc_html_e( 'Double Opt-In Form', 'forminator' ); ?></label>
-		<select name="double_opt_form_id" id="double_opt_form_id" class="sui-select sui-form-control">
-			<option value=""><?php esc_html_e( 'No form selected', 'forminator' ); ?></option>
+		<select name="double_opt_form_id" id="double_opt_form_id" class="sui-select" data-placeholder="<?php esc_html_e( 'No form selected', 'forminator' ); ?>">
+			<option></option>
 			<?php foreach ( $vars['forms'] as $form_id => $form_name ) : ?>
 				<option value="<?php echo esc_attr( $form_id ); ?>" <?php selected( $form_id, $vars['double_opt_form_id'] ); ?>><?php echo esc_html( $form_name ); ?></option>
 			<?php endforeach; ?>
@@ -110,15 +131,15 @@ foreach ( $template_vars as $key => $val ) {
 							value="1"
 						<?php checked( 1, $vars['instantresponders'] ); ?>>
 					<span class="sui-toggle-slider"></span>
+					<span class="sui-toggle-label"><?php esc_html_e( 'Enable Instant Responders', 'forminator' ); ?></span>
 				</label>
-				<label class="sui-toggle-label" for="instantresponders"><?php esc_html_e( 'Enable Instant Responders', 'forminator' ); ?></label>
 				<?php if ( ! empty( $vars['instantresponders_error'] ) ) : ?>
 					<span class="sui-error-message"><?php echo esc_html( $vars['instantresponders_error'] ); ?></span>
 				<?php endif; ?>
 				<span class="sui-description">
 					<?php
 					esc_html_e(
-						'When the instant responders option is enabled, ActiveCampaign will send any instant responders setup when the contact is added to the list.
+						'When the instant responders option is enabled, ActiveCampaign will send any instant responders set up when the contact is added to the list.
 						This option is not available to users on a free trial.',
 						'forminator'
 					);
@@ -137,8 +158,8 @@ foreach ( $template_vars as $key => $val ) {
 							value="1"
 						<?php checked( 1, $vars['lastmessage'] ); ?>>
 					<span class="sui-toggle-slider"></span>
+					<span class="sui-toggle-label"><?php esc_html_e( 'Send last broadcast campaign', 'forminator' ); ?></span>
 				</label>
-				<label class="sui-toggle-label" for="lastmessage"><?php esc_html_e( 'Send last broadcast campaign', 'forminator' ); ?></label>
 				<?php if ( ! empty( $vars['lastmessage_error'] ) ) : ?>
 					<span class="sui-error-message"><?php echo esc_html( $vars['lastmessage_error'] ); ?></span>
 				<?php endif; ?>

@@ -44,6 +44,13 @@ class Forminator_Core {
 	public $pro_fields = array();
 
 	/**
+	 * Store field objects
+	 *
+	 * @var array
+	 */
+	private static $field_objects = array();
+
+	/**
 	 * Plugin instance
 	 *
 	 * @var null
@@ -70,14 +77,14 @@ class Forminator_Core {
 	 * @since 1.0
 	 */
 	public function __construct() {
-		// Include all necessary files
+		// Include all necessary files.
 		$this->includes();
 
-		//First check if upgrade of data is needed
+		// First check if upgrade of data is needed.
 		Forminator_Upgrade::init();
 
 		if ( is_admin() ) {
-			// Initialize admin core
+			// Initialize admin core.
 			$this->admin = new Forminator_Admin();
 
 			new Forminator_Shortcode_Generator();
@@ -85,28 +92,32 @@ class Forminator_Core {
 			add_action( 'wp_head', array( $this, 'localize_pointers' ) );
 		}
 
-		// Get enabled modules
+		// Get enabled modules.
 		$modules       = new Forminator_Modules();
 		$this->modules = $modules->get_modules();
 
-		// Get enabled fields
+		// Get enabled fields.
 		$fields       = new Forminator_Fields();
 		$this->fields = $fields->get_fields();
+
+		$this->set_field_objects();
 
 		/**
 		 * Filter Pro fields for promotion PRO version
 		 *
 		 * @since 1.13
-		 * @param array $pro_fields Array of PRO fields e.g. [ 'field_type' => 'test', 'name' => 'test, 'icon' => 'sui-icon-pencil' ]
+		 * @param array $pro_fields Array of PRO fields e.g. [ 'field_type' => 'test', 'name' => 'test, 'icon' => 'sui-icon-pencil' ].
 		 */
-		$this->pro_fields = apply_filters( 'forminator_pro_fields', [] );
+		$this->pro_fields = apply_filters( 'forminator_pro_fields', array() );
 
-		// HACK: Add settings and entries page at the end of the list
+		// HACK: Add settings and entries page at the end of the list.
 		if ( is_admin() ) {
 			$this->admin->add_entries_page();
+			$this->admin->add_addons_page();
 			if ( Forminator::is_addons_feature_enabled() ) {
 				$this->admin->add_integrations_page();
 			}
+			$this->admin->add_reports_page();
 			$this->admin->add_settings_page();
 
 			if ( ! FORMINATOR_PRO ) {
@@ -114,14 +125,70 @@ class Forminator_Core {
 			}
 		}
 
-		//Protection management
+		// Protection management.
 		Forminator_Protection::get_instance();
 
-		//Export management
+		// Export management.
 		Forminator_Export::get_instance();
 
-		//Post meta box
+		Forminator_Reports::get_instance();
+
+		// Post meta box.
 		add_action( 'init', array( &$this, 'post_field_meta_box' ) );
+	}
+
+	/**
+	 * Set field objects
+	 */
+	private function set_field_objects() {
+		if ( self::$field_objects ) {
+			return;
+		}
+		foreach ( $this->fields as $field_object ) {
+			self::$field_objects[ $field_object->slug ] = $field_object;
+		}
+	}
+
+	/**
+	 * Get field object by field type
+	 *
+	 * @param string $type Field type.
+	 * @return object
+	 */
+	public static function get_field_object( $type ) {
+		$object = isset( self::$field_objects[ $type ] ) ? self::$field_objects[ $type ] : null;
+
+		return $object;
+	}
+
+	/**
+	 * Get field types
+	 *
+	 * @return array
+	 */
+	public static function get_field_types() {
+		$types = array_keys( self::$field_objects );
+
+		return $types;
+	}
+
+	/**
+	 * Get field type based on $element_id
+	 *
+	 * @param $element_id Field slug.
+	 * @return array
+	 */
+	public static function get_field_type( $element_id ) {
+		$field_type = '';
+		$parts      = explode( '-', $element_id );
+		// all avail fields on library.
+		$field_types = Forminator_Core::get_field_types();
+
+		if ( in_array( $parts[0], $field_types, true ) ) {
+			$field_type = $parts[0];
+		}
+
+		return $field_type;
 	}
 
 	/**
@@ -130,7 +197,7 @@ class Forminator_Core {
 	 * @since 1.0
 	 */
 	private function includes() {
-		// Abstracts
+		// Abstracts.
 		/* @noinspection PhpIncludeInspection */
 		include_once forminator_plugin_dir() . 'library/abstracts/abstract-class-field.php';
 		/* @noinspection PhpIncludeInspection */
@@ -148,7 +215,7 @@ class Forminator_Core {
 		/* @noinspection PhpIncludeInspection */
 		include_once forminator_plugin_dir() . 'library/abstracts/abstract-class-user.php';
 
-		// Classes
+		// Classes.
 		/* @noinspection PhpIncludeInspection */
 		include_once forminator_plugin_dir() . 'library/class-loader.php';
 		/* @noinspection PhpIncludeInspection */
@@ -169,6 +236,8 @@ class Forminator_Core {
 		include_once forminator_plugin_dir() . 'library/class-export-result.php';
 		/* @noinspection PhpIncludeInspection */
 		include_once forminator_plugin_dir() . 'library/class-export.php';
+        /* @noinspection PhpIncludeInspection */
+		include_once forminator_plugin_dir() . 'library/class-reports.php';
 		/* @noinspection PhpIncludeInspection */
 		include_once forminator_plugin_dir() . 'library/render/class-render-form.php';
 		/* @noinspection PhpIncludeInspection */
@@ -187,15 +256,15 @@ class Forminator_Core {
 		/* @noinspection PhpIncludeInspection */
 		include_once forminator_plugin_dir() . 'library/render/class-widget.php';
 		/* @noinspection PhpIncludeInspection */
-		include_once forminator_plugin_dir() . 'library/class-recaptcha.php';
+		include_once forminator_plugin_dir() . 'library/class-captcha-verification.php';
 		/* @noinspection PhpIncludeInspection */
 		include_once forminator_plugin_dir() . 'library/class-migration.php';
 
-		//Models
+		// Models.
 		/* @noinspection PhpIncludeInspection */
 		include_once forminator_plugin_dir() . 'library/model/class-form-entry-model.php';
 
-		// Helpers
+		// Helpers.
 		/* @noinspection PhpIncludeInspection */
 		include_once forminator_plugin_dir() . 'library/helpers/helper-core.php';
 		/* @noinspection PhpIncludeInspection */
@@ -222,7 +291,7 @@ class Forminator_Core {
 			include_once forminator_plugin_dir() . 'library/helpers/helper-payment.php';
 		}
 
-		//Model
+		// Model.
 		/* @noinspection PhpIncludeInspection */
 		include_once forminator_plugin_dir() . 'library/model/class-base-form-model.php';
 		/* @noinspection PhpIncludeInspection */
@@ -235,6 +304,7 @@ class Forminator_Core {
 		include_once forminator_plugin_dir() . 'library/model/class-quiz-form-model.php';
 		/* @noinspection PhpIncludeInspection */
 		include_once forminator_plugin_dir() . 'library/model/class-form-views-model.php';
+		include_once forminator_plugin_dir() . 'library/model/class-form-reports-model.php';
 		if ( is_admin() ) {
 			/* @noinspection PhpIncludeInspection */
 			include_once forminator_plugin_dir() . 'admin/abstracts/class-admin-page.php';
@@ -251,9 +321,9 @@ class Forminator_Core {
 			/* @noinspection PhpIncludeInspection */
 			if ( ! class_exists( 'WP_List_Table' ) ) {
 				/* @noinspection PhpIncludeInspection */
-				require_once ABSPATH . 'wp-admin/includes/class-wp-screen.php';//added
+				require_once ABSPATH . 'wp-admin/includes/class-wp-screen.php';// added.
 				/* @noinspection PhpIncludeInspection */
-				require_once ABSPATH . 'wp-admin/includes/screen.php';//added
+				require_once ABSPATH . 'wp-admin/includes/screen.php';// added.
 				/* @noinspection PhpIncludeInspection */
 				require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 				/* @noinspection PhpIncludeInspection */
@@ -302,9 +372,9 @@ class Forminator_Core {
 
 	public function localize_pointers() {
 		?>
-        <script type="text/javascript">
-            var ajaxurl = '<?php echo admin_url( 'admin-ajax.php' );  // WPCS: XSS ok. ?>';
-        </script>
+		<script type="text/javascript">
+			var ajaxurl = '<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>';
+		</script>
 		<?php
 	}
 
@@ -316,8 +386,8 @@ class Forminator_Core {
 	public function render_post_meta_box( $post ) {
 		$meta_values = get_post_custom( $post->ID );
 		?>
-        <table class="widefat">
-            <tbody>
+		<table class="widefat">
+			<tbody>
 			<?php
 			foreach ( $meta_values as $key => $value ) {
 				if ( '_' === $key[0] ) {
@@ -325,15 +395,137 @@ class Forminator_Core {
 				}
 				$value = $value[0];
 				?>
-                <tr>
-                    <th><?php echo esc_html( $key ); ?></th>
-                    <td><?php echo esc_html( $value ); ?></td>
-                </tr>
+				<tr>
+					<th><?php echo esc_html( $key ); ?></th>
+					<td><?php echo esc_html( $value ); ?></td>
+				</tr>
 				<?php
 			}
 			?>
-            </tbody>
-        </table>
+			</tbody>
+		</table>
 		<?php
+	}
+
+	/**
+	 * Sanitize
+	 *
+	 * @param string $key POST key.
+	 * @param mixed  $default_value Default value.
+	 * @return type
+	 */
+	public static function sanitize_text_field( $key, $default_value = '' ) {
+		if ( ! empty( $_POST[ $key ] ) ) {
+			$value = sanitize_text_field( wp_unslash( $_POST[ $key ] ) );
+		} elseif ( ! empty( $_GET[ $key ] ) ) {
+			$value = sanitize_text_field( wp_unslash( $_GET[ $key ] ) );
+		} else {
+			$value = $default_value;
+		}
+
+		return $value;
+	}
+
+	/**
+     * Recursively sanitize data
+     *
+	 * @param array  $data Data.
+	 * @param string $current_key Current key.
+	 *
+	 * @return array|string
+	 */
+	public static function sanitize_array( $data, $current_key = '' ) {
+		$data = wp_unslash( $data );
+		$skipped_keys = array( 'preview_data' );
+		// TODO: Should skip fields that has its own sanitize function
+		if (
+			in_array( $current_key, $skipped_keys, true ) ||
+			0 === strpos( $current_key, 'url-' ) ||
+			0 === strpos( $current_key, 'select-' ) ||
+			0 === strpos( $current_key, 'checkbox-' )
+		) {
+			return $data;
+		}
+
+		$allow_html = array(
+			'variations',
+			'question_description',
+			'thankyou-message',
+			'email-thankyou-message',
+			'manual-thankyou-message',
+			'user-email-editor',
+			'admin-email-editor',
+			'quiz_description',
+			'question_description',
+			'email-editor',
+			'email-editor-method-email',
+			'email-editor-method-manual',
+            'msg_count',
+			'confirm-password-description',
+			'description',
+            'consent_description',
+            'hc_invisible_notice',
+            'options_bulk_editor',
+            'label',
+            'value',
+            'importable',
+            'sc_message',
+			'hidden-registration-form-message',
+			'hidden-login-form-message',
+		);
+		if (
+			in_array( $current_key, $allow_html, true ) ||
+			0 === strpos( $current_key, 'html-' ) ||
+			0 === strpos( $current_key, 'textarea-' ) ||
+			0 === strpos( $current_key, 'radio-' ) ||
+			false !== strpos( $current_key, '-post-title' ) ||
+			false !== strpos( $current_key, '-post-content' ) ||
+			false !== strpos( $current_key, '-post-excerpt' )
+		) {
+			return trim( wp_kses_post( $data ) );
+		}
+
+		// Allow line breaks.
+		$allow_linebreaks = array(
+			'custom_css',
+			'placeholder',
+		);
+		if ( in_array( $current_key, $allow_linebreaks, true ) ) {
+			return sanitize_textarea_field( $data );
+		}
+
+		// Cannot use esc_url_raw coz it strips curly braces.
+		if ( 'redirect-url' === $current_key ) {
+			return trim( wp_strip_all_tags( $data ) );
+		}
+
+		if ( ! is_array( $data ) ) {
+			return sanitize_text_field( $data );
+		} else {
+			foreach ( $data as $key => $value ) {
+				$data[ $key ] = self::sanitize_array( $value, $key );
+			}
+
+			return $data;
+		}
+	}
+
+	/**
+	 * Recursively sanitize html data
+	 *
+	 * @param array $data Data.
+	 *
+	 * @return array|string
+	 */
+	public static function sanitize_html_array( $data ) {
+		if ( ! is_array( $data ) ) {
+			return esc_html( $data );
+		} else {
+			foreach ( $data as $key => $value ) {
+				$data[ $key ] = self::sanitize_html_array( $value );
+			}
+
+			return $data;
+		}
 	}
 }

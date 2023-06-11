@@ -3,12 +3,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
 
-//Remove password field in Submissions page
+// Remove password field in Submissions page.
 add_action( 'forminator_custom_form_build_fields_mappers', array( 'Forminator_User', 'remove_password_from_all_fields' ) );
 add_action( 'forminator_custom_form_filter_fields', array( 'Forminator_User', 'remove_password_from_all_fields' ) );
-//Change form settings
+// Change form settings.
 add_filter( 'forminator_builder_data_settings_before_saving', array( 'Forminator_User', 'change_form_settings' ), 11, 2 );
-//Remove password field from merge tags {all_fields}, {all_non_empty_fields}
+// Remove password field from merge tags {all_fields}, {all_non_empty_fields}.
 add_filter( 'forminator_custom_form_before_form_fields', array( 'Forminator_User', 'remove_password_from_all_fields' ) );
 
 /**
@@ -22,7 +22,7 @@ abstract class Forminator_User {
 	 * Main constructor
 	 */
 	public function __construct() {
-		//Remove {password-N} in mail data
+		// Remove {password-N} in mail data.
 		add_filter( 'forminator_custom_form_mail_data', array( $this, 'remove_password_in_form_mail_data' ) );
 	}
 
@@ -45,8 +45,8 @@ abstract class Forminator_User {
 	/**
 	 * Replace user value
 	 *
-	 * @param array   $field_data_array
-	 * @param string  $user_key
+	 * @param array  $field_data_array
+	 * @param string $user_key
 	 * @return string $user_value
 	 */
 	public function replace_value( $field_data_array, $user_key ) {
@@ -80,7 +80,6 @@ abstract class Forminator_User {
 		if ( ! empty( $form_fields ) ) {
 			foreach ( $form_fields as $key => $form_field ) {
 				$field_array = $form_field->to_formatted_array();
-				$field_forms = forminator_fields_to_array();
 				$field_type  = $field_array['type'];
 				if ( 'password' === $field_type ) {
 					unset( $form_fields[ $key ] );
@@ -103,8 +102,8 @@ abstract class Forminator_User {
 	/**
 	 * Encrypt non-Openssl
 	 *
-	 * @param string $text  The text to encrypt
-	 * @param string $key   Key for encryption
+	 * @param string $text  The text to encrypt.
+	 * @param string $key   Key for encryption.
 	 *
 	 * @return string       Encrypted String
 	 */
@@ -126,8 +125,8 @@ abstract class Forminator_User {
 	/**
 	 * Decrypt non-Openssl
 	 *
-	 * @param string $text  The text to decrypt
-	 * @param string $key   Key for encryption
+	 * @param string $text  The text to decrypt.
+	 * @param string $key   Key for encryption.
 	 *
 	 * @return string       Decrypted String
 	 */
@@ -167,10 +166,10 @@ abstract class Forminator_User {
 	/**
 	 * Encrypt AES-256-CTR with HMAC-SHA-512 hash
 	 *
-	 * @param string $text           The text to encrypt
-	 * @param string $encryption_key Key for encryption
-	 * @param string $cipher_name    The cypher name. Default 'aes-256-ctr'
-	 * @param string $mac_key        The key to be used to generate the hash
+	 * @param string $text           The text to encrypt.
+	 * @param string $encryption_key Key for encryption.
+	 * @param string $cipher_name    The cypher name. Default 'aes-256-ctr'.
+	 * @param string $mac_key        The key to be used to generate the hash.
 	 *
 	 * @return string|false
 	 */
@@ -182,7 +181,7 @@ abstract class Forminator_User {
 				$encryption_key = self::get_encryption_key();
 			}
 
-			// OPENSSL_RAW_DATA is not available on PHP 5.3
+			// OPENSSL_RAW_DATA is not available on PHP 5.3.
 			$options    = defined( 'OPENSSL_RAW_DATA' ) ? OPENSSL_RAW_DATA : 1;
 			$ciphertext = openssl_encrypt( $text, $cipher_name, $encryption_key, $options, $nonce );
 
@@ -209,10 +208,10 @@ abstract class Forminator_User {
 	/**
 	 * Decrypt AES-256-CTR with HMAC-SHA-512 hash.
 	 *
-	 * @param string $text           The text to decrypt
-	 * @param string $encryption_key Key for encryption
-	 * @param string $cipher_name    The cypher name. Default 'aes-256-ctr'
-	 * @param string $mac_key        The key to be used for the hash
+	 * @param string $text           The text to decrypt.
+	 * @param string $encryption_key Key for encryption.
+	 * @param string $cipher_name    The cypher name. Default 'aes-256-ctr'.
+	 * @param string $mac_key        The key to be used for the hash.
 	 *
 	 * @return string|false
 	 */
@@ -236,7 +235,7 @@ abstract class Forminator_User {
 				$encryption_key = self::get_encryption_key();
 			}
 
-			// OPENSSL_RAW_DATA is not available on PHP 5.3
+			// OPENSSL_RAW_DATA is not available on PHP 5.3.
 			$options         = defined( 'OPENSSL_RAW_DATA' ) ? OPENSSL_RAW_DATA : 1;
 			$decrypted_value = openssl_decrypt( $ciphertext, $cipher_name, $encryption_key, $options, $nonce );
 		} else {
@@ -262,10 +261,14 @@ abstract class Forminator_User {
 			'thankyou-message',
 		);
 
-		if ( isset( $sanitized_settings['form-type'] ) && in_array( $sanitized_settings['form-type'], array(
+		if ( isset( $sanitized_settings['form-type'] ) && in_array(
+			$sanitized_settings['form-type'],
+			array(
 				'login',
-				'registration'
-			), true ) ) {
+				'registration',
+			),
+			true
+		) ) {
 			$extra_messages = array(
 				'hidden-' . $sanitized_settings['form-type'] . '-form-message',
 				'email-thankyou-message',

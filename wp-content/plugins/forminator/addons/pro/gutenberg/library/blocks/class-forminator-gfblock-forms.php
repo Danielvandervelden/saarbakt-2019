@@ -41,7 +41,7 @@ class Forminator_GFBlock_Forms extends Forminator_GFBlock_Abstract {
 	 * @since 1.0 Gutenberg Addon
 	 */
 	public function __construct() {
-		// Initialize block
+		// Initialize block.
 		$this->init();
 	}
 
@@ -49,7 +49,7 @@ class Forminator_GFBlock_Forms extends Forminator_GFBlock_Abstract {
 	 * Render block markup on front-end
 	 *
 	 * @since 1.0 Gutenberg Addon
-	 * @param array $properties Block properties
+	 * @param array $properties Block properties.
 	 *
 	 * @return string
 	 */
@@ -61,7 +61,7 @@ class Forminator_GFBlock_Forms extends Forminator_GFBlock_Abstract {
 	 * Preview form markup in block
 	 *
 	 * @since 1.0 Gutenberg Addon
-	 * @param array $properties Block properties
+	 * @param array $properties Block properties.
 	 *
 	 * @return string
 	 */
@@ -82,7 +82,7 @@ class Forminator_GFBlock_Forms extends Forminator_GFBlock_Abstract {
 	 * @since 1.0 Gutenberg Addon
 	 */
 	public function load_assets() {
-		// Scripts
+		// Scripts.
 		wp_enqueue_script(
 			'forminator-block-forms',
 			forminator_gutenberg()->get_plugin_url() . '/js/forms-block.min.js',
@@ -91,7 +91,7 @@ class Forminator_GFBlock_Forms extends Forminator_GFBlock_Abstract {
 			false
 		);
 
-		// Localize scripts
+		// Localize scripts.
 		wp_localize_script(
 			'forminator-block-forms',
 			'frmnt_form_data',
@@ -134,9 +134,13 @@ class Forminator_GFBlock_Forms extends Forminator_GFBlock_Abstract {
 		$style_version = '4.0.3';
 
 		$script_src     = forminator_plugin_url() . 'assets/js/library/intlTelInput.min.js';
+		$script_src_cleave     = forminator_plugin_url() . 'assets/js/library/cleave.min.js';
+		$script_src_cleave_phone     = forminator_plugin_url() . 'assets/js/library/cleave-phone.i18n.js';
 		$script_version = FORMINATOR_VERSION;
-		wp_enqueue_style( 'intlTelInput-forminator-css', $style_src, array(), $style_version ); // intlTelInput
-		wp_enqueue_script( 'forminator-intlTelInput', $script_src, array( 'jquery' ), $script_version, false ); // intlTelInput
+		wp_enqueue_style( 'intlTelInput-forminator-css', $style_src, array(), $style_version ); // intlTelInput.
+		wp_enqueue_script( 'forminator-intlTelInput', $script_src, array( 'jquery' ), $script_version, false ); // intlTelInput.
+		wp_enqueue_script( 'forminator-cleave', $script_src_cleave, array( 'jquery' ), $script_version, false ); // intlTelInput.
+		wp_enqueue_script( 'forminator-cleave-phone', $script_src_cleave_phone, array( 'jquery' ), $script_version, false ); // intlTelInput.
 
 		wp_localize_script( 'forminator-front-scripts', 'ForminatorFront', forminator_localize_data() );
 	}

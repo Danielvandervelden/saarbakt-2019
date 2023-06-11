@@ -13,7 +13,7 @@ class Forminator_Addon_Default_Holder extends Forminator_Addon_Abstract {
 
 	protected $_slug                   = '';
 	protected $_version                = '1.0';
-	protected $_min_forminator_version = PHP_INT_MAX; // make it un-activable
+	protected $_min_forminator_version = PHP_INT_MAX; // make it un-activable.
 	protected $_short_title            = '';
 	protected $_title                  = '';
 	protected $_url                    = '';
@@ -31,7 +31,7 @@ class Forminator_Addon_Default_Holder extends Forminator_Addon_Abstract {
 	 */
 	public static function get_instance() {
 		if ( is_null( self::$_instance ) ) {
-			self::$_instance = new self();// @codeCoverageIgnore
+			self::$_instance = new self();// @codeCoverageIgnore.
 		}
 
 		return self::$_instance;

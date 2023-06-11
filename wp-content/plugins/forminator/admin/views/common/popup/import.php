@@ -5,13 +5,40 @@ $nonce = wp_create_nonce( 'forminator_save_import_' . $slug );
 
 <div class="sui-box-body wpmudev-popup-form">
 
-	<div class="sui-notice sui-notice-error wpmudev-ajax-error-placeholder sui-hidden"><p></p></div>
+	<div
+		role="alert"
+		id="wpmudev-ajax-error-placeholder"
+		class="sui-notice sui-notice-error"
+		aria-live="assertive"
+	>
+		<!-- Nothing should be placed here -->
+	</div>
 
 	<div class="sui-form-field">
 
 		<textarea class="sui-form-control" rows="10" name="importable"></textarea>
 
-		<span class="sui-description"><?php printf( esc_html__( 'Paste exported %s above.', 'forminator' ), $slug ); ?></span>
+		<span class="sui-description"><?php echo esc_html( sprintf( __( 'Paste exported %s above.', 'forminator' ), esc_html( $slug ) ) ); ?></span>
+
+	</div>
+
+	<div class="sui-form-field">
+
+		<label for="change-recipients" class="sui-checkbox">
+
+			<input
+				type="checkbox"
+				id="change-recipients"
+				aria-labelledby="change-recipients-label"
+				name="change_recipients"
+				value="checked"
+			/>
+
+			<span aria-hidden="true"></span>
+
+			<span id="change-recipients-label"><?php esc_html_e( 'Change all recipients in this form to current user email.', 'forminator' ); ?></span>
+
+		</label>
 
 	</div>
 

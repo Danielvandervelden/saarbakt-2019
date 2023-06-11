@@ -26,7 +26,6 @@
 		    chart_design: 'bar',
 		    chart_options: {},
 		    forminator_fields: [],
-		    max_nested_formula: 5,
 		    general_messages: {
 			    calculation_error: 'Failed to calculate field.',
 			    payment_require_ssl_error: 'SSL required to submit this form, please check your URL.',
@@ -66,6 +65,7 @@
 		this.template_type = '';
 
 		this.init();
+		this.handleDiviPopup();
 	}
 
 	// Avoid Plugin.prototype conflicts
@@ -93,6 +93,8 @@
 				$modal.find('form').css('display', '');
 			});
 
+			self.reint_intlTelInput();
+
 			// Show form when popup trigger
 			setTimeout(function () {
 				var $modal = $('.wph-modal-active');
@@ -105,6 +107,10 @@
 					$( this.element ).each( function() {
 						self.init_custom_form( this );
 					});
+
+					this.$el.on( 'forminator-clone-group', function ( event ) {
+						self.init_custom_form( event.target );
+					} );
 
 					break;
 				case  'poll':
@@ -122,8 +128,6 @@
 				forminator_selector: self.forminator_selector,
 				chart_design: self.settings.chart_design,
 				chart_options: self.settings.chart_options,
-				fadeout: self.settings.fadeout,
-				fadeout_time: self.settings.fadeout_time,
 				has_quiz_loader: self.settings.has_quiz_loader,
 				has_loader: self.settings.has_loader,
 				loader_label: self.settings.loader_label,
@@ -150,11 +154,14 @@
 
 			// Init small form for all type of form
 			this.small_form();
-
 		},
 		init_custom_form: function ( form_selector ) {
 
-			var self = this;
+			var self 			= this,
+				$saveDraft 		= this.$el.find( '.forminator-save-draft-link' ),
+				saveDraftExists = 0 !== $saveDraft.length ? true : false,
+				draftTimer
+				;
 
 			//initiate validator
 			this.init_intlTelInput_validation( form_selector );
@@ -170,7 +177,6 @@
 			// initiate calculator
 			$( form_selector ).forminatorFrontCalculate({
 				forminatorFields: self.settings.forminator_fields,
-				maxExpand: self.settings.max_nested_formula,
 				generalMessages: self.settings.general_messages,
 				memoizeTime: self.settings.calcs_memoize_time || 300,
 			});
@@ -187,38 +193,31 @@
 			// initiate payment if exist
 			var first_payment = $( form_selector ).find('div[data-is-payment="true"], input[data-is-payment="true"]').first();
 
-			if ( first_payment.length ) {
-				var payment_type = first_payment.data('paymentType');
-				if (payment_type === 'stripe') {
-					$( form_selector ).forminatorFrontPayment({
-						type: payment_type,
-						paymentEl: first_payment,
-						paymentRequireSsl: self.settings.payment_require_ssl,
-						generalMessages: self.settings.general_messages,
-						fadeout_time: self.settings.fadeout_time,
-						has_loader: self.settings.has_loader,
-						loader_label: self.settings.loader_label,
-					});
-				}
-				if (payment_type === 'paypal') {
+			if( self.settings.has_stripe ) {
+				var stripe_payment = $(this.element).find('.forminator-stripe-element').first();
 
-					$( form_selector ).forminatorFrontPayPal({
-						type: payment_type,
-						paymentEl: self.settings.paypal_config,
-						paymentRequireSsl: self.settings.payment_require_ssl,
-						generalMessages: self.settings.general_messages,
-						has_loader: self.settings.has_loader,
-						loader_label: self.settings.loader_label,
-					});
-
-					// Enable inline validation if paypal is used to prevent checkout if form has errors
-					if ( ! self.settings.inline_validation ) {
-						$( form_selector ).forminatorFrontValidate({
-							rules: self.settings.rules,
-							messages: self.settings.messages
-						});
-					}
+				if ( $( self.element ).is( ':visible' ) ) {
+					this.renderStripe( self, stripe_payment );
 				}
+
+				// Show Stripe on modal display.
+				$( document ).on( "hustle:module:displayed", function () {
+					self.renderStripe( self, stripe_payment );
+				});
+			}
+
+			if( self.settings.has_paypal
+					// Fix for Divi popup.
+					&& ( ! $( self.element ).closest( '.et_pb_section' ).length
+					|| $( self.element ).is( ':visible' ) ) ) {
+				$(this.element).forminatorFrontPayPal({
+					type: 'paypal',
+					paymentEl: this.settings.paypal_config,
+					paymentRequireSsl: self.settings.payment_require_ssl,
+					generalMessages: self.settings.general_messages,
+					has_loader: self.settings.has_loader,
+					loader_label: self.settings.loader_label,
+				});
 			}
 
 			//initiate condition
@@ -247,7 +246,11 @@
 
 			this.upload_field( form_selector );
 
+			this.init_login_2FA();
+
 			self.maybeRemoveDuplicateFields( form_selector );
+
+			self.checkComplianzBlocker();
 
 			// Handle function on resize
 			$(window).on('resize', function () {
@@ -258,6 +261,19 @@
 			$( window ).on( 'load', function () {
 				// Repeat the function here, just in case our scripts gets loaded late
 				self.maybeRemoveDuplicateFields( form_selector );
+			});
+
+			// We have to declare initialData here, after everything has been set initially, to prevent triggering change event.
+			var initialData	= saveDraftExists ? this.$el.serializeArray() : '';
+			this.$el.find( ".forminator-field input, .forminator-row input[type=hidden], .forminator-field select, .forminator-field textarea, .forminator-field-signature").on( 'change input', function (e) {
+				if ( saveDraftExists && $saveDraft.hasClass( 'disabled' ) ) {
+					clearTimeout( draftTimer );
+					draftTimer = setTimeout( function() {
+							self.maybe_enable_save_draft( $saveDraft, initialData );
+						},
+						500
+					);
+				}
 			});
 
 			if( 'undefined' !== typeof self.settings.hasLeads ) {
@@ -403,7 +419,7 @@
 			});
 
 			if( 'end' !== lead_placement ) {
-				this.$el.find('.forminator-submit-rightaway').click(function () {
+				this.$el.find('.forminator-submit-rightaway').on("click", function () {
 					self.$el.submit();
 					$(this).closest('.forminator-question').find('.forminator-submit-rightaway').addClass('forminator-has-been-disabled').attr('disabled', 'disabled');
 				});
@@ -526,7 +542,8 @@
 
 				// Initialize intlTelInput plugin on each field with "format check" enabled and
 				// set to check either "international" or "standard" phones.
-				var is_national_phone = $(this).data('national_mode'),
+				var self              = this,
+					is_national_phone = $(this).data('national_mode'),
 					country           = $(this).data('country'),
 					validation        = $(this).data('validation');
 
@@ -545,13 +562,48 @@
 					if ( 'undefined' !== typeof ( validation ) && 'standard' === validation ) {
 						args.allowDropdown  = false;
 					}
+					// stop from removing country code.
+					if ( 'undefined' !== typeof ( validation ) && 'international' === validation ) {
+						args.autoHideDialCode = false;
+					}
 
-					$(this).intlTelInput(args);
+					var iti = $(this).intlTelInput(args);
+					if ( 'undefined' !== typeof ( validation )
+						&& 'international' === validation ) {
+						var dial_code = $(this).intlTelInput( 'getSelectedCountryData' ).dialCode,
+							country_code = '+' + dial_code;
+						if ( country_code !== $(this).val() ) {
+							var phone_value = $(this).val().trim().replace( dial_code, '' ).replace( '+', '' );
+								$(this).val( country_code + phone_value );
+						}
+					}
+
+					if ( 'undefined' !== typeof ( validation ) && 'standard' === validation ) {
+						// Reset country to default if changed and invalid previously.
+						$( this ).on( 'blur', function() {
+							if ( '' === $( self ).val() ) {
+								iti.intlTelInput( 'setCountry', country );
+								form.validate().element( $( self ) );
+							}
+						});
+					}
+
+					var dialCode = '+' + $(this).intlTelInput('getSelectedCountryData').dialCode;
+
+					new Cleave(this, {
+						phone: true,
+						phoneRegionCode: 'undefined' !== typeof ( country ) ? country : 'us',
+						prefix: ('enabled' === is_national_phone) ? dialCode : null,
+					});
 
 					if ( ! is_material ) {
-						$(this).closest( '.forminator-field' ).find( 'div.intl-tel-input' ).addClass( 'forminator-phone' );
+						$(this).closest( '.forminator-field' ).find( 'div.iti' ).addClass( 'forminator-phone' );
 					} else {
-						$(this).closest( '.forminator-field' ).find( 'div.intl-tel-input' ).addClass( 'forminator-input-with-phone' );
+						$(this).closest( '.forminator-field' ).find( 'div.iti' ).addClass( 'forminator-input-with-phone' );
+
+						if ( $(this).closest( '.forminator-field' ).find( 'div.iti' ).hasClass( 'iti--allow-dropdown' ) ) {
+							$(this).closest( '.forminator-field' ).find( '.forminator-label' ).addClass( 'iti--allow-dropdown' );
+						}
 					}
 
 					// intlTelInput plugin adds a markup that's not compatible with 'material' theme when 'allowDropdown' is true (default).
@@ -563,6 +615,14 @@
 				}
 			});
 
+		},
+
+		reint_intlTelInput: function () {
+
+			var self = this;
+			self.$el.on( 'after:forminator:form:submit', function (e, data) {
+				self.init_intlTelInput_validation( self.forminator_selector );
+			} );
 		},
 
 		init_fui: function ( form_selector ) {
@@ -593,7 +653,9 @@
 				});
 			}
 
-			FUI.select2( select2.length );
+			if ( 'function' === typeof FUI.select2 ) {
+				FUI.select2( select2.length );
+			}
 
 			if ( multiselect.length ) {
 				FUI.multiSelectStates( multiselect );
@@ -662,7 +724,8 @@
 					totalSteps: num_pages,
 					hashStep: hashStep,
 					step: step,
-					inline_validation: self.settings.inline_validation
+					inline_validation: self.settings.inline_validation,
+					submitButtonClass: self.settings.submit_button_class
 				});
 			}
 		},
@@ -703,7 +766,7 @@
 					e.stopPropagation();
 
 				});
-			};
+			}
 
 			function classHover( el ) {
 
@@ -713,16 +776,16 @@
 
 				var hoverClass = 'forminator-is_hover';
 
-				element.mouseover( function( e ) {
+				element.on( 'mouseover', function( e ) {
 					elementField.addClass( hoverClass );
 					elementAnswer.addClass( hoverClass );
 					e.stopPropagation();
-				}).mouseout( function( e ) {
+				}).on( 'mouseout', function( e ) {
 					elementField.removeClass( hoverClass );
 					elementAnswer.removeClass( hoverClass );
 					e.stopPropagation();
 				});
-			};
+			}
 
 			function classActive( el ) {
 
@@ -741,7 +804,7 @@
 					elementAnswer.removeClass( activeClass );
 					e.stopPropagation();
 				});
-			};
+			}
 
 			function classError( el ) {
 
@@ -789,7 +852,7 @@
 					e.stopPropagation();
 
 				});
-			};
+			}
 
 			if ( input.length ) {
 
@@ -816,11 +879,11 @@
 				var $select = $(this);
 
 				// Set field active class on hover
-				$select.mouseover(function (e) {
+				$select.on('mouseover', function (e) {
 					e.stopPropagation();
 					$(this).closest('.forminator-field').addClass('forminator-is_hover');
 
-				}).mouseout(function (e) {
+				}).on('mouseout', function (e) {
 					e.stopPropagation();
 					$(this).closest('.forminator-field').removeClass('forminator-is_hover');
 
@@ -877,13 +940,14 @@
 
 					if ($limit.length) {
 						if ($limit.data('limit')) {
+							var field_value = $(this).val().replace( /<[^>]*>/g, '' );
 							if ($limit.data('type') !== "words") {
-								count = $(this).val().length;
+								count = $( '<div>' + field_value + '</div>' ).text().length;
 							} else {
-								count = $(this).val().trim().split(/\s+/).length;
+								count = field_value.trim().split(/\s+/).length;
 
                                 // Prevent additional words from being added when limit is reached.
-                                numwords = $(this).val().trim().split(/\s+/).length;
+                                numwords = field_value.trim().split(/\s+/).length;
                                 if ( numwords >= $limit.data( 'limit' ) ) {
                                     // Allow delete and backspace when limit is reached.
 									if( e.which === 32 ) {
@@ -924,25 +988,41 @@
 				});
 			});
 
-			form.find('.forminator-currency').each(function () {
-				var decimals = $( this ).data('decimals');
-				$( this ).change( function (e) {
-					this.value = parseFloat( this.value ).toFixed( decimals );
+			form.find('.forminator-number--field, .forminator-currency, .forminator-calculation').each(function () {
+				var inputType = $( this ).attr( 'type' );
+				if ( 'number' === inputType ) {
+					var decimals = $( this ).data( 'decimals' );
+					$( this ).change( function ( e ) {
+						this.value = parseFloat( this.value ).toFixed( decimals );
+					});
+					$( this ).trigger( 'change' );
+				}
+				/*
+				* If you need to retrieve the formatted (masked) value, you can use something like this:
+				* $element.inputmask({'autoUnmask' : false});
+				* var value = $element.val();
+				* $element.inputmask({'autoUnmask' : true});
+				*/
+				$( this ).inputmask({
+					'alias': 'decimal',
+					'rightAlign': false,
+					'digitsOptional': false,
+					'showMaskOnHover': false,
+					'autoUnmask' : true, // Automatically unmask the value when retrieved - this prevents the "Maximum call stack size exceeded" console error that happens in some forms that contain number/calculation fields with localized masks.
+					'removeMaskOnSubmit': true,
 				});
 			});
 
-
-			// form.find('.forminator-number--field').each(function () {
-			// 	var separators = $(this).data('separators');
-			// 	$(this).mask( separators, { reverse: false } );
-			// });
-            // form.find('.forminator-currency').each(function () {
-            //     var separators = $(this).data('separators');
-            //     $(this).mask( separators, { reverse: false } );
-            // });
+			// Fixes the 2nd number input bug: https://incsub.atlassian.net/browse/FOR-3033
+			form.find( 'input[type=number]' ).on( 'mouseover', function() {
+				$( this ).trigger( 'focus' );
+			}).on( 'mouseout', function() {
+				$( this ).trigger( 'blur' );
+			});
 		},
 
 		field_time: function () {
+			var self = this;
 			$('.forminator-input-time').on('input', function (e) {
 				var $this = $(this),
 				    value = $this.val()
@@ -953,6 +1033,132 @@
 					$this.val(value.substr(0, 2));
 				}
 			});
+
+			// Apply time limits.
+			this.$el.find( '.forminator-timepicker' ).each( function( i, el ) {
+				var $tp   = $( el ),
+					start = $tp.data( 'start-limit' ),
+					end   = $tp.data( 'end-limit' )
+				;
+
+				if ( 'undefined' !== typeof start && 'undefined' !== typeof end ) {
+					var hourSelect = $tp.find( '.time-hours' ),
+						initHours  = hourSelect.html()
+					;
+
+					// Reset right away.
+					self.resetTimePicker( $tp, start, end );
+					// Reset onchange.
+					$tp.find( '.time-ampm' ).on( 'change', function() {
+						hourSelect.val('');
+						hourSelect.html( initHours );
+						self.resetTimePicker( $tp, start, end );
+						setTimeout(
+							function() {
+								$tp.find( '.forminator-field' ).removeClass( 'forminator-has_error' );
+							},
+							10
+						);
+					});
+				}
+			});
+		},
+
+		// Remove hour options that are outside the limits.
+		resetTimePicker: function ( timePicker, start, end ) {
+			var meridiem = timePicker.find( '.time-ampm' ),
+				[ startTime, startModifier ] = start.split(' '),
+				[ startHour, startMinute ] = startTime.split(':'),
+				startHour = parseInt( startHour ),
+				[ endTime, endModifier ] = end.split(' '),
+				[ endHour, endMinute ] = endTime.split(':'),
+				endHour = parseInt( endHour )
+				;
+
+			if ( startModifier === endModifier ) {
+				meridiem.find( 'option[value!="' + endModifier + '"]' ).remove();
+			}
+
+			timePicker.find( '.time-hours' ).children().each( function( optionIndex, optionEl ) {
+				var optionValue = parseInt( optionEl.value );
+
+				if (
+					'' !== optionValue &&
+					( optionValue < startHour || ( 0 !== startHour && 12 === optionValue ) ) &&
+					meridiem.val() === startModifier
+				) {
+					optionEl.remove();
+				}
+
+				if (
+					'' !== optionValue &&
+					optionValue > endHour &&
+					12 !== optionValue &&
+					meridiem.val() === endModifier
+				) {
+					optionEl.remove();
+				}
+			});
+		},
+
+		init_login_2FA: function () {
+			var self = this;
+			this.two_factor_providers( 'totp' );
+			$('body').on('click', '.forminator-2fa-link', function () {
+				self.$el.find('#login_error').remove();
+				self.$el.find('.notification').empty();
+				var slug = $(this).data('slug');
+				self.two_factor_providers( slug );
+				if ('fallback-email' === slug) {
+					self.resend_code();
+				}
+			});
+			this.$el.find('.wpdef-2fa-email-resend input').on('click', function () {
+				self.resend_code();
+			});
+		},
+		two_factor_providers: function ( slug ) {
+			var self = this;
+			self.$el.find('.forminator-authentication-box').hide();
+			self.$el.find('.forminator-authentication-box input').attr( 'disabled', true );
+			self.$el.find( '#forminator-2fa-' + slug ).show();
+			self.$el.find( '#forminator-2fa-' + slug + ' input' ).attr( 'disabled', false );
+			if ( self.$el.find('.forminator-2fa-link').length > 0 ) {
+				self.$el.find('.forminator-2fa-link').hide();
+				self.$el.find('.forminator-2fa-link:not(#forminator-2fa-link-'+ slug +')').each(function() {
+					self.$el.find('.forminator-auth-method').val( slug );
+					$( this ).find('input').attr( 'disabled', false );
+					$( this ).show();
+				});
+			}
+		},
+
+		// Logic for FallbackEmail method.
+		resend_code: function () {
+			// Work with the button 'Resen Code'.
+			var self  = this;
+			var that  = $('input[name="button_resend_code"]');
+			var token = $('.forminator-auth-token');
+			let data = {
+				action: 'forminator_2fa_fallback_email',
+				data: JSON.stringify({
+					'token': token
+				})
+			};
+			$.ajax({
+				type: 'POST',
+				url: window.ForminatorFront.ajaxUrl,
+				data: data,
+				beforeSend: function () {
+					that.attr('disabled', 'disabled');
+					$('.def-ajaxloader').show();
+				},
+				success: function (data) {
+					that.removeAttr('disabled');
+					$('.def-ajaxloader').hide();
+					$('.notification').text(data.data.message);
+				}
+			})
 		},
 
 		material_field: function () {
@@ -1002,7 +1208,6 @@
 		},
 
 		upload_field: function ( form_selector ) {
-
 			var self = this,
 			    form = $( form_selector )
 			;
@@ -1014,7 +1219,7 @@
 
 				e.preventDefault();
 
-				var $self  = $(this),
+				var $self  = $( this ),
 				    $input = $self.siblings('input'),
 				    $label = $self.closest( '.forminator-file-upload' ).find('> span')
 					;
@@ -1026,7 +1231,7 @@
 
 			});
 
-			form.find( '.forminator-input-file, .forminator-input-file-required' ).change(function () {
+			form.find( '.forminator-input-file, .forminator-input-file-required' ).on('change', function () {
 				var $nameLabel = $(this).closest( '.forminator-file-upload' ).find( '> span' ),
 					vals = $(this).val(),
 					val  = vals.length ? vals.split('\\').pop() : ''
@@ -1037,8 +1242,9 @@
 				self.toggle_file_input();
 			});
 
+			form.find( '.forminator-button-upload' ).off();
 			form.find( '.forminator-button-upload' ).on( 'click', function (e) {
-				e.preventDefault();;
+				e.preventDefault();
 
 				var $id        = $(this).attr('data-id'),
 				    $target    = form.find('input#' + $id)
@@ -1121,6 +1327,40 @@
 			}
 		},
 
+		renderHcaptcha: function ( captcha_field ) {
+			var self = this;
+			//render hcaptcha only if not rendered
+			if (typeof $( captcha_field ).data( 'forminator-hcaptcha-widget' ) === 'undefined') {
+				var size = $( captcha_field ).data( 'size' ),
+				    data = {
+					    sitekey: $( captcha_field ).data( 'sitekey' ),
+					    theme: $( captcha_field ).data( 'theme' ),
+					    size: size
+				    };
+
+				if ( size === 'invisible' ) {
+					data.callback = function ( token ) {
+						$( self.element ).trigger( 'submit.frontSubmit' );
+					};
+				} else {
+					data.callback = function () {
+						$( captcha_field ).parent( '.forminator-col' )
+							.removeClass( 'forminator-has_error' )
+							.remove( '.forminator-error-message' );
+					};
+				}
+
+				if ( data.sitekey !== "" ) {
+					// noinspection Annotator
+					var widgetId = hcaptcha.render( captcha_field, data );
+					// mark as rendered
+					$( captcha_field ).data( 'forminator-hcaptcha-widget', widgetId );
+					// this.addCaptchaAria( captcha_field );
+					// this.responsive_captcha();
+				}
+			}
+		},
+
 		addCaptchaAria: function ( captcha_field ) {
 			var gRecaptchaResponse = $( captcha_field ).find( '.g-recaptcha-response' ),
 				gRecaptcha = $( captcha_field ).find( '>div' );
@@ -1191,6 +1431,129 @@
 
 		},
 
+		/**
+		 * Render Stripe once it's available
+		 *
+		 * @param string
+		 * @param type ('array'/'object')
+		 */
+		renderStripe: function( form, stripe_payment, stripeLoadCounter = 0 ) {
+			var self = this;
+
+			setTimeout( function() {
+				stripeLoadCounter++;
+
+				if ( 'undefined' !== typeof Stripe ) {
+
+					$( form.element ).forminatorFrontPayment({
+						type: 'stripe',
+						paymentEl: stripe_payment,
+						paymentRequireSsl: form.settings.payment_require_ssl,
+						generalMessages: form.settings.general_messages,
+						has_loader: form.settings.has_loader,
+						loader_label: form.settings.loader_label,
+					});
+
+				// Retry checking for 30 seconds
+				} else if ( stripeLoadCounter < 300 ) {
+					self.renderStripe( form, stripe_payment, stripeLoadCounter );
+				} else {
+					console.error( 'Failed to load Stripe.' );
+				}
+			}, 100 );
+		},
+
+        // Enable save draft button once a change is made
+		maybe_enable_save_draft: function ( $saveDraft, initialData ) {
+			var changedData = this.$el.serializeArray(),
+				hasChanged	= false,
+				hasSig		= this.$el.find( '.forminator-field-signature' ).length ? true : false
+				;
+
+			// Remove signature field from changedData, will process later
+			changedData = changedData.filter( function( val ) {
+				return val.name.indexOf( 'ctlSignature' ) === -1 ;
+			});
+
+			initialData = JSON.stringify( initialData );
+			changedData = JSON.stringify( changedData );
+
+			// Check for field changes
+			if ( initialData !== changedData ) {
+				hasChanged = true;
+			}
+
+			// Check for signature change
+			if ( hasSig && false === hasChanged ) {
+				this.$el.find( '.forminator-field-signature' ).each( function(e) {
+					var sigPrefix = $( this ).find( '.signature-prefix' ).val();
+
+					if (
+						0 !== $( this ).find( '#ctlSignature' + sigPrefix + '_data' ).length &&
+						'' !== $( this ).find( '#ctlSignature' + sigPrefix + '_data' ).val()
+					) {
+						hasChanged = true;
+						return false;
+					}
+				});
+			}
+
+			if ( hasChanged ) {
+				$saveDraft.removeClass( 'disabled' );
+			} else {
+				$saveDraft.addClass( 'disabled' );
+			}
+		},
+
+		handleDiviPopup: function () {
+			var self = this;
+			if ( 'undefined' !== typeof DiviArea ) {
+				DiviArea.addAction( 'show_area', function( area ) {
+					setTimeout(
+						function() {
+							self.init();
+							forminatorSignInit();
+							forminatorSignatureResize();
+						},
+						100
+					);
+				});
+			}
+		},
+
+		disableFields: function () {
+			this.$el.addClass( 'forminator-fields-disabled' );
+		},
+
+        // Check if Complianz has added a blocker for reCaptcha.
+		checkComplianzBlocker: function () {
+			var complianzBlocker = this.$el.find( '.cmplz-blocked-content-container' );
+
+			if ( complianzBlocker.length > 0 ) {
+                var row = complianzBlocker.closest( '.forminator-row' );
+
+				this.disableFields();
+                row.insertBefore( this.$el.find( '.forminator-row' ).first() );
+				row.css({ 'pointer-events': 'all', 'opacity': '1' });
+				row.find( '*' ).css( 'pointer-events', 'all' );
+
+                // For paginated.
+                if ( row.closest( '.forminator-pagination--content' ).length > 0 ) {
+                    row.closest( '.forminator-pagination--content' ).css({ 'pointer-events': 'all', 'opacity': '1' });
+                    row.nextAll( '.forminator-row' ).css({ 'opacity': '0.5' });
+                }
+
+                // Reload window if accepted.
+                $( 'body' ).on( 'click', '.cmplz-blocked-content-notice, .cmplz-accept', function() {
+                    setTimeout(
+                        function() {
+                            window.location.reload();
+                        },
+                        50
+                    );
+                });
+			}
+		},
 	});
 
 	// A really lightweight plugin wrapper around the constructor,
@@ -1205,60 +1568,162 @@
 
 	// hook from wp_editor tinymce
 	$(document).on('tinymce-editor-init', function (event, editor) {
+		var editor_id = editor.id,
+			$field = $('#' + editor_id ).closest('.forminator-col')
+		;
+
 		// trigger editor change to save value to textarea,
 		// default wp tinymce textarea update only triggered when submit
 		var count  = 0;
 		editor.on('change', function () {
 			// only forminator
-			if (editor.id.indexOf('forminator-wp-editor-') === 0) {
+			if ( -1 !== editor_id.indexOf( 'forminator-field-textarea-' ) ) {
 				editor.save();
-			}
-			var editor_id = editor.id,
-				$field = $('#' + editor_id ).closest('.forminator-col'),
-				$limit = $field.find('.forminator-description span')
-			;
-			if ($limit.length) {
-				if ($limit.data('limit')) {
-					if ($limit.data('type') !== "words") {
-						count = editor.getContent({ format: 'text' }).length;
-					} else {
-						count = editor.getContent({ format: 'text' }).split(/\s+/).length;
-					}
-					$limit.html(count + ' / ' + $limit.data('limit'));
-				}
+				$field.find( '#' + editor_id ).trigger( 'change' );
 			}
 
-
+			if ( -1 !== editor_id.indexOf( 'forminator-field-post-content-' ) ) {
+				editor.save();
+				$field.find( '#' + editor_id ).trigger( 'change' );
+			}
 		});
+
+		// Trigger onblur.
+		editor.on( 'blur', function () {
+			// only forminator
+			if (
+				-1 !== editor_id.indexOf( 'forminator-field-textarea-' ) ||
+				-1 !== editor_id.indexOf( 'forminator-field-post-content-' )
+			) {
+				$field.find( '#' + editor_id ).valid();
+			}
+		});
+
+		// Make the visual editor and html editor the same height
+		if ( $( '#' + editor.id + '_ifr' ).is( ':visible' ) ) {
+			$( '#' + editor.id + '_ifr' ).height( $( '#' + editor.id ).height() );
+		}
+
+		// Add aria-describedby.
+		if ( -1 !== editor_id.indexOf( 'forminator' ) ) {
+			$( '#' + editor_id ).closest( '.wp-editor-wrap' ).attr(
+				'aria-describedby',
+				editor_id + '-description'
+			);
+		}
 	});
 
-	// Focus to nearest input when label is clicked
-	$( document ).on( 'ready after.load.forminator', function () {
+	$( document ).on( 'click', '.forminator-copy-btn', function( e ) {
+		forminatorCopyTextToClipboard( $( this ).prev( '.forminator-draft-link' ).val() );
+		if ( ! $( this ).hasClass( 'copied' ) ) {
+			$( this ).addClass( 'copied' )
+			$( this ).prepend( '&check;  ' );
+		}
+	} );
 
+	// Copy: Async + Fallback
+	// https://stackoverflow.com/a/30810322
+	function forminatorFallbackCopyTextToClipboard( text ) {
+		var textArea = document.createElement("textarea");
+		textArea.value = text;
+
+		// Avoid scrolling to bottom
+		textArea.style.top = "0";
+		textArea.style.left = "0";
+		textArea.style.position = "fixed";
+
+		document.body.appendChild(textArea);
+		textArea.focus();
+		textArea.select();
+
+		try {
+			var successful = document.execCommand('copy');
+			var msg = successful ? 'successful' : 'unsuccessful';
+			// console.log('Fallback: Copying text command was ' + msg);
+		} catch (err) {
+			// console.error('Fallback: Oops, unable to copy', err);
+		}
+
+		document.body.removeChild(textArea);
+	}
+
+	function forminatorCopyTextToClipboard (text ) {
+		if (!navigator.clipboard) {
+			forminatorFallbackCopyTextToClipboard(text);
+			return;
+		}
+		navigator.clipboard.writeText(text).then(function() {
+			// console.log('Async: Copying to clipboard was successful!');
+		}, function(err) {
+			// console.error('Async: Could not copy text: ', err);
+		});
+	}
+
+	// Focus to nearest input when label is clicked
+	function focus_to_nearest_input() {
 		$( '.forminator-custom-form' ).find( '.forminator-label' ).on( 'click', function ( e ) {
 			e.preventDefault();
 			var fieldLabel = $( this );
 
 			fieldLabel.next( '#' + fieldLabel.attr( 'for' ) ).focus();
 		});
-	});
+	}
+
+	focus_to_nearest_input();
+	$( document ).on( 'after.load.forminator', focus_to_nearest_input );
+
+	// Elementor Popup show event
+	jQuery( document ).on( 'elementor/popup/show', () => {
+		forminator_render_captcha();
+		forminator_render_hcaptcha();
+	} );
+
+	/**
+	 * Sanitize the user input string.
+	 *
+	 * @param {string} string
+	 */
+	function sanitize_text_field( string ) {
+		var str = String(string).replace(/[&\/\\#^+()$~%.'":*?<>{}!@]/g, '');
+		return str.trim();
+	}
 
 })(jQuery, window, document);
 
 // noinspection JSUnusedGlobalSymbols
 var forminator_render_captcha = function () {
 	// TODO: avoid conflict with another plugins that provide recaptcha
-	//  notify forminator front that grecaptcha loaded. anc can be used
+	//  notify forminator front that grecaptcha has loaded and can be used
 	jQuery('.forminator-g-recaptcha').each(function () {
 		// find closest form
 		var thisCaptcha = jQuery(this),
 			form 		= thisCaptcha.closest('form');
 
-		if (form.length > 0) {
+		if ( form.length > 0 && '' === thisCaptcha.html() ) {
 			window.setTimeout( function() {
 				var forminatorFront = form.data( 'forminatorFront' );
-				if (typeof forminatorFront !== 'undefined') {
+				if ( typeof forminatorFront !== 'undefined' ) {
 					forminatorFront.renderCaptcha( thisCaptcha[0] );
+				}
+			}, 100 );
+		}
+	});
+};
+
+// noinspection JSUnusedGlobalSymbols
+var forminator_render_hcaptcha = function () {
+	// TODO: avoid conflict with another plugins that provide hcaptcha
+	//  notify forminator front that hcaptcha has loaded and can be used
+	jQuery('.forminator-hcaptcha').each(function () {
+		// find closest form
+		var thisCaptcha = jQuery(this),
+			form 		= thisCaptcha.closest('form');
+
+		if ( form.length > 0 && '' === thisCaptcha.html() ) {
+			window.setTimeout( function() {
+				var forminatorFront = form.data( 'forminatorFront' );
+				if ( typeof forminatorFront !== 'undefined' ) {
+					forminatorFront.renderHcaptcha( thisCaptcha[0] );
 				}
 			}, 100 );
 		}
@@ -1384,5 +1849,5 @@ var forminatorDateUtil = {
 		}
 
 	    return d2.getFullYear()-d1.getFullYear();
-	}
+	},
 };

@@ -87,7 +87,7 @@ class ExactMetrics_Welcome {
 		delete_transient( '_exactmetrics_activation_redirect' );
 
 		// Bail if activating from network, or bulk.
-		if ( isset( $_GET['activate-multi'] ) ) { // WPCS: CSRF ok, input var ok.
+		if ( isset( $_GET['activate-multi'] ) ) { 
 			return;
 		}
 

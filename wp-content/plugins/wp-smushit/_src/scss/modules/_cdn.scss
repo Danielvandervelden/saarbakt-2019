@@ -14,9 +14,16 @@
             vertical-align: top;
         }
 
-        &.wrap-smush-cdn .sui-block-content-center p {
-            max-width: 600px;
-            margin: 20px auto 30px;
+        &.wrap-smush-cdn {
+            .sui-block-content-center p {
+                max-width: 600px;
+                margin: 20px auto 30px;
+            }
+            .sui-box-header .sui-actions-right .sui-icon-info{
+                font-size: 16px;
+                position: relative;
+                top: 1.5px;
+            }
         }
 
         .sui-cdn {
@@ -24,7 +31,6 @@
                 margin-top: 0;
             }
         }
-
         .wp-smush-stats {
             display: flex;
             align-items: center;
@@ -59,34 +65,6 @@
             &.smush-extension-iframe {
                 background-color: #8772D5;
                 font-size: 7px;
-            }
-        }
-
-        &.wrap-smush-cdn {
-
-            /* Pro features list in Free */
-            .smush-pro-features {
-                max-width: 350px;
-                margin: 0 auto 30px auto;
-                text-align: left;
-
-                .smush-pro-feature-row {
-
-                    .smush-pro-feature-title {
-                        font-size: 12px;
-                        line-height: 14px;
-
-                        &:before {
-                            font-size: 12px;
-                        }
-                    }
-
-                    &:not(:last-child) {
-                        border-bottom: 1px solid #F2F2F2;
-                        padding-bottom: 12px;
-                        margin-bottom: 12px;
-                   }
-                }
             }
         }
     }

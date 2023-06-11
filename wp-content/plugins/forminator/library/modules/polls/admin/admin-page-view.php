@@ -33,15 +33,15 @@ class Forminator_Poll_Page extends Forminator_Admin_Module_Edit_Page {
 	 */
 	protected static function module_array( $id, $title, $views, $date, $status, $model ) {
 		return array(
-					"id"              => $id,
-					"title"           => $title,
-					"entries"         => Forminator_Form_Entry_Model::count_entries( $id ),
-					"last_entry_time" => forminator_get_latest_entry_time_by_form_id( $id ),
-					"views"           => $views,
-					"date"            => $date,
-					"status"          => $status,
-					'name'            => forminator_get_name_from_model( $model ),
-				);
+			'id'              => $id,
+			'title'           => $title,
+			'entries'         => Forminator_Form_Entry_Model::count_entries( $id ),
+			'last_entry_time' => forminator_get_latest_entry_time_by_form_id( $id ),
+			'views'           => $views,
+			'date'            => $date,
+			'status'          => $status,
+			'name'            => forminator_get_name_from_model( $model ),
+		);
 	}
 
 	/**
@@ -54,10 +54,13 @@ class Forminator_Poll_Page extends Forminator_Admin_Module_Edit_Page {
 		return apply_filters(
 			'forminator_polls_bulk_actions',
 			array(
-				'clone-polls'        => __( "Duplicate", 'forminator' ),
-				'reset-views-polls'  => __( "Reset Tracking Data", 'forminator' ),
-				'delete-votes-polls' => __( "Delete Votes", 'forminator' ),
-				'delete-polls'       => __( "Delete", 'forminator' ),
-			) );
+				'publish-polls'      => __( 'Publish', 'forminator' ),
+				'draft-polls'        => __( 'Unpublish', 'forminator' ),
+				'clone-polls'        => __( 'Duplicate', 'forminator' ),
+				'reset-views-polls'  => __( 'Reset Tracking Data', 'forminator' ),
+				'delete-votes-polls' => __( 'Delete Votes', 'forminator' ),
+				'delete-polls'       => __( 'Delete', 'forminator' ),
+			)
+		);
 	}
 }

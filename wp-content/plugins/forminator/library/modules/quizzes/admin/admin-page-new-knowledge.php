@@ -17,10 +17,11 @@ class Forminator_Quiz_New_Knowledge extends Forminator_Admin_Page {
 	 * @return mixed
 	 */
 	public function getWizardTitle() {
-		if ( isset( $_REQUEST['id'] ) ) { // WPCS: CSRF OK
-			return __( "Edit Quiz", 'forminator' );
+		$id = filter_input( INPUT_GET, 'id', FILTER_VALIDATE_INT );
+		if ( $id ) {
+			return __( 'Edit Quiz', 'forminator' );
 		} else {
-			return __( "New Quiz", 'forminator' );
+			return __( 'New Quiz', 'forminator' );
 		}
 	}
 
@@ -31,10 +32,10 @@ class Forminator_Quiz_New_Knowledge extends Forminator_Admin_Page {
 	 * @param $hook
 	 */
 	public function enqueue_scripts( $hook ) {
-		// Load admin scripts
+		// Load admin scripts.
 		wp_register_script(
 			'forminator-admin',
-			forminator_plugin_url() . 'assets/js/knowledge-scripts.js',
+			forminator_plugin_url() . 'build/knowledge-scripts.js',
 			array(
 				'jquery',
 				'wp-color-picker',
@@ -45,7 +46,12 @@ class Forminator_Quiz_New_Knowledge extends Forminator_Admin_Page {
 			true
 		);
 
-		wp_enqueue_script( 'forminator-jquery-ui-touch', forminator_plugin_url() . 'assets/js/library/jquery.ui.touch-punch.min.js', array( 'jquery' ), FORMINATOR_VERSION, true );
+		// Remove default WordPress jQuery touch punch
+		wp_deregister_script('jquery-touch-punch');
+		// Register new modified jQuery touch punch script
+		wp_register_script('jquery-touch-punch', forminator_plugin_url() . 'assets/js/library/jquery.ui.touch-punch.min.js', array( 'jquery-ui-core', 'jquery-ui-mouse' ), FORMINATOR_VERSION, true);
+		// Enqueue the script   
+		wp_enqueue_script('jquery-touch-punch');
 		forminator_common_admin_enqueue_scripts( true );
 	}
 }

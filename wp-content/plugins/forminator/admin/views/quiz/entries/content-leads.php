@@ -1,10 +1,11 @@
 <?php
-$form_type        = $this->get_form_type();
-$url_entry_id = ( isset( $_GET['entry_id'] ) && ! empty( $_GET['entry_id'] ) ) ? (int) sanitize_text_field( $_GET['entry_id'] ) : 0;//phpcs:ignore
+$form_type    = $this->get_form_type();
+$url_entry_id = filter_input( INPUT_GET, 'entry_id', FILTER_VALIDATE_INT );
+$url_entry_id = $url_entry_id ? $url_entry_id : 0;
 foreach ( $this->entries_iterator() as $entries ) {
 
 	$db_entry_id = isset( $entries['entry_id'] ) ? $entries['entry_id'] : '';
-	$entry_date = isset( $entries['entry_date'] ) ? $entries['entry_date'] : '';
+	$entry_date  = isset( $entries['entry_date'] ) ? $entries['entry_date'] : '';
 
 	$summary       = $entries['summary'];
 	$summary_items = $summary['items'];
@@ -13,11 +14,11 @@ foreach ( $this->entries_iterator() as $entries ) {
 	$detail_items = $detail['items'];
 	$quiz_entry   = $detail['quiz_entry'];
 	$integrations = $detail['integrations'];
-	//Open entry tab by received submission link
+	// Open entry tab by received submission link.
 	$cls_open_tab = $url_entry_id === (int) $db_entry_id ? 'sui-accordion-item--open' : '';
 	?>
 
-    <tr class="sui-accordion-item <?php echo esc_attr( $cls_open_tab ); ?>" data-entry-id="<?php echo esc_attr( $db_entry_id ); ?>">
+	<tr class="sui-accordion-item <?php echo esc_attr( $cls_open_tab ); ?>" data-entry-id="<?php echo esc_attr( $db_entry_id ); ?>">
 
 		<?php foreach ( $summary_items as $key => $summary_item ) { ?>
 
@@ -36,7 +37,7 @@ foreach ( $this->entries_iterator() as $entries ) {
 
 				echo '</td>';
 
-            elseif ( 1 === $summary_item['colspan'] ) :
+			elseif ( 1 === $summary_item['colspan'] ) :
 
 				echo '<td class="sui-accordion-item-title">';
 
@@ -47,9 +48,9 @@ foreach ( $this->entries_iterator() as $entries ) {
 						echo '<span aria-hidden="true"></span>';
 
 						echo '<span class="sui-screen-reader-text">' . sprintf(/* translators: ... */
-								esc_html__( 'Select entry number %s', 'forminator' ),
-								esc_html( $db_entry_id )
-							) . '</span>';
+							esc_html__( 'Select entry number %s', 'forminator' ),
+							esc_html( $db_entry_id )
+						) . '</span>';
 
 					echo '</label>';
 
@@ -79,9 +80,9 @@ foreach ( $this->entries_iterator() as $entries ) {
 
 			echo '<td>';
 				echo '' . sprintf(/* translators: ... */
-						esc_html__( '+ %s other fields', 'forminator' ),
-						esc_html( $summary['num_fields_left'] )
-					) . '';
+					esc_html__( '+ %s other fields', 'forminator' ),
+					esc_html( $summary['num_fields_left'] )
+				) . '';
 				echo '<span class="sui-accordion-open-indicator">';
 					echo '<span class="sui-icon-chevron-down"></span>';
 				echo '</span>';
@@ -90,13 +91,13 @@ foreach ( $this->entries_iterator() as $entries ) {
 		}
 		?>
 
-    </tr>
+	</tr>
 
-    <tr class="sui-accordion-item-content">
+	<tr class="sui-accordion-item-content">
 
-        <td colspan="<?php echo esc_attr( $detail['colspan'] ); ?>">
+		<td colspan="<?php echo esc_attr( $detail['colspan'] ); ?>">
 
-            <div class="sui-box">
+			<div class="sui-box">
 
 				<div class="sui-box-body fui-entries--knowledge">
 
@@ -115,136 +116,31 @@ foreach ( $this->entries_iterator() as $entries ) {
 						<h3 class="fui-entries-subtitle"><?php esc_html_e( 'Lead Details', 'forminator' ); ?></h3>
 
 						<?php if ( ! empty( $detail_items ) ) { ?>
-
-							<table class="fui-entries-table" data-design="ghost">
-
-								<tbody>
-
-									<?php foreach ( $detail_items as $detail_item ) { ?>
-
-										<?php $sub_entries = $detail_item['sub_entries']; ?>
-
-										<?php if ( isset( $detail_item['type'] ) && ( 'stripe' === $detail_item['type'] || 'paypal' === $detail_item['type'] ) ) { ?>
-
-											<?php if ( ! empty( $sub_entries ) ) { ?>
-
-												<tr>
-
-													<td><?php echo esc_html( $detail_item['label'] ); ?></td>
-
-													<td>
-
-														<table class="fui-entries-table" data-size="sm">
-
-															<thead>
-
-																<tr>
-
-																	<?php
-																	$end = count( $sub_entries );
-																	foreach ( $sub_entries as $sub_key => $sub_entry ) {
-
-																		$sub_key ++;
-
-																		if ( $sub_key === $end ) {
-
-																			echo '<th colspan="2">' . esc_html( $sub_entry['label'] ) . '</th>';
-
-																		} else {
-
-																			echo '<th>' . esc_html( $sub_entry['label'] ) . '</th>';
-
-																		}
-																	}
-																	?>
-
-																</tr>
-
-															</thead>
-
-															<tbody>
-
-																<tr>
-
-																	<?php
-																	$end = count( $sub_entries );
-																	foreach ( $sub_entries as $sub_key => $sub_entry ) {
-
-																		$sub_key ++;
-
-																		if ( $sub_key === $end ) {
-																			// No escape for Stripe & PayPal transaction links because we generate it ourselves above
-																			echo '<td colspan="2">' . $sub_entry['value'] . '</td>'; //phpcs:ignore -- html output intended
-
-																		} else {
-
-																			echo '<td>' . esc_html( $sub_entry['value'] ) . '</td>';
-
-																		}
-																	}
-																	?>
-
-																</tr>
-
-															</tbody>
-
-														</table>
-
-													</td>
-
-												</tr>
-
-											<?php } ?>
-
-										<?php } else { ?>
-
-											<tr>
-
-												<td><?php echo esc_html( $detail_item['label'] ); ?></td>
-
-												<td>
-
-													<?php if ( empty( $sub_entries ) ) { ?>
-
-														<?php if ( 'textarea' === $detail_item['type'] && ( isset( $detail_item['rich'] ) && 'true' === $detail_item['rich'] ) ): ?>
-
-															<div class="fui-rich-textarea"><?php echo( $detail_item['value'] );//phpcs:ignore -- html output intended ?></div>
-
-														<?php else: ?>
-
-															<?php echo( $detail_item['value'] );//phpcs:ignore -- html output intended ?>
-
-														<?php endif; ?>
-
-													<?php } else { ?>
-
-														<?php foreach ( $sub_entries as $sub_entry ) { ?>
-
-															<div class="sui-form-field">
-																<span class="sui-settings-label"><?php echo esc_html( $sub_entry['label'] ); ?></span>
-																<span class="sui-description"><?php echo( $sub_entry['value'] );//phpcs:ignore -- html output intended ?></span>
-															</div>
-
-														<?php } ?>
-
-													<?php } ?>
-
-												</td>
-
-											</tr>
-
-										<?php } ?>
-
-									<?php } ?>
-
-								</tbody>
-
-							</table>
-
+							<?php foreach ( $detail_items as $detail_item ) { ?>
+								<?php include_once forminator_plugin_dir() . 'admin/views/custom-form/entries/content-details.php'; ?>
+								<?php forminator_submissions_content_details( $detail_item ); ?>
+							<?php } ?>
 						<?php } else { ?>
 
-							<div class="sui-notice">
-								<p><?php esc_html_e( 'Lead details are not available for this submission. Looks like the participant opted to skip the lead generation form while submitting the quiz.', 'forminator' ); ?></p>
+							<div
+								role="alert"
+								class="sui-notice sui-active"
+								style="display: block; text-align: left;"
+								aria-live="assertive"
+							>
+
+								<div class="sui-notice-content">
+
+									<div class="sui-notice-message">
+
+										<span class="sui-notice-icon sui-icon-info" aria-hidden="true"></span>
+
+										<p><?php esc_html_e( 'Lead details are not available for this submission. Looks like the participant opted to skip the lead generation form while submitting the quiz.', 'forminator' ); ?></p>
+
+									</div>
+
+								</div>
+
 							</div>
 
 						<?php } ?>
@@ -256,7 +152,8 @@ foreach ( $this->entries_iterator() as $entries ) {
 
 						<h3 class="fui-entries-subtitle"><?php esc_html_e( 'Quiz Results', 'forminator' ); ?></h3>
 
-						<?php if ( ! empty( $quiz_entry ) ) {
+						<?php
+						if ( ! empty( $quiz_entry ) ) {
 
 							if ( 'knowledge' === $form_type ) {
 
@@ -272,7 +169,7 @@ foreach ( $this->entries_iterator() as $entries ) {
 								}
 								?>
 
-								<p class="sui-description"><?php echo sprintf( __( 'You got %s/%s correct answers.', 'forminator' ), $right, $total ); // phpcs:ignore ?></p>
+								<p class="sui-description"><?php echo sprintf( esc_html__( 'You got %1$s/%2$s correct answers.', 'forminator' ), (int) $right, (int) $total ); ?></p>
 
 								<table class="fui-entries-table">
 
@@ -294,12 +191,14 @@ foreach ( $this->entries_iterator() as $entries ) {
 											<tr>
 												<td><strong><?php echo esc_html( $answer['question'] ); ?></strong></td>
 												<td>
-													<?php if ( $answer['isCorrect'] ) {
+													<?php
+													if ( $answer['isCorrect'] ) {
 														echo '<span class="sui-tag sui-tag-success">' . esc_html( $user_answer ) . '</span>';
 													} else {
 														echo '<span class="sui-tag sui-tag-error">' . esc_html( $user_answer ) . '</span>';
-													} ?>
-                                            	</td>
+													}
+													?>
+												</td>
 											</tr>
 
 										<?php endforeach; ?>
@@ -362,7 +261,7 @@ foreach ( $this->entries_iterator() as $entries ) {
 
 											<tr>
 
-												<td colspan="2"><?php printf( __( '<strong>Quiz Result:</strong> %s', 'forminator' ), $meta['result']['title'] ); // phpcs:ignore ?></td>
+												<td colspan="2"><?php echo wp_kses_post( sprintf( __( '<strong>Quiz Result:</strong> %s', 'forminator' ), $meta['result']['title'] ) ); ?></td>
 
 											</tr>
 
@@ -375,9 +274,26 @@ foreach ( $this->entries_iterator() as $entries ) {
 							<?php } ?>
 
 						<?php } else { ?>
-                            <div class="sui-notice">
-                                <p><?php esc_html_e( 'Quiz results are not available for this submission. The participant either couldn\'t finish the quiz or had some errors while submitting the quiz.', 'forminator' ); ?></p>
-                            </div>
+							<div
+								role="alert"
+								class="sui-notice sui-active"
+								style="display: block; text-align: left;"
+								aria-live="assertive"
+							>
+
+								<div class="sui-notice-content">
+
+									<div class="sui-notice-message">
+
+										<span class="sui-notice-icon sui-icon-info" aria-hidden="true"></span>
+
+										<p><?php esc_html_e( 'Quiz results are not available for this submission. The participant either couldn\'t finish the quiz or had some errors while submitting the quiz.', 'forminator' ); ?></p>
+
+									</div>
+
+								</div>
+
+							</div>
 						<?php } ?>
 
 					</div>
@@ -413,7 +329,7 @@ foreach ( $this->entries_iterator() as $entries ) {
 													class="sui-image"
 													style="width: 20px; height: 20px;"
 												/>
-												<span style="margin-left: 10px;"><?php echo $integration['title']; // phpcs:ignore -- html output intended ?></span>
+												<span style="margin-left: 10px;"><?php echo wp_kses_post( $integration['title'] ); ?></span>
 											</div>
 
 											<div>
@@ -430,7 +346,7 @@ foreach ( $this->entries_iterator() as $entries ) {
 
 												<?php else : ?>
 
-													<span><?php echo( $integration['value'] ); // phpcs:ignore -- html output intended ?></span>
+													<span><?php echo wp_kses_post( $integration['value'] ); ?></span>
 
 												<?php endif; ?>
 
@@ -456,7 +372,7 @@ foreach ( $this->entries_iterator() as $entries ) {
 
 															<div class="">
 																<span class="sui-settings-label"><?php echo esc_html( $sub_entry['label'] ); ?></span>
-																<span class="sui-description"><?php echo( $sub_entry['value'] ); // phpcs:ignore -- html output intended ?></span>
+																<span class="sui-description"><?php echo wp_kses_post( $sub_entry['value'] ); ?></span>
 															</div>
 
 														<?php } ?>
@@ -481,58 +397,41 @@ foreach ( $this->entries_iterator() as $entries ) {
 
 				</div>
 
-                <div class="sui-box-footer">
+				<div class="sui-box-footer">
 
-                    <button
-                            type="button"
-                            class="sui-button sui-button-ghost sui-button-red wpmudev-open-modal"
-						<?php if ( isset( $entries['activation_key'] ) ) {
-							$button_title = esc_html__( 'Delete Submission & User', 'forminator' );
+					<button
+							type="button"
+							class="sui-button sui-button-ghost sui-button-red wpmudev-open-modal"
+						<?php
+						if ( isset( $entries['activation_key'] ) ) {
+							$button_title      = esc_html__( 'Delete Submission & User', 'forminator' );
 							$is_activation_key = true;
 							?>
-                            data-activation-key="<?php echo $entries['activation_key']; ?>"
-                            data-modal="delete-unconfirmed-user-module"
-                            data-entry-id="<?php echo esc_attr( $db_entry_id ); ?>"
-                            data-form-id="<?php echo esc_attr( $this->model->id ); ?>"
-						<?php } else {
-							$button_title = esc_html__( 'Delete', 'forminator' );
+							data-activation-key="<?php echo esc_attr( $entries['activation_key'] ); ?>"
+							data-modal="delete-unconfirmed-user-module"
+							data-entry-id="<?php echo esc_attr( $db_entry_id ); ?>"
+							data-form-id="<?php echo esc_attr( $this->model->id ); ?>"
+							<?php
+						} else {
+							$button_title      = esc_html__( 'Delete', 'forminator' );
 							$is_activation_key = false;
 							?>
-                            data-modal="delete-module"
-                            data-form-id="<?php echo esc_attr( $db_entry_id ); ?>"
+							data-modal="delete-module"
+							data-form-id="<?php echo esc_attr( $db_entry_id ); ?>"
 						<?php } ?>
-                            data-modal-title="<?php esc_attr_e( 'Delete Submission', 'forminator' ); ?>"
-                            data-modal-content="<?php esc_attr_e( 'Are you sure you wish to permanently delete this submission?', 'forminator' ); ?>"
-                            data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminatorQuizEntries' ) ); ?>"
-                    >
-                        <i class="sui-icon-trash" aria-hidden="true"></i> <?php echo $button_title; ?>
-                    </button>
+							data-modal-title="<?php esc_attr_e( 'Delete Submission', 'forminator' ); ?>"
+							data-modal-content="<?php esc_attr_e( 'Are you sure you wish to permanently delete this submission?', 'forminator' ); ?>"
+							data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminatorQuizEntries' ) ); ?>"
+					>
+						<i class="sui-icon-trash" aria-hidden="true"></i> <?php echo wp_kses_post( $button_title ); ?>
+					</button>
 
-					<?php if ( isset( $entries['activation_method'] ) && 'manual' === $entries['activation_method'] && $is_activation_key  ) { ?>
+				</div>
 
-                        <div class="sui-actions-right">
-                            <button
-                                    type="button"
-                                    class="sui-button wpmudev-open-modal"
-                                    data-modal="approve-user-module"
-                                    data-modal-title="<?php esc_attr_e( 'Approve User', 'forminator' ); ?>"
-                                    data-modal-content="<?php esc_attr_e( 'Are you sure you want to approve and activate this user?', 'forminator' ); ?>"
-                                    data-form-id="<?php echo esc_attr( $db_entry_id ); ?>"
-                                    data-activation-key="<?php echo esc_attr( $entries['activation_key'] ); ?>"
-                                    data-nonce="<?php echo wp_create_nonce( 'forminatorFormEntries' ); // WPCS: XSS ok. ?>"
-                            >
-								<?php esc_html_e( 'Approve User', 'forminator' ); ?>
-                            </button>
-                        </div>
+			</div>
 
-					<?php } ?>
+		</td>
 
-                </div>
-
-            </div>
-
-        </td>
-
-    </tr>
+	</tr>
 
 <?php } ?>

@@ -41,7 +41,7 @@ class Forminator_GFBlock_Quizzes extends Forminator_GFBlock_Abstract {
 	 * @since 1.0 Gutenberg Addon
 	 */
 	public function __construct() {
-		// Initialize block
+		// Initialize block.
 		$this->init();
 	}
 
@@ -49,7 +49,7 @@ class Forminator_GFBlock_Quizzes extends Forminator_GFBlock_Abstract {
 	 * Render block markup on front-end
 	 *
 	 * @since 1.0 Gutenberg Addon
-	 * @param array $properties Block properties
+	 * @param array $properties Block properties.
 	 *
 	 * @return string
 	 */
@@ -61,7 +61,7 @@ class Forminator_GFBlock_Quizzes extends Forminator_GFBlock_Abstract {
 	 * Preview form markup in block
 	 *
 	 * @since 1.0 Gutenberg Addon
-	 * @param array $properties Block properties
+	 * @param array $properties Block properties.
 	 *
 	 * @return string
 	 */
@@ -80,7 +80,7 @@ class Forminator_GFBlock_Quizzes extends Forminator_GFBlock_Abstract {
 	 * @since 1.0 Gutenberg Addon
 	 */
 	public function load_assets() {
-		// Scripts
+		// Scripts.
 		wp_enqueue_script(
 			'forminator-block-quizzes',
 			forminator_gutenberg()->get_plugin_url() . '/js/quizzes-block.min.js',
@@ -89,7 +89,7 @@ class Forminator_GFBlock_Quizzes extends Forminator_GFBlock_Abstract {
 			false
 		);
 
-		// Localize scripts
+		// Localize scripts.
 		wp_localize_script(
 			'forminator-block-quizzes',
 			'frmnt_quiz_data',
@@ -111,16 +111,16 @@ class Forminator_GFBlock_Quizzes extends Forminator_GFBlock_Abstract {
 	 * @param WP_REST_Request $data
 	 */
 	public function preview_block_markup( $data ) {
-		// Get properties
+		// Get properties.
 		$properties = $data->get_params();
 
-		// Get module ID
+		// Get module ID.
 		$id = isset( $properties['module_id'] ) ? $properties['module_id'] : false;
 
-		// Get block preview markup
+		// Get block preview markup.
 		$markup = $this->preview_block( $properties );
 
-		// Get quiz
+		// Get quiz.
 		$quiz = Forminator_API::get_module( $id );
 
 		if ( $markup ) {

@@ -72,7 +72,7 @@ class Forminator_WP_User_Autofill_Provider extends Forminator_Autofill_Provider_
 	 * @return bool
 	 */
 	public function is_enabled() {
-		// no prequisities / requirements
+		// no prequisities / requirements.
 		return true;
 	}
 
@@ -106,8 +106,8 @@ class Forminator_WP_User_Autofill_Provider extends Forminator_Autofill_Provider_
 	 *          'PROVIDER_SLUG.ATTRIBUTE_PROVIDER_KEY'
 	 *              ],
 	 *   'text' => [
-	 *          // you can add multiple here
-	 *          // or you can add other provider too! simply by knowing its slug and attribute key
+	 *          // you can add multiple here.
+	 *          // or you can add other provider too! simply by knowing its slug and attribute key.
 	 *          'simple.simple_text',
 	 *              ],
 	 *    'number' => [

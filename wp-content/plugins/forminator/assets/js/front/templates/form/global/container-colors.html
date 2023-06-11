@@ -13,6 +13,13 @@
 		<?php } ?>
 	}
 
+<?php } else if ( forminator_array_value_exists( $properties, 'form-border' ) ) { ?>
+	
+	#forminator-module-<?php echo $properties['form_id'] ?> {
+		border-color: #777771;
+		background-color: rgba(0,0,0,0);
+	}
+	
 <?php } else { ?>
 
 	#forminator-module-<?php echo $properties['form_id'] ?> {

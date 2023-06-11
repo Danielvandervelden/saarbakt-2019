@@ -1,6 +1,6 @@
 <?php
 
-// File generated from our OpenAPI spec
+// File generated from our OpenAPI spec.
 
 namespace Forminator\Stripe\Checkout;
 
@@ -73,7 +73,7 @@ class Session extends \Forminator\Stripe\ApiResource
     const PATH_LINE_ITEMS = '/line_items';
 
     /**
-     * @param string $id the ID of the session on which to retrieve the items
+     * @param string $id the ID of the session on which to retrieve the items.
      * @param null|array $params
      * @param null|array|string $opts
      *

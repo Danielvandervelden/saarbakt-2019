@@ -41,6 +41,19 @@ class Settings extends Abstract_Page implements Interface_Page {
 		}
 
 		add_action( 'smush_setting_column_right_inside', array( $this, 'usage_settings' ), 25, 2 );
+		add_action( 'smush_setting_column_right_inside', array( $this, 'detection_settings' ), 25, 2 );
+	}
+
+	/**
+	 * Enqueue scripts.
+	 *
+	 * @since 3.9.0
+	 *
+	 * @param string $hook Hook from where the call is made.
+	 */
+	public function enqueue_scripts( $hook ) {
+		// Scripts for Configs.
+		$this->enqueue_configs_scripts();
 	}
 
 	/**
@@ -113,6 +126,75 @@ class Settings extends Abstract_Page implements Interface_Page {
 	}
 
 	/**
+	 * Display a description in Settings - Image Resize Detection.
+	 *
+	 * @since 3.2.1
+	 *
+	 * @param string $name  Setting name.
+	 */
+	public function detection_settings( $name ) {
+		// Add only to full size settings.
+		if ( 'detection' !== $name ) {
+			return;
+		}
+		?>
+
+		<span class="sui-description sui-toggle-description">
+			<?php esc_html_e( 'Note: The highlighting will only be visible to administrators – visitors won’t see the highlighting.', 'wp-smushit' ); ?>
+			<?php if ( $this->settings->get( 'detection' ) ) : ?>
+				<?php if ( $this->settings->get( 'cdn' ) && $this->settings->get( 'auto_resize' ) ) : ?>
+					<div class="sui-notice smush-highlighting-notice">
+						<div class="sui-notice-content">
+							<div class="sui-notice-message">
+								<i class="sui-notice-icon sui-icon-info sui-md" aria-hidden="true"></i>
+								<p>
+									<?php
+									esc_html_e(
+										'Note: Images served via the Smush CDN are automatically resized to fit their containers, these will be skipped.',
+										'wp-smushit'
+									);
+									?>
+								</p>
+							</div>
+						</div>
+					</div>
+				<?php else : ?>
+					<div class="sui-notice sui-notice-info smush-highlighting-notice">
+						<div class="sui-notice-content">
+							<div class="sui-notice-message">
+								<i class="sui-notice-icon sui-icon-info sui-md" aria-hidden="true"></i>
+								<p>
+									<?php
+									printf(
+									/* translators: %1$s: opening a tag, %2$s: closing a tag */
+										esc_html__(
+											'Incorrect image size highlighting is active. %1$sView the frontend%2$s of your website to see if any images aren\'t the correct size for their containers.',
+											'wp-smushit'
+										),
+										'<a href="' . esc_url( home_url() ) . '" target="_blank">',
+										'</a>'
+									);
+									?>
+								</p>
+							</div>
+						</div>
+					</div>
+				<?php endif; ?>
+			<?php else : ?>
+				<div class="sui-notice sui-notice-warning smush-highlighting-warning sui-hidden">
+					<div class="sui-notice-content">
+						<div class="sui-notice-message">
+							<i class="sui-notice-icon sui-icon-info sui-md" aria-hidden="true"></i>
+							<p><?php esc_html_e( 'Almost there! To finish activating this feature you must save your settings.', 'wp-smushit' ); ?></p>
+						</div>
+					</div>
+				</div>
+			<?php endif; ?>
+		</span>
+		<?php
+	}
+
+	/**
 	 * Common footer meta box.
 	 *
 	 * @since 3.2.0
@@ -140,6 +222,7 @@ class Settings extends Abstract_Page implements Interface_Page {
 		$this->view(
 			'settings/general-meta-box',
 			array(
+				'detection'        => $this->settings->get( 'detection' ),
 				'site_language'    => $site_language,
 				'tracking'         => (bool) $this->settings->get( 'usage' ),
 				'translation_link' => $link,
@@ -154,7 +237,7 @@ class Settings extends Abstract_Page implements Interface_Page {
 		$this->view(
 			'settings/permissions-meta-box',
 			array(
-				'networkwide' => get_site_option( WP_SMUSH_PREFIX . 'networkwide' ),
+				'networkwide' => get_site_option( 'wp-smush-networkwide' ),
 			)
 		);
 	}

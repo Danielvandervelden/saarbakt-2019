@@ -28,7 +28,7 @@ if (!class_exists('Forminator_Google_Client')) {
  */
 class Forminator_Google_Signer_P12 extends Forminator_Google_Signer_Abstract
 {
-  // OpenSSL private key resource
+  // OpenSSL private key resource.
   private $privateKey;
 
   // Creates a new signer from a .p12 file.
@@ -40,16 +40,16 @@ class Forminator_Google_Signer_P12 extends Forminator_Google_Signer_Abstract
       );
     }
 
-    // If the private key is provided directly, then this isn't in the p12
-    // format. Different versions of openssl support different p12 formats
-    // and the key from google wasn't being accepted by the version available
+    // If the private key is provided directly, then this isn't in the p12.
+    // format. Different versions of openssl support different p12 formats.
+    // and the key from google wasn't being accepted by the version available.
     // at the time.
     if (!$password && strpos($p12, "-----BEGIN RSA PRIVATE KEY-----") !== false) {
       $this->privateKey = openssl_pkey_get_private($p12);
     } elseif ($password === 'notasecret' && strpos($p12, "-----BEGIN PRIVATE KEY-----") !== false) {
       $this->privateKey = openssl_pkey_get_private($p12);
     } else {
-      // This throws on error
+      // This throws on error.
       $certs = array();
       if (!openssl_pkcs12_read($p12, $certs, $password)) {
         throw new Forminator_Google_Auth_Exception(
@@ -58,7 +58,7 @@ class Forminator_Google_Signer_P12 extends Forminator_Google_Signer_Abstract
             openssl_error_string()
         );
       }
-      // TODO(beaton): is this part of the contract for the openssl_pkcs12_read
+      // TODO(beaton): is this part of the contract for the openssl_pkcs12_read.
       // method?  What happens if there are multiple private keys?  Do we care?
       if (!array_key_exists("pkey", $certs) || !$certs["pkey"]) {
         throw new Forminator_Google_Auth_Exception("No private key found in p12 file.");

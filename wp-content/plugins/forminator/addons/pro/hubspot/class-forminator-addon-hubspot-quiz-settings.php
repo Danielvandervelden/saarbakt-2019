@@ -44,7 +44,7 @@ class Forminator_Addon_Hubspot_Quiz_Settings extends Forminator_Addon_Quiz_Setti
 	 * @return array
 	 */
 	public function quiz_settings_wizards() {
-		// numerical array steps
+		// numerical array steps.
 		return array(
 			array(
 				'callback'     => array( $this, 'map_fields' ),
@@ -82,7 +82,7 @@ class Forminator_Addon_Hubspot_Quiz_Settings extends Forminator_Addon_Quiz_Setti
 		$forminator_field_element_ids = array();
 		$forminator_quiz_element_ids  = array();
 		foreach ( $this->form_fields as $form_field ) {
-			// collect element ids
+			// collect element ids.
 			$forminator_field_element_ids[] = $form_field['element_id'];
 			if ( 'email' === $form_field['type'] ) {
 				$email_fields[] = $form_field;
@@ -94,7 +94,7 @@ class Forminator_Addon_Hubspot_Quiz_Settings extends Forminator_Addon_Quiz_Setti
 			'quiz-name' => __( 'Quiz Name', 'forminator' ),
 		);
 		foreach ( $quiz_questions as $quiz_question ) {
-			// collect element ids
+			// collect element ids.
 			$forminator_quiz_element_ids[]         = $quiz_question['slug'];
 			$quiz_fields[ $quiz_question['slug'] ] = $quiz_question['title'];
 		}
@@ -178,7 +178,7 @@ class Forminator_Addon_Hubspot_Quiz_Settings extends Forminator_Addon_Quiz_Setti
 						$element_id = $fields_map[ $key ];
 						if ( ! in_array( $element_id, $forminator_field_element_ids, true ) ) {
 							$input_exceptions->add_input_exception(/* translators: ... */
-								sprintf( __( 'Please assign valid field for %s', 'forminator' ), $title ),
+								sprintf( __( 'Please assign valid field for %s', 'forminator' ), esc_html( $title ) ),
 								$key . '_error'
 							);
 							continue;
@@ -292,7 +292,7 @@ class Forminator_Addon_Hubspot_Quiz_Settings extends Forminator_Addon_Quiz_Setti
 		$file_fields                  = array();
 		$forminator_field_element_ids = array();
 		foreach ( $this->form_fields as $form_field ) {
-			// collect element ids
+			// collect element ids.
 			$forminator_field_element_ids[] = $form_field['element_id'];
 			if ( 'upload' === $form_field['type'] ) {
 				$file_fields[] = $form_field;
@@ -556,7 +556,7 @@ class Forminator_Addon_Hubspot_Quiz_Settings extends Forminator_Addon_Quiz_Setti
 		foreach ( $this->get_quiz_settings_values() as $key => $value ) {
 			$multi_ids[] = array(
 				'id'    => $key,
-				// use name that was added by user on creating connection
+				// use name that was added by user on creating connection.
 				'label' => isset( $value['name'] ) ? $value['name'] : $key,
 			);
 		}
@@ -572,7 +572,7 @@ class Forminator_Addon_Hubspot_Quiz_Settings extends Forminator_Addon_Quiz_Setti
 	 * @param array $submitted_data
 	 */
 	public function disconnect_form( $submitted_data ) {
-		// only execute if multi_id provided on submitted data
+		// only execute if multi_id provided on submitted data.
 		if ( isset( $submitted_data['multi_id'] ) && ! empty( $submitted_data['multi_id'] ) ) {
 			$addon_quiz_settings = $this->get_quiz_settings_values();
 			unset( $addon_quiz_settings[ $submitted_data['multi_id'] ] );

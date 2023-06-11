@@ -76,12 +76,12 @@ class Forminator_Phone extends Forminator_Field {
 		return apply_filters(
 			'forminator_phone_defaults_settings',
 			array(
-				'required'              => false,
-				'limit'                 => 10,
-				'limit_type'            => 'characters',
-				'validation'            => 'none',
-				'field_label'           => __( 'Phone', 'forminator' ),
-				'placeholder'           => __( 'E.g. +1 300 400 5000', 'forminator' ),
+				'required'    => false,
+				'limit'       => 10,
+				'limit_type'  => 'characters',
+				'validation'  => 'none',
+				'field_label' => __( 'Phone', 'forminator' ),
+				'placeholder' => __( 'E.g. +1 300 400 5000', 'forminator' ),
 			)
 		);
 	}
@@ -149,26 +149,27 @@ class Forminator_Phone extends Forminator_Field {
 	 * @since 1.0
 	 *
 	 * @param $field
-	 * @param $settings
+	 * @param Forminator_Render_Form $views_obj Forminator_Render_Form object.
 	 *
 	 * @return mixed
 	 */
-	public function markup( $field, $settings = array() ) {
+	public function markup( $field, $views_obj, $draft_value = null ) {
 
+		$settings    = $views_obj->model->settings;
 		$this->field = $field;
 
 		$html                  = '';
 		$id                    = self::get_property( 'element_id', $field );
 		$name                  = $id;
 		$ariaid                = $id;
-		$id                    = 'forminator-field-' . $id;
+		$id                    = 'forminator-field-' . $id . '_' . Forminator_CForm_Front::$uid;
 		$required              = self::get_property( 'required', $field, false, 'bool' );
 		$ariareq               = 'false';
 		$design                = $this->get_form_style( $settings );
 		$placeholder           = $this->sanitize_value( self::get_property( 'placeholder', $field ) );
 		$value                 = esc_html( self::get_property( 'value', $field ) );
 		$national_country      = self::get_property( 'phone_national_country', $field, 'AF' );
-		$international_country = self::get_property( 'phone_international_country', $field, 'US' );
+		$international_country = self::get_property( 'phone_international_country', $field, 'AF' );
 		$limit                 = esc_html( self::get_property( 'limit', $field, 10 ) );
 		$label                 = esc_html( self::get_property( 'field_label', $field, '' ) );
 		$description           = self::get_property( 'description', $field, '' );
@@ -179,15 +180,24 @@ class Forminator_Phone extends Forminator_Field {
 		}
 
 		if ( self::FIELD_PROPERTY_VALUE_NOT_EXIST === $format_check ) {
-			// read old attribute
-			$phone_check = self::get_property( 'phone_validation', $field, false, 'bool' );
+			// read old attribute.
+			$phone_check  = self::get_property( 'phone_validation', $field, false, 'bool' );
 			$format_check = false === $phone_check ? 'none' : '';
 		}
 
-		// Check if Pre-fill parameter used
-		if ( $this->has_prefill( $field ) ) {
-			// We have pre-fill parameter, use its value or $value
+		if ( isset( $draft_value['value'] ) ) {
+
+			$value = esc_attr( $draft_value['value'] );
+
+		} elseif ( $this->has_prefill( $field ) ) {
+
+			// We have pre-fill parameter, use its value or $value.
 			$value = $this->get_prefill( $field, $value );
+
+			// If validation is not international, replace 1st space with plus.
+			if ( 'international' !== $format_check ) {
+				$value = 0 === strpos( $value, ' ' ) ? str_replace( ' ', '+', $value ) : trim( $value );
+			}
 		}
 
 		$phone_attr = array(
@@ -230,13 +240,17 @@ class Forminator_Phone extends Forminator_Field {
 			$phone_attr['data-validation'] = $format_check;
 		}
 
+		if ( ! empty( $description ) ) {
+			$phone_attr['aria-describedby'] = esc_attr( $id . '-description' );
+		}
+
 		$html .= '<div class="forminator-field">';
 
 			$html .= self::create_input( $phone_attr, $label, '', $required, $design );
 
 		if ( ! empty( $description ) || ( 'character_limit' === $format_check && 0 < $limit ) ) {
 
-			$html .= '<span class="forminator-description">';
+			$html .= sprintf( '<span id="' . esc_attr( $id . '-description' ) . '" class="forminator-description" id="%s">', $id . '-description' );
 
 			if ( ! empty( $description ) ) {
 				$html .= wp_kses_data( $description );
@@ -269,8 +283,8 @@ class Forminator_Phone extends Forminator_Field {
 		$format_check = self::get_property( 'validation', $field, self::FIELD_PROPERTY_VALUE_NOT_EXIST );
 
 		if ( self::FIELD_PROPERTY_VALUE_NOT_EXIST === $format_check ) {
-			// read old attribute
-			$phone_check = self::get_property( 'phone_validation', $field, false, 'bool' );
+			// read old attribute.
+			$phone_check  = self::get_property( 'phone_validation', $field, false, 'bool' );
 			$format_check = false === $phone_check ? 'none' : '';
 		}
 
@@ -281,7 +295,7 @@ class Forminator_Phone extends Forminator_Field {
 			$rules .= '"trim": true,';
 		}
 
-		//standard means phoneUS
+		// standard means phoneUS.
 		if ( 'none' !== $format_check ) {
 			if ( 'standard' === $format_check ) {
 				$rules .= '"forminatorPhoneNational": true,';
@@ -309,8 +323,8 @@ class Forminator_Phone extends Forminator_Field {
 		$format_check = self::get_property( 'validation', $field, self::FIELD_PROPERTY_VALUE_NOT_EXIST );
 
 		if ( self::FIELD_PROPERTY_VALUE_NOT_EXIST === $format_check ) {
-			// read old attribute
-			$phone_check = self::get_property( 'phone_validation', $field, false, 'bool' );
+			// read old attribute.
+			$phone_check  = self::get_property( 'phone_validation', $field, false, 'bool' );
 			$format_check = false === $phone_check ? 'none' : '';
 		}
 
@@ -318,7 +332,10 @@ class Forminator_Phone extends Forminator_Field {
 		$messages           = '"' . $this->get_id( $field ) . '": {' . "\n";
 
 		if ( $this->is_required( $field ) ) {
-			$required_message = self::get_property( 'required_message', $field, __( 'This field is required. Please input a phone number.', 'forminator' ) );
+			$required_message = self::get_property( 'required_message', $field );
+			if ( empty( $required_message ) ) {
+				$required_message = __( 'This field is required. Please input a phone number.', 'forminator' );
+			}
 			$required_message = apply_filters(
 				'forminator_field_phone_required_validation_message',
 				$required_message,
@@ -339,8 +356,8 @@ class Forminator_Phone extends Forminator_Field {
 
 		if ( 'none' !== $format_check ) {
 			if ( 'standard' === $format_check ) {
-				$validation_message = apply_filters( // phpcs:ignore
-						'forminator_field_phone_phoneUS_validation_message',
+				$validation_message = apply_filters(
+					'forminator_field_phone_phoneUS_validation_message',
 					( ! empty( $validation_message ) ? $validation_message : __( 'Please input a valid phone number.', 'forminator' ) ),
 					$field,
 					$format_check,
@@ -376,7 +393,7 @@ class Forminator_Phone extends Forminator_Field {
 			$this
 		);
 
-		$messages     .= '"phone": "' . forminator_addcslashes( $phone_message ) . '",' . "\n";
+		$messages .= '"phone": "' . forminator_addcslashes( $phone_message ) . '",' . "\n";
 
 		$messages .= '},' . "\n";
 
@@ -389,13 +406,12 @@ class Forminator_Phone extends Forminator_Field {
 	 *
 	 * @since 1.0
 	 *
-	 * @param array		   $field
+	 * @param array        $field
 	 * @param array|string $data
-	 * @param array        $post_data
 	 *
 	 * @return bool
 	 */
-	public function validate( $field, $data, $post_data = array() ) {
+	public function validate( $field, $data ) {
 		$id = self::get_property( 'element_id', $field );
 
 		if ( $this->is_required( $field ) ) {
@@ -414,15 +430,15 @@ class Forminator_Phone extends Forminator_Field {
 			}
 		}
 
-		//if data is empty, no need to `$format_check`
+		// if data is empty, no need to `$format_check`.
 		if ( empty( $data ) ) {
 			return true;
 		}
-		//enable phone validation if `phone_validation` property enabled and data not empty, even the field is not required
+		// enable phone validation if `phone_validation` property enabled and data not empty, even the field is not required.
 		$format_check = self::get_property( 'validation', $field, self::FIELD_PROPERTY_VALUE_NOT_EXIST );
 		if ( self::FIELD_PROPERTY_VALUE_NOT_EXIST === $format_check ) {
-			// read old attribute
-			$phone_check = self::get_property( 'phone_validation', $field, false, 'bool' );
+			// read old attribute.
+			$phone_check  = self::get_property( 'phone_validation', $field, false, 'bool' );
 			$format_check = false === $phone_check ? 'none' : '';
 		}
 		$validation_message = self::get_property( 'validation_message', $field, '' );
@@ -486,14 +502,14 @@ class Forminator_Phone extends Forminator_Field {
 	 *
 	 * @since 1.0.2
 	 *
-	 * @param array     $field
-	 * @param array|string $data - the data to be sanitized
+	 * @param array        $field
+	 * @param array|string $data - the data to be sanitized.
 	 *
 	 * @return array|string $data - the data after sanitization
 	 */
 	public function sanitize( $field, $data ) {
 		$original_data = $data;
-		// Sanitize
+		// Sanitize.
 		$data = forminator_sanitize_field( $data );
 
 		return apply_filters( 'forminator_field_phone_sanitize', $data, $field, $original_data );

@@ -42,7 +42,7 @@ class Forminator_Addon_Aweber_Form_Settings extends Forminator_Addon_Form_Settin
 	 * @return array
 	 */
 	public function form_settings_wizards() {
-		// numerical array steps
+		// numerical array steps.
 		return array(
 			array(
 				'callback'     => array( $this, 'pick_name' ),
@@ -64,7 +64,7 @@ class Forminator_Addon_Aweber_Form_Settings extends Forminator_Addon_Form_Settin
 	}
 
 	/**
-	 * Setup Connection Name
+	 * Set up Connection Name
 	 *
 	 * @since 1.0 AWeber Addon
 	 *
@@ -165,7 +165,7 @@ class Forminator_Addon_Aweber_Form_Settings extends Forminator_Addon_Form_Settin
 	}
 
 	/**
-	 * Setup List
+	 * Set up List
 	 *
 	 * @since 1.0 AWeber Addon
 	 *
@@ -197,15 +197,29 @@ class Forminator_Addon_Aweber_Form_Settings extends Forminator_Addon_Form_Settin
 		$lists = array();
 
 		try {
+			$setting_values = $this->addon->get_settings_values();
 
 			$api           = $this->addon->get_api();
-			$lists_request = $api->get_account_lists( $this->addon->get_account_id() );
+			$lists_request = $api->get_account_lists( $setting_values['account_id'] );
 
 			if ( ! is_object( $lists_request ) || ! isset( $lists_request->entries ) || ! is_array( $lists_request->entries ) || empty( $lists_request->entries ) ) {
 				throw new Forminator_Addon_Aweber_Exception( __( 'No lists found on your AWeber. Please create one.', 'forminator' ) );
 			}
 
-			foreach ( $lists_request->entries as $entry ) {
+			$lists_entries = $lists_request->entries;
+			$lists_count   = count( $lists_entries );
+			$list_start    = 0;
+
+			if ( 0 !== $lists_count ) {
+				while ( $lists_count < $lists_request->total_size ) {
+					$list_start        = $list_start + 100;
+					$lists_request_new = $api->get_account_lists( $setting_values['account_id'], array( 'ws.start' => $list_start ) );
+					$lists_entries     = array_merge( $lists_entries, $lists_request_new->entries );
+					$lists_count       = count( $lists_entries );
+				}
+			}
+
+			foreach ( $lists_entries as $entry ) {
 				$lists[ $entry->id ] = $entry->name;
 			}
 
@@ -298,7 +312,7 @@ class Forminator_Addon_Aweber_Form_Settings extends Forminator_Addon_Form_Settin
 	}
 
 	/**
-	 * Setup fields map
+	 * Set up fields map
 	 *
 	 * @since 1.0 AWeber Addon
 	 *
@@ -316,11 +330,11 @@ class Forminator_Addon_Aweber_Form_Settings extends Forminator_Addon_Form_Settin
 		$multi_id = $submitted_data['multi_id'];
 		unset( $submitted_data['multi_id'] );
 
-		// find type of email
+		// find type of email.
 		$email_fields                 = array();
 		$forminator_field_element_ids = array();
 		foreach ( $this->form_fields as $form_field ) {
-			// collect element ids
+			// collect element ids.
 			$forminator_field_element_ids[] = $form_field['element_id'];
 			if ( 'email' === $form_field['type'] ) {
 				$email_fields[] = $form_field;
@@ -347,9 +361,10 @@ class Forminator_Addon_Aweber_Form_Settings extends Forminator_Addon_Form_Settin
 		$list_id = $this->get_multi_id_form_settings_value( $multi_id, 'list_id', 0 );
 
 		try {
+			$setting_values = $this->addon->get_settings_values();
 
 			$api                        = $this->addon->get_api();
-			$list_custom_fields_request = $api->get_account_list_custom_fields( $this->addon->get_account_id(), $list_id );
+			$list_custom_fields_request = $api->get_account_list_custom_fields( $setting_values['account_id'], $list_id );
 
 			if ( ! is_object( $list_custom_fields_request ) || ! isset( $list_custom_fields_request->entries ) || ! is_array( $list_custom_fields_request->entries ) ) {
 				throw new Forminator_Addon_Aweber_Exception( __( 'Failed to get Custom Fields on the list.', 'forminator' ) );
@@ -386,7 +401,7 @@ class Forminator_Addon_Aweber_Form_Settings extends Forminator_Addon_Form_Settin
 						$element_id = $fields_map[ $key ];
 						if ( ! in_array( $element_id, $forminator_field_element_ids, true ) ) {
 							$input_exceptions->add_input_exception(/* translators: ... */
-								sprintf( __( 'Please assign valid field for %s', 'forminator' ), $title ),
+								sprintf( __( 'Please assign valid field for %s', 'forminator' ), esc_html( $title ) ),
 								$key . '_error'
 							);
 							continue;
@@ -477,7 +492,7 @@ class Forminator_Addon_Aweber_Form_Settings extends Forminator_Addon_Form_Settin
 	}
 
 	/**
-	 * Setup options
+	 * Set up options
 	 *
 	 * Contains :
 	 * - ad_tracking
@@ -522,7 +537,7 @@ class Forminator_Addon_Aweber_Form_Settings extends Forminator_Addon_Form_Settin
 		}
 		$tag_selected_fields = array();
 		foreach ( $saved_tags as $key => $saved_tag ) {
-			// using form data
+			// using form data.
 			if ( stripos( $saved_tag, '{' ) === 0
 				&& stripos( $saved_tag, '}' ) === ( strlen( $saved_tag ) - 1 )
 			) {
@@ -537,10 +552,10 @@ class Forminator_Addon_Aweber_Form_Settings extends Forminator_Addon_Form_Settin
 					// let this go, its already selected.
 					unset( $forminator_form_element_ids[ $element_id ] );
 				} else {
-					// no more exist on element ids let it go
+					// no more exist on element ids let it go.
 					unset( $saved_tags[ $key ] );
 				}
-			} else { // free form type
+			} else { // free form type.
 				$tag_selected_fields[] = array(
 					'element_id'  => $saved_tag,
 					'field_label' => $saved_tag,
@@ -619,7 +634,7 @@ class Forminator_Addon_Aweber_Form_Settings extends Forminator_Addon_Form_Settin
 	 * @return bool
 	 */
 	public function setup_options_is_completed( $submitted_data ) {
-		// all settings here are optional, so it can be marked as completed
+		// all settings here are optional, so it can be marked as completed.
 		return true;
 	}
 
@@ -675,7 +690,7 @@ class Forminator_Addon_Aweber_Form_Settings extends Forminator_Addon_Form_Settin
 		foreach ( $this->get_form_settings_values() as $key => $value ) {
 			$multi_ids[] = array(
 				'id'    => $key,
-				// use name that was added by user on creating connection
+				// use name that was added by user on creating connection.
 				'label' => isset( $value['name'] ) ? $value['name'] : $key,
 			);
 		}
@@ -691,7 +706,7 @@ class Forminator_Addon_Aweber_Form_Settings extends Forminator_Addon_Form_Settin
 	 * @param array $submitted_data
 	 */
 	public function disconnect_form( $submitted_data ) {
-		// only execute if multi_id provided on submitted data
+		// only execute if multi_id provided on submitted data.
 		if ( isset( $submitted_data['multi_id'] ) && ! empty( $submitted_data['multi_id'] ) ) {
 			$addon_form_settings = $this->get_form_settings_values();
 			unset( $addon_form_settings[ $submitted_data['multi_id'] ] );

@@ -1,7 +1,4 @@
-<?php
-$section = isset( $_GET['section'] ) ? $_GET['section'] : 'dashboard'; // wpcs csrf ok.
-
-?>
+<?php $section = Forminator_Core::sanitize_text_field( 'section', 'dashboard' ); ?>
 
 <div class="sui-box" data-nav="import" style="<?php echo esc_attr( 'import' !== $section ? 'display: none;' : '' ); ?>">
 
@@ -36,17 +33,34 @@ $section = isset( $_GET['section'] ) ? $_GET['section'] : 'dashboard'; // wpcs c
 							<button
 								role="button"
 								class="sui-button wpmudev-open-modal"
-								data-modal="import_cform_cf7"
+								data-modal="import_form_cf7"
 								data-modal-title=""
-								data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_popup_import_cform_cf7' ) ); ?>"
+								data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_popup_import_form_cf7' ) ); ?>"
 							>
 								<i class="sui-icon-upload-cloud" aria-hidden="true"></i> <?php esc_html_e( 'Import', 'forminator' ); ?>
 							</button>
 
 						<?php else : ?>
 
-							<div class="sui-notice" style="margin-top: 10px;">
-								<p><?php echo esc_html__( 'Contact Form 7 plugin is not active on your website.', 'forminator' ); ?></p>
+							<div
+								role="alert"
+								class="sui-notice sui-active"
+								style="display: block; text-align: left;"
+								aria-live="assertive"
+							>
+
+								<div class="sui-notice-content">
+
+									<div class="sui-notice-message">
+
+										<span class="sui-notice-icon sui-icon-info" aria-hidden="true"></span>
+
+										<p><?php echo esc_html__( 'Contact Form 7 plugin is not active on your website.', 'forminator' ); ?></p>
+
+									</div>
+
+								</div>
+
 							</div>
 
 						<?php endif; ?>
@@ -64,9 +78,9 @@ $section = isset( $_GET['section'] ) ? $_GET['section'] : 'dashboard'; // wpcs c
 							<button
 								role="button"
 								class="sui-button wpmudev-open-modal"
-								data-modal="import_cform_ninja"
+								data-modal="import_form_ninja"
 								data-modal-title=""
-								data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_popup_import_cform_ninjaforms' ) ); ?>"
+								data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_popup_import_form_ninjaforms' ) ); ?>"
 							>
 								<i class="sui-icon-upload-cloud" aria-hidden="true"></i> <?php esc_html_e( 'Import Ninja Forms', 'forminator' ); ?>
 							</button>
@@ -86,9 +100,9 @@ $section = isset( $_GET['section'] ) ? $_GET['section'] : 'dashboard'; // wpcs c
 							<button
 								role="button"
 								class="sui-button wpmudev-open-modal"
-								data-modal="import_cform_gravity"
+								data-modal="import_form_gravity"
 								data-modal-title=""
-								data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_popup_import_cform_gravityforms' ) ); ?>"
+								data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_popup_import_form_gravityforms' ) ); ?>"
 							>
 								<i class="sui-icon-upload-cloud" aria-hidden="true"></i> <?php esc_html_e( 'Import Gravity Forms', 'forminator' ); ?>
 							</button>

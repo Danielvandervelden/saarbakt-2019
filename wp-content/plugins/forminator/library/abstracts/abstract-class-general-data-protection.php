@@ -39,7 +39,7 @@ abstract class Forminator_General_Data_Protection {
 		add_filter( 'wp_privacy_personal_data_exporters', array( $this, 'register_exporters' ), 10 );
 		add_filter( 'wp_privacy_personal_data_erasers', array( $this, 'register_erasers' ), 10 );
 
-		// for data removal / anonymize data
+		// for data removal / anonymize data.
 		if ( ! wp_next_scheduled( 'forminator_general_data_protection_cleanup' ) ) {
 			wp_schedule_event( time(), $this->get_cron_cleanup_interval(), 'forminator_general_data_protection_cleanup' );
 		}
@@ -129,8 +129,8 @@ abstract class Forminator_General_Data_Protection {
 	 * @param int    $module_id
 	 * @param string $retain_time
 	 */
-	protected function delete_older_entries( $module_id, $retain_time ) {
-		$entry_ids = Forminator_Form_Entry_Model::get_older_entry_ids( $retain_time, '', $module_id );
+	protected function delete_older_entries( $module_id, $retain_time, $is_draft = false ) {
+		$entry_ids = Forminator_Form_Entry_Model::get_older_entry_ids( $retain_time, '', $module_id, $is_draft );
 		foreach ( $entry_ids as $entry_id ) {
 			Forminator_Form_Entry_Model::delete_by_entry( $entry_id );
 		}
@@ -197,7 +197,7 @@ abstract class Forminator_General_Data_Protection {
 		 *
 		 * @since  1.0.6
 		 *
-		 * @params string $cron_cleanup_interval interval in string (daily,hourly, etc)
+		 * @params string $cron_cleanup_interval interval in string (daily,hourly, etc).
 		 */
 		$cron_cleanup_interval = apply_filters( 'forminator_general_data_cleanup_interval', $cron_cleanup_interval );
 

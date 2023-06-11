@@ -58,7 +58,7 @@ class Forminator_Captcha extends Forminator_Field {
 	public function __construct() {
 		parent::__construct();
 
-		$this->name = __( 'reCaptcha', 'forminator' );
+		$this->name = __( 'Captcha', 'forminator' );
 	}
 
 	/**
@@ -70,10 +70,22 @@ class Forminator_Captcha extends Forminator_Field {
 	public function defaults() {
 
 		return array(
+			'captcha_provider'		  => 'recaptcha',
 			'captcha_type'            => 'v2_checkbox',
+			'hcaptcha_type'           => 'hc_checkbox',
 			'score_threshold'         => '0.5',
 			'captcha_badge'           => 'bottomright',
-			'recaptcha_error_message' => __( 'reCAPTCHA verification failed. Please try again.', 'forminator' ),
+			'hc_invisible_notice'	  => sprintf(
+											__(
+												'This site is protected by hCaptcha and its %1$sPrivacy Policy%3$s and %2$sTerms of Service%3$s apply.',
+												'forminator'
+											),
+											'<a href="https://hcaptcha.com/privacy">',
+											'<a href="https://hcaptcha.com/terms">',
+											'</a>'
+										),
+			'recaptcha_error_message' => esc_html__( 'reCAPTCHA verification failed. Please try again.', 'forminator' ),
+			'hcaptcha_error_message'  => esc_html__( 'hCaptcha verification failed. Please try again.', 'forminator' ),
 		);
 	}
 
@@ -113,37 +125,63 @@ class Forminator_Captcha extends Forminator_Field {
 	 * @since 1.0
 	 *
 	 * @param $field
-	 * @param $settings
+	 * @param Forminator_Render_Form $views_obj Forminator_Render_Form object.
 	 *
 	 * @return mixed
 	 */
-	public function markup( $field, $settings = array() ) {
+	public function markup( $field, $views_obj ) {
 
-		$captcha_badge = '';
-		$captcha_type  = self::get_property( 'captcha_type', $field, '' );
-		$captcha_theme = self::get_property( 'captcha_theme', $field, 'light' );
-		$captcha_size  = self::get_property( 'captcha_size', $field, 'normal' );
+		$captcha_badge	 = '';
+		$hcaptcha_notice = '';
+		$provider		 = self::get_property( 'captcha_provider', $field, 'recaptcha' );
 
-		if ( 'v2_checkbox' === $captcha_type ) {
-			$key = get_option( 'forminator_captcha_key', '' );
-		} elseif ( 'v2_invisible' === $captcha_type ) {
-			$key = get_option( 'forminator_v2_invisible_captcha_key', '' );
-		} elseif ( 'v3_recaptcha' === $captcha_type ) {
-			$key = get_option( 'forminator_v3_captcha_key', '' );
+		if ( 'recaptcha' === $provider ) {
+			$captcha_type  = self::get_property( 'captcha_type', $field, 'v3_recaptcha' );
+			$captcha_theme = self::get_property( 'captcha_theme', $field, 'light' );
+			$captcha_size  = self::get_property( 'captcha_size', $field, 'normal' );
+			$captcha_class = 'forminator-g-recaptcha';
+
+			if ( $this->is_invisible_recaptcha( $field ) ) {
+				$captcha_badge  = 'data-badge="' . esc_attr( self::get_property( 'captcha_badge', $field, 'inline' ) ) . '"';
+				$captcha_size   = 'invisible';
+				$captcha_class .= ' recaptcha-invisible';
+			}
+
+			switch ( $captcha_type ) {
+				case 'v2_checkbox':
+					$key = get_option( 'forminator_captcha_key', '' );
+					break;
+				case 'v2_invisible':
+					$key = get_option( 'forminator_v2_invisible_captcha_key', '' );
+					break;
+				case 'v3_recaptcha':
+					$key = get_option( 'forminator_v3_captcha_key', '' );
+					break;
+			}
+
 		} else {
-			$key = get_option( 'forminator_captcha_key', '' );
+			$key 		   = get_option( 'forminator_hcaptcha_key', '' );
+			$captcha_type  = self::get_property( 'hcaptcha_type', $field, 'hc_checkbox' );
+			$captcha_theme = self::get_property( 'hcaptcha_theme', $field, 'light' );
+			$captcha_size  = self::get_property( 'hcaptcha_size', $field, 'normal' );
+			$captcha_class = 'forminator-hcaptcha';
+
+			if ( 'hc_invisible' === $captcha_type ) {
+				$captcha_size 	  = 'invisible';
+				$hcaptcha_notice  = self::get_property( 'hc_invisible_notice', $field, '' );
+				$hcaptcha_notice  = sprintf( '<div class="forminator-checkbox__label">%s</div>', wp_kses_post( $hcaptcha_notice ) );
+			}
 		}
-
-		$captcha_class = 'forminator-g-recaptcha';
-
-		if ( $this->is_invisible_recaptcha( $field ) ) {
-			$captcha_badge  = 'data-badge="' . self::get_property( 'captcha_badge', $field, 'inline' ) . '"';
-			$captcha_size   = 'invisible';
-			$captcha_class .= ' recaptcha-invisible';
-		}
-
 		// dont use .g-recaptcha class as it will rendered automatically when other plugin load recaptcha with default render
-		return sprintf( '<div class="%s" data-theme="%s" %s data-sitekey="%s" data-size="%s"></div>', $captcha_class, $captcha_theme, $captcha_badge, $key, $captcha_size );
+		return sprintf(
+			'<div class="%s" data-theme="%s" %s data-sitekey="%s" data-size="%s"></div> %s',
+			esc_attr( $captcha_class ),
+			esc_attr( $captcha_theme ),
+			$captcha_badge,
+			esc_attr( $key ),
+			esc_attr( $captcha_size ),
+			$hcaptcha_notice
+		);
 	}
 
 
@@ -157,15 +195,23 @@ class Forminator_Captcha extends Forminator_Field {
 	 * @return bool
 	 */
 	public function is_available( $field ) {
+		$provider	  = self::get_property( 'captcha_provider', $field, 'recaptcha' );
 		$captcha_type = self::get_property( 'captcha_type', $field, '' );
-		if ( 'v2_checkbox' === $captcha_type ) {
-			$key = get_option( 'forminator_captcha_key', '' );
-		} elseif ( 'v2_invisible' === $captcha_type ) {
-			$key = get_option( 'forminator_v2_invisible_captcha_key', '' );
-		} elseif ( 'v3_recaptcha' === $captcha_type ) {
-			$key = get_option( 'forminator_v3_captcha_key', '' );
+
+		if ( 'recaptcha' === $provider ) {
+			switch ( $captcha_type ) {
+				case 'v2_invisible':
+					$key = get_option( 'forminator_v2_invisible_captcha_key', '' );
+					break;
+				case 'v3_recaptcha':
+					$key = get_option( 'forminator_v3_captcha_key', '' );
+					break;
+				default:
+					$key = get_option( 'forminator_captcha_key', '' );
+
+			}
 		} else {
-			$key = get_option( 'forminator_captcha_key', '' );
+			$key = get_option( 'forminator_hcaptcha_key', '' );
 		}
 
 		if ( ! $key ) {
@@ -182,31 +228,40 @@ class Forminator_Captcha extends Forminator_Field {
 	 *
 	 * @param array        $field
 	 * @param array|string $data
-	 * @param array        $post_data
 	 *
 	 * @return bool
 	 */
-	public function validate( $field, $data, $post_data = array() ) {
+	public function validate( $field, $data ) {
+		$element_id    = self::get_property( 'element_id', $field );
+		$provider  	   = self::get_property( 'captcha_provider', $field, 'recaptcha' );
 		$captcha_type  = self::get_property( 'captcha_type', $field, '' );
 		$score = '';
 
-		if ( 'v2_checkbox' === $captcha_type ) {
-			$secret = get_option( 'forminator_captcha_secret', '' );
-		} elseif ( 'v2_invisible' === $captcha_type ) {
-			$secret = get_option( 'forminator_v2_invisible_captcha_secret', '' );
-		} elseif ( 'v3_recaptcha' === $captcha_type ) {
-			$secret = get_option( 'forminator_v3_captcha_secret', '' );
-			$score  = self::get_property( 'score_threshold', $field, '' );
-		} else {
-			$secret = get_option( 'forminator_captcha_secret', '' );
-		}
-		$element_id    = self::get_property( 'element_id', $field );
-		$error_message = self::get_property( 'recaptcha_error_message', $field, '' );
+		if ( 'recaptcha' === $provider ) {
 
-		$recaptcha = new Forminator_Recaptcha( $secret );
-		$verify    = $recaptcha->verify( $data, null, $score );
+			if ( 'v2_checkbox' === $captcha_type ) {
+				$secret = get_option( 'forminator_captcha_secret', '' );
+			} elseif ( 'v2_invisible' === $captcha_type ) {
+				$secret = get_option( 'forminator_v2_invisible_captcha_secret', '' );
+			} elseif ( 'v3_recaptcha' === $captcha_type ) {
+				$secret = get_option( 'forminator_v3_captcha_secret', '' );
+				$score  = self::get_property( 'score_threshold', $field, '' );
+			}
+
+			$error_message	= self::get_property( 'recaptcha_error_message', $field, '' );
+
+		} else {
+
+			// hcaptcha
+			$secret			= get_option( 'forminator_hcaptcha_secret', '' );
+			$error_message	= self::get_property( 'hcaptcha_error_message', $field, '' );
+		}
+
+		$captcha = new Forminator_Captcha_Verification( $secret, $provider );
+		$verify	 = $captcha->verify( $data, null, $score );
+
 		if ( is_wp_error( $verify ) ) {
-			$invalid_captcha_message = ( ! empty( $error_message ) ? $error_message : __( 'reCAPTCHA verification failed. Please try again.', 'forminator' ) );
+			$invalid_captcha_message = ( ! empty( $error_message ) ? $error_message : __( 'Captcha verification failed. Please try again.', 'forminator' ) );
 
 			/**
 			 * Filter message displayed for invalid captcha

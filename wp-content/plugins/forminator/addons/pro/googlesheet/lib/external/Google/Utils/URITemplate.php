@@ -85,7 +85,7 @@ class Forminator_Google_Utils_URITemplate
     // We know a data block will have {} round it, so we can strip that.
     $data = substr($string, $start + 1, $end - $start - 1);
 
-    // If the first character is one of the reserved operators, it effects
+    // If the first character is one of the reserved operators, it effects.
     // the processing of the stream.
     if (isset($this->operators[$data[0]])) {
       $op = $this->operators[$data[0]];
@@ -95,7 +95,7 @@ class Forminator_Google_Utils_URITemplate
 
       switch ($op) {
         case "reserved":
-          // Reserved means certain characters should not be URL encoded
+          // Reserved means certain characters should not be URL encoded.
           $data = $this->replaceVars($data, $parameters, ",", null, true);
           break;
         case "fragment":
@@ -116,12 +116,12 @@ class Forminator_Google_Utils_URITemplate
           $data = $this->replaceVars($data, $parameters, ".");
           break;
         case "semicolon":
-          // Semicolon prefixed and separated. Uses the key name
+          // Semicolon prefixed and separated. Uses the key name.
           $prefix = ";";
           $data = $this->replaceVars($data, $parameters, ";", "=", false, true, false);
           break;
         case "form":
-          // Standard URL format. Uses the key name
+          // Standard URL format. Uses the key name.
           $prefix = "?";
           $data = $this->replaceVars($data, $parameters, "&", "=");
           break;
@@ -167,7 +167,7 @@ class Forminator_Google_Utils_URITemplate
       );
     } else {
       // If we have multiple values, we need to split and loop over them.
-      // Each is treated individually, then glued together with the
+      // Each is treated individually, then glued together with the.
       // separator character.
       $vars = explode(",", $section);
       return $this->combineList(
@@ -176,7 +176,7 @@ class Forminator_Google_Utils_URITemplate
           $parameters,
           $combine,
           $reserved,
-          false, // Never emit empty strings in multi-param replacements
+          false, // Never emit empty strings in multi-param replacements.
           $combine_on_empty
       );
     }
@@ -262,7 +262,7 @@ class Forminator_Google_Utils_URITemplate
       $value = str_replace($this->reservedEncoded, $this->reserved, $value);
     }
 
-    // If we do not need to include the key name, we just return the raw
+    // If we do not need to include the key name, we just return the raw.
     // value.
     if (!$combine || $skip_final_combine) {
       return $value;

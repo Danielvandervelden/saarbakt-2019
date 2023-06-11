@@ -111,12 +111,13 @@ class Forminator_MultiValue extends Forminator_Field {
 	 * @since 1.0
 	 *
 	 * @param $field
-	 * @param $settings
+	 * @param Forminator_Render_Form $views_obj Forminator_Render_Form object.
 	 *
 	 * @return mixed
 	 */
-	public function markup( $field, $settings = array() ) {
+	public function markup( $field, $views_obj, $draft_value = null ) {
 
+		$settings    = $views_obj->model->settings;
 		$this->field = $field;
 		$i           = 1;
 		$html        = '';
@@ -124,25 +125,32 @@ class Forminator_MultiValue extends Forminator_Field {
 		$name        = $id;
 		$ariaid      = $id;
 		$id          = 'forminator-field-' . $id;
-		$uniq_id     = uniqid();
+		$uniq_id     = Forminator_CForm_Front::$uid;
 		$post_value  = self::get_post_data( $name, self::FIELD_PROPERTY_VALUE_NOT_EXIST );
 		$name        = $name . '[]';
 		$required    = self::get_property( 'required', $field, false );
 		$options     = self::get_property( 'options', $field, array() );
-		$value_type  = trim( isset( $field['value_type'] ) ? $field['value_type'] : "multiselect" );
+		$value_type  = trim( isset( $field['value_type'] ) ? $field['value_type'] : 'multiselect' );
 		$description = self::get_property( 'description', $field, '' );
 		$label       = esc_html( self::get_property( 'field_label', $field, '' ) );
 		$design      = $this->get_form_style( $settings );
 
-		$calc_enabled = self::get_property( 'calculations', $field, false, 'bool' );
-		$images_enabled		  = self::get_property( 'enable_images', $field, false );
-		$images_enabled		  = filter_var( $images_enabled, FILTER_VALIDATE_BOOLEAN );
-		$input_visibility 	  = self::get_property( 'input_visibility', $field, 'true' );
-		$input_visibility 	  = filter_var( $input_visibility, FILTER_VALIDATE_BOOLEAN );
+		$calc_enabled     = self::get_property( 'calculations', $field, false, 'bool' );
+		$images_enabled   = self::get_property( 'enable_images', $field, false );
+		$images_enabled   = filter_var( $images_enabled, FILTER_VALIDATE_BOOLEAN );
+		$input_visibility = self::get_property( 'input_visibility', $field, 'true' );
+		$input_visibility = filter_var( $input_visibility, FILTER_VALIDATE_BOOLEAN );
+		$draft_value 	  = isset( $draft_value['value'] ) && ! empty( $draft_value['value'] ) ? array_map( 'trim', $draft_value['value'] ) : '';
+		$hidden_behavior  = self::get_property( 'hidden_behavior', $field );
+
+		$draft_valid	  = false;
+		$prefil_valid	  = false;
+		$default_arr 	  = array();
 
 		$html .= sprintf(
-			'<div role="group" class="forminator-field" aria-labelledby="%s">',
-			'forminator-checkbox-group-' . $uniq_id . '-label'
+			'<div role="group" class="%s" aria-labelledby="%s">',
+			esc_attr( $required ? 'forminator-field required' : 'forminator-field' ),
+			esc_attr( 'forminator-checkbox-group-' . $uniq_id . '-label' )
 		);
 
 		if ( $label ) {
@@ -162,14 +170,40 @@ class Forminator_MultiValue extends Forminator_Field {
 			}
 		}
 
+		$hidden_calc_behavior = '';
+		if ( $hidden_behavior && 'zero' === $hidden_behavior ) {
+			$hidden_calc_behavior = ' data-hidden-behavior="' . $hidden_behavior . '"';
+		}
+
+		foreach ( $options as $option ) {
+			$pref_value = $option['value'] ? esc_html( $option['value'] ) : esc_html( $option['label'] );
+			if ( ! empty( $draft_value ) ) {
+				if ( in_array( trim( $pref_value ), $draft_value ) ) { // phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
+					$draft_valid	= true;
+					$default_arr[] 	= $pref_value;
+				}
+			}
+
+			if ( $this->has_prefill( $field ) ) {
+				// We have pre-fill parameter, use its value or $value.
+				$prefill        = $this->get_prefill( $field, false );
+				$prefill_values = explode( ',', $prefill );
+				$prefill_values	= array_map( 'trim', $prefill_values );
+				if ( in_array( $pref_value, $prefill_values ) ) { // phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
+					$prefil_valid	= true;
+					$default_arr[] 	= $pref_value;
+				}
+			}
+		}
+
 		foreach ( $options as $option ) {
 			$value             = $option['value'] ? esc_html( $option['value'] ) : esc_html( $option['label'] );
 			$input_id          = $id . '-' . $i . '-' . $uniq_id;
 			$option_default    = isset( $option['default'] ) ? filter_var( $option['default'], FILTER_VALIDATE_BOOLEAN ) : false;
 			$calculation_value = $calc_enabled && isset( $option['calculation'] ) ? $option['calculation'] : 0.0;
 			$option_image_url  = array_key_exists( 'image', $option ) ? $option['image'] : '';
-			$option_label      = '<span class="forminator-checkbox-label">' . esc_html( $option['label'] ) . '</span>';
-			$aria_label        = '<span class="forminator-screen-reader-only">' . esc_html( $option['label'] ) . '</span>';
+			$option_label      = '<span class="forminator-checkbox-label">' . wp_kses_post( $option['label'] ) . '</span>';
+			$aria_label        = '<span class="forminator-screen-reader-only">' . wp_kses_post( $option['label'] ) . '</span>';
 
 			$class = 'forminator-checkbox';
 
@@ -188,79 +222,89 @@ class Forminator_MultiValue extends Forminator_Field {
 
 			$selected = false;
 
-			// Check if Pre-fill parameter used
-			if ( $this->has_prefill( $field ) ) {
-				// We have pre-fill parameter, use its value or $value
-				$prefill        = $this->get_prefill( $field, false );
-				$prefill_values = explode( ',', $prefill );
-
-				if ( in_array( $value, $prefill_values ) ) { // phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
-					$option_default = true;
-				}
-			}
-
 			if ( self::FIELD_PROPERTY_VALUE_NOT_EXIST !== $post_value ) {
 				if ( is_array( $post_value ) ) {
 					$selected = in_array( $value, $post_value );// phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
 				}
 			} else {
-				$selected = $option_default;
+				if ( $draft_valid ) {
+					if ( in_array( $value, $default_arr ) ) {
+						$selected = true;
+					}
+				} else if ( $prefil_valid ) {
+					if ( in_array( $value, $default_arr ) ) {
+						$selected = true;
+					}
+				} else {
+					$selected = $option_default;
+				}
 			}
 
 			$selected = $selected ? 'checked="checked"' : '';
 
-			$html .= '<label for="' . esc_attr( $input_id ) . '" class="' . esc_attr( $class ) . '" title="' . esc_attr( $option['label'] ) . '">';
+			$label_id = $input_id . '-label';
+
+			$html .= sprintf(
+				'<label id="%s" for="%s" class="%s" title="%s">',
+				esc_attr( $label_id ),
+				esc_attr( $input_id ),
+				esc_attr( $class ),
+				esc_attr( $option['label'] )
+			);
 
 				$html .= sprintf(
-					'<input type="checkbox" name="%s" value="%s" id="%s" data-calculation="%s" %s />',
+					'<input type="checkbox" name="%s" value="%s" id="%s" aria-labelledby="%s" data-calculation="%s" %s %s aria-describedby="%s"/>',
 					$name,
 					$value,
 					$input_id,
+					$label_id,
 					$calculation_value,
-					$selected
+					$selected,
+					$hidden_calc_behavior,
+					esc_attr( $id . '-' . $uniq_id . '-description' )
 				);
 
-				if ( $input_visibility && ( $images_enabled && ! empty( $option_image_url ) ) ) {
-					// Bullet + Label.
-					$html .= '<span class="forminator-checkbox-box" aria-hidden="true"></span>';
-					$html .= $option_label;
+			if ( $input_visibility && ( $images_enabled && ! empty( $option_image_url ) ) ) {
+				// Bullet + Label.
+				$html .= '<span class="forminator-checkbox-box" aria-hidden="true"></span>';
+				$html .= $option_label;
 
-					// Image.
-					if ( 'none' === $design ) {
-						$html .= '<img class="forminator-checkbox-image" src="' . esc_url( $option_image_url ) . '" aria-hidden="true" />';
-					} else {
-						$html .= '<span class="forminator-checkbox-image" aria-hidden="true">';
-							$html .= '<span style="background-image: url(' . esc_url( $option_image_url ) . ');"></span>';
-						$html .= '</span>';
-					}
-				} else if ( ! $input_visibility && ( $images_enabled && ! empty( $option_image_url ) ) ) {
-
-					// Image.
-					if ( 'none' === $design ) {
-						$html .= '<img class="forminator-checkbox-image" src="' . esc_url( $option_image_url ) . '" aria-hidden="true" />';
-					} else {
-						$html .= '<span class="forminator-checkbox-image" aria-hidden="true">';
-							$html .= '<span style="background-image: url(' . esc_url( $option_image_url ) . ');"></span>';
-						$html .= '</span>';
-					}
-
-					// Aria Label.
-					$html .= $aria_label;
-
+				// Image.
+				if ( 'none' === $design ) {
+					$html .= '<img class="forminator-checkbox-image" src="' . esc_url( $option_image_url ) . '" aria-hidden="true" />';
 				} else {
-
-					// Bullet + Label.
-					$html .= '<span class="forminator-checkbox-box" aria-hidden="true"></span>';
-					$html .= $option_label;
-
+					$html     .= '<span class="forminator-checkbox-image" aria-hidden="true">';
+						$html .= '<span style="background-image: url(' . esc_url( $option_image_url ) . ');"></span>';
+					$html     .= '</span>';
 				}
+			} elseif ( ! $input_visibility && ( $images_enabled && ! empty( $option_image_url ) ) ) {
+
+				// Image.
+				if ( 'none' === $design ) {
+					$html .= '<img class="forminator-checkbox-image" src="' . esc_url( $option_image_url ) . '" aria-hidden="true" />';
+				} else {
+					$html     .= '<span class="forminator-checkbox-image" aria-hidden="true">';
+						$html .= '<span style="background-image: url(' . esc_url( $option_image_url ) . ');"></span>';
+					$html     .= '</span>';
+				}
+
+				// Aria Label.
+				$html .= $aria_label;
+
+			} else {
+
+				// Bullet + Label.
+				$html .= '<span class="forminator-checkbox-box" aria-hidden="true"></span>';
+				$html .= $option_label;
+
+			}
 
 			$html .= '</label>';
 
 			$i ++;
 		}
 
-			$html .= self::get_description( $description );
+			$html .= self::get_description( $description, $id . '-' . $uniq_id );
 
 		$html .= '</div>';
 
@@ -299,7 +343,10 @@ class Forminator_MultiValue extends Forminator_Field {
 		$is_required = $this->is_required( $field );
 
 		if ( $is_required ) {
-			$required_message = self::get_property( 'required_message', $field, __( 'This field is required. Please select a value.', 'forminator' ) );
+			$required_message = self::get_property( 'required_message', $field );
+			if ( empty( $required_message ) ) {
+				$required_message = __( 'This field is required. Please select a value.', 'forminator' );
+			}
 			$required_message = apply_filters(
 				'forminator_multi_field_required_validation_message',
 				$required_message,
@@ -319,14 +366,27 @@ class Forminator_MultiValue extends Forminator_Field {
 	 *
 	 * @param array        $field
 	 * @param array|string $data
-	 * @param array        $post_data
 	 */
-	public function validate( $field, $data, $post_data = array() ) {
+	public function validate( $field, $data ) {
+		$id = self::get_property( 'element_id', $field );
+
+		foreach ( $data as $value ) {
+			if ( false === array_search( htmlspecialchars_decode( $value ), array_column( $field['options'], 'value' ) ) ) {
+				$this->validation_message[ $id ] = apply_filters(
+					'forminator_checkbox_field_nonexistent_validation_message',
+					__( 'Selected value does not exist.', 'forminator' ),
+					$id,
+					$field
+				);
+				break;
+			}
+		}
 		if ( $this->is_required( $field ) ) {
-			$id               = self::get_property( 'element_id', $field );
 			$required_message = self::get_property( 'required_message', $field, __( 'This field is required. Please select a value', 'forminator' ) );
 			if ( empty( $data ) ) {
-				$this->validation_message[ $id ] = apply_filters(
+				$slug = ! empty( $field['original_id'] ) ? $field['original_id'] : $id;
+
+				$this->validation_message[ $slug ] = apply_filters(
 					'forminator_multi_field_required_validation_message',
 					$required_message,
 					$id,
@@ -342,14 +402,21 @@ class Forminator_MultiValue extends Forminator_Field {
 	 * @since 1.0.2
 	 *
 	 * @param array        $field
-	 * @param array|string $data - the data to be sanitized
+	 * @param array|string $data - the data to be sanitized.
 	 *
 	 * @return array|string $data - the data after sanitization
 	 */
 	public function sanitize( $field, $data ) {
 		$original_data = $data;
-		// Sanitize
-		$data = forminator_sanitize_field( $data );
+
+		// Sanitize.
+		if ( is_array( $data ) ) {
+			foreach ( $data as $key => $val ) {
+				$data[ $key ] = trim( wp_kses_post( $val ) );
+			}
+		} else {
+			$data = trim( wp_kses_post( $data ) );
+		}
 
 		return apply_filters( 'forminator_field_multi_sanitize', $data, $field, $original_data );
 	}
@@ -359,12 +426,12 @@ class Forminator_MultiValue extends Forminator_Field {
 	 *
 	 * @since 1.7
 	 *
-	 * @param $submitted_data
+	 * @param $submitted_field
 	 * @param $field_settings
 	 *
 	 * @return float|string
 	 */
-	private function calculable_value( $submitted_data, $field_settings ) {
+	private static function calculable_value( $submitted_field, $field_settings ) {
 		$enabled = self::get_property( 'calculations', $field_settings, false, 'bool' );
 		if ( ! $enabled ) {
 			return self::FIELD_NOT_CALCULABLE;
@@ -374,7 +441,7 @@ class Forminator_MultiValue extends Forminator_Field {
 
 		$options = self::get_property( 'options', $field_settings, array() );
 
-		if ( ! is_array( $submitted_data ) ) {
+		if ( ! is_array( $submitted_field ) ) {
 			return $sums;
 		}
 
@@ -382,11 +449,11 @@ class Forminator_MultiValue extends Forminator_Field {
 			$option_value      = ( isset( $option['value'] ) && ! empty( $option['value'] ) ) ? $option['value'] : ( isset( $option['label'] ) ? $option['label'] : '' );
 			$calculation_value = isset( $option['calculation'] ) ? $option['calculation'] : 0.0;
 
-			forminator_maybe_log( __METHOD__, $option_value, $submitted_data );
+			forminator_maybe_log( __METHOD__, $option_value, $submitted_field );
 
-			// strict array compare disabled to allow non-coercion type compare
-			if ( in_array( $option_value, $submitted_data ) ) {// phpcs:ignore
-				// this one is selected
+			// strict array compare disabled to allow non-coercion type compare.
+			if ( in_array( $option_value, $submitted_field ) ) {
+				// this one is selected.
 				$sums += floatval( $calculation_value );
 			}
 		}
@@ -398,20 +465,20 @@ class Forminator_MultiValue extends Forminator_Field {
 	 * @since 1.7
 	 * @inheritdoc
 	 */
-	public function get_calculable_value( $submitted_data, $field_settings ) {
-		$calculable_value = $this->calculable_value( $submitted_data, $field_settings );
+	public static function get_calculable_value( $submitted_field_data, $field_settings ) {
+		$calculable_value = self::calculable_value( $submitted_field_data, $field_settings );
 		/**
 		 * Filter formula being used on calculable value on multi-value / checkbox field
 		 *
 		 * @since 1.7
 		 *
 		 * @param float $calculable_value
-		 * @param array $submitted_data
+		 * @param array $submitted_field_data
 		 * @param array $field_settings
 		 *
 		 * @return string|int|float
 		 */
-		$calculable_value = apply_filters( 'forminator_field_multi_calculable_value', $calculable_value, $submitted_data, $field_settings );
+		$calculable_value = apply_filters( 'forminator_field_multi_calculable_value', $calculable_value, $submitted_field_data, $field_settings );
 
 		return $calculable_value;
 	}

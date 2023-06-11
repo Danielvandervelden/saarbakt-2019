@@ -84,9 +84,9 @@ abstract class Forminator_Mail {
 	 *
 	 * @since 1.0
 	 *
-	 * @param string $recipient - mail recipient email
-	 * @param string $message   - mail message
-	 * @param string $subject   - mail subject
+	 * @param string $recipient - mail recipient email.
+	 * @param string $message   - mail message.
+	 * @param string $subject   - mail subject.
 	 */
 	public function __construct( $recipient = '', $message = '', $subject = '' ) {
 		if ( ! empty( $recipient ) && filter_var( $recipient, FILTER_VALIDATE_EMAIL ) ) {
@@ -105,19 +105,17 @@ abstract class Forminator_Mail {
 
 	/**
 	 * Initialize the mail
-	 *
-	 * @param array $post_vars - post variables.
 	 */
-	public function init( $post_vars ) {
+	public function init() {
 		$user_email  = false;
 		$user_name   = '';
 		$user_login  = '';
-		$embed_id    = $post_vars['page_id'];
+		$embed_id    = filter_input( INPUT_POST, 'page_id', FILTER_VALIDATE_INT );
 		$embed_title = get_the_title( $embed_id );
 		$embed_url   = forminator_get_current_url();
 		$site_url    = site_url();
 
-		//Check if user is logged in
+		// Check if user is logged in.
 		if ( is_user_logged_in() ) {
 			$current_user = wp_get_current_user();
 			$user_email   = $current_user->user_email;
@@ -131,7 +129,7 @@ abstract class Forminator_Mail {
 			$user_login = $current_user->user_login;
 		}
 
-		//Set up mail variables
+		// Set up mail variables.
 		$message_vars = forminator_set_message_vars( $embed_id, $embed_title, $embed_url, $user_name, $user_email, $user_login, $site_url );
 
 		/**
@@ -139,13 +137,12 @@ abstract class Forminator_Mail {
 		 *
 		 * @since 1.0.2
 		 *
-		 * @param array $message_vars - the message variables
-		 * @param int   $embed_id     - the current module id
-		 * @param array $post_vars    - the post params
+		 * @param array $message_vars - the message variables.
+		 * @param int   $embed_id     - the current module id.
 		 *
 		 * @return array $message_vars
 		 */
-		$this->message_vars = apply_filters( 'forminator_custom_' . static::$module_slug . '_message_vars', $message_vars, $embed_id, $post_vars );
+		$this->message_vars = apply_filters( 'forminator_custom_' . static::$module_slug . '_message_vars', $message_vars, $embed_id );
 	}
 
 	/**
@@ -153,7 +150,7 @@ abstract class Forminator_Mail {
 	 *
 	 * @since 1.0
 	 *
-	 * @param array $setting - the module settings
+	 * @param array $setting - the module settings.
 	 *
 	 * @return bool
 	 */
@@ -173,24 +170,28 @@ abstract class Forminator_Mail {
 	 * Get Recipients of admin emails
 	 *
 	 * @since 1.0.3
-	 * @since 1.6.2 add $data,$custom_form model, and entry
+	 * @since 1.6.2 add $custom_form model, and entry
 	 *
 	 * @param array                       $notification
-	 * @param array                       $data
 	 * @param Forminator_Base_Form_Model  $module
 	 * @param Forminator_Form_Entry_Model $entry
 	 * @param                             $lead_model
 	 *
 	 * @return array
 	 */
-	public function get_admin_email_recipients( $notification, $data = array(), $module = null, $entry = null, $pseudo_submitted_data = array(), $lead_model = array() ) {
+	public function get_admin_email_recipients( $notification, $module = null, $entry = null, $lead_model = array() ) {
 
-		$email = array();
+		$email 		= array();
+		$recipients = array();
 		if ( isset( $notification['email-recipients'] ) && 'routing' === $notification['email-recipients'] ) {
 			if ( ! empty( $notification['routing'] ) ) {
 				foreach ( $notification['routing'] as $routing ) {
-					if ( $this->is_routing( $routing, $data, $module, $pseudo_submitted_data ) ) {
-						$recipients = array_map( 'trim', explode( ',', $routing['email'] ) );
+					if ( $this->is_routing( $routing, $module ) ) {
+						if( false !== strpos( $routing['email'], ',' ) ) {
+							$recipients = array_merge( array_map( 'trim', explode( ',', $routing['email'] ) ), $recipients );
+						} else {
+							$recipients[] = trim( $routing['email'] );
+						}
 					}
 				}
 			}
@@ -199,14 +200,25 @@ abstract class Forminator_Mail {
 		}
 		if ( ! empty( $recipients ) ) {
 			foreach ( $recipients as $key => $recipient ) {
-				$recipient = $this->get_recipient( $recipient, $module, $data, $entry, $lead_model );
-				if ( is_email( $recipient ) ) {
-					$email[] = $recipient;
+				$recipient = $this->get_recipient( $recipient, $module, $entry, $lead_model );
+				if( false !== strpos( $recipient, ',' ) ) {
+					$emails = array_map( 'trim', explode( ',', $recipient ) );
+					if( ! empty( $emails ) ) {
+						foreach ( $emails as $email_key => $email_recipient ) {
+							if ( is_email( $email_recipient ) ) {
+								$email[] = $email_recipient;
+							}
+						}
+					}
+				} else {
+					if ( is_email( $recipient ) ) {
+						$email[] = $recipient;
+					}
 				}
 			}
 		}
 
-		return apply_filters( 'forminator_' . static::$module_slug . '_get_admin_email_recipients', $email, $notification, $data, $module, $entry );
+		return apply_filters( 'forminator_' . static::$module_slug . '_get_admin_email_recipients', $email, $notification, Forminator_CForm_Front_Action::$prepared_data, $module, $entry );
 	}
 
 	/**
@@ -214,7 +226,7 @@ abstract class Forminator_Mail {
 	 *
 	 * @since 1.0
 	 *
-	 * @param string $recipient - recipient email
+	 * @param string $recipient - recipient email.
 	 */
 	public function set_recipient( $recipient ) {
 		if ( filter_var( $recipient, FILTER_VALIDATE_EMAIL ) ) {
@@ -246,7 +258,7 @@ abstract class Forminator_Mail {
 	 *
 	 * @since 1.0
 	 *
-	 * @param string $message - the mail message
+	 * @param string $message - the mail message.
 	 */
 	public function set_message( $message ) {
 		$this->message = $message;
@@ -257,8 +269,8 @@ abstract class Forminator_Mail {
 	 *
 	 * @since 1.0
 	 *
-	 * @param array  $message_vars - the mail message array variables
-	 * @param string $message      - the mail message
+	 * @param array  $message_vars - the mail message array variables.
+	 * @param string $message      - the mail message.
 	 */
 	public function set_message_with_vars( $message_vars, $message ) {
 		$this->message = str_replace(
@@ -273,7 +285,7 @@ abstract class Forminator_Mail {
 	 *
 	 * @since 1.0
 	 *
-	 * @param string $subject - the mail subject
+	 * @param string $subject - the mail subject.
 	 */
 	public function set_subject( $subject ) {
 		$this->subject = $subject;
@@ -284,7 +296,7 @@ abstract class Forminator_Mail {
 	 *
 	 * @since 1.0
 	 *
-	 * @param array $attachment - the mail attachment
+	 * @param array $attachment - the mail attachment.
 	 */
 	public function set_attachment( $attachment ) {
 		$this->attachment = $attachment;
@@ -295,7 +307,7 @@ abstract class Forminator_Mail {
 	 *
 	 * @since 1.0
 	 *
-	 * @param array $headers - the mail headers
+	 * @param array $headers - the mail headers.
 	 */
 	public function set_headers( $headers = array() ) {
 		if ( ! empty( $headers ) ) {
@@ -318,9 +330,15 @@ abstract class Forminator_Mail {
 		$subject       = wp_strip_all_tags( $subject );
 		$this->subject = $subject;
 
-		$message       = stripslashes( $this->message );
-		$message       = wpautop( $message );
-		$message       = make_clickable( $message );
+		$message = make_clickable( wpautop( stripslashes( $this->message ) ) );
+
+		/**
+		 * Filter email body that will be sent by Forminator Mailer
+		 *
+		 * @param string $message
+		 */
+		$message = apply_filters( 'forminator_email_message', $message );
+
 		$this->message = $message;
 	}
 
@@ -397,59 +415,7 @@ abstract class Forminator_Mail {
 	 * @return bool
 	 */
 	public static function is_condition_fulfilled( $form_field_value, $condition ) {
-		switch ( $condition['rule'] ) {
-			case 'is':
-				if ( is_array( $form_field_value ) ) {
-					// possible input is "1" to be compared with 1
-					return in_array( $condition['value'], $form_field_value ); //phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
-				}
-				if ( is_numeric( $condition['value'] ) ) {
-					return ( (int) $form_field_value === (int) $condition['value'] );
-				}
-
-				return ( $form_field_value === $condition['value'] );
-			case 'is_not':
-				if ( is_array( $form_field_value ) ) {
-					// possible input is "1" to be compared with 1
-					return ! in_array( $condition['value'], $form_field_value ); //phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
-				}
-
-				return ( $form_field_value !== $condition['value'] );
-			case 'is_great':
-				if ( ! is_numeric( $condition['value'] ) ) {
-					return false;
-				}
-				if ( ! is_numeric( $form_field_value ) ) {
-					return false;
-				}
-
-				return $form_field_value > $condition['value'];
-			case 'is_less':
-				if ( ! is_numeric( $condition['value'] ) ) {
-					return false;
-				}
-				if ( ! is_numeric( $form_field_value ) ) {
-					return false;
-				}
-
-				return $form_field_value < $condition['value'];
-			case 'contains':
-				return ( stripos( $form_field_value, $condition['value'] ) === false ? false : true );
-			case 'starts':
-				return ( stripos( $form_field_value, $condition['value'] ) === 0 ? true : false );
-			case 'ends':
-				return ( stripos( $form_field_value, $condition['value'] ) === ( strlen( $form_field_value - 1 ) ) ? true : false );
-			case 'is_correct':
-				return $form_field_value ? true : false;
-			case 'is_incorrect':
-				return ! $form_field_value ? true : false;
-			case 'is_final_result':
-				return $form_field_value === $condition['element_id'];
-			case 'is_not_final_result':
-				return $form_field_value !== $condition['element_id'];
-			default:
-				return false;
-		}
+		return Forminator_Field::is_condition_fulfilled( $form_field_value, $condition );
 	}
 
 	/**
@@ -457,9 +423,9 @@ abstract class Forminator_Mail {
 	 *
 	 * @since 1.6.2
 	 *
-	 * @param string $slug         question slug
-	 * @param  int   $answer_index answer index
-	 * @param  int   $quiz_model
+	 * @param string $slug         question slug.
+	 * @param  int    $answer_index answer index.
+	 * @param  int    $quiz_model
 	 *
 	 * @return bool
 	 */
@@ -480,5 +446,26 @@ abstract class Forminator_Mail {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Get the result slug for Personality Quiz
+	 *
+	 * @since   1.15.3
+	 *
+	 * @param   array $form_data  submitted data.
+	 *
+	 * @return  string
+	 */
+	public static function get_result_slug( $form_data ) {
+		if ( ! empty( $form_data ) ) {
+			if ( isset( $form_data['entry'] ) ) {
+				if ( isset( $form_data['entry'][0]['value']['result'] ) ) {
+					return $form_data['entry'][0]['value']['result']['slug'];
+				}
+			}
+		}
+
+		return '';
 	}
 }

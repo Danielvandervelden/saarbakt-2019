@@ -120,7 +120,7 @@ class Forminator_Google_IO_Stream extends Forminator_Google_IO_Abstract
         )
     );
 
-    // We are trapping any thrown errors in this method only and
+    // We are trapping any thrown errors in this method only and.
     // throwing an exception.
     $this->trappedErrorNumber = null;
     $this->trappedErrorString = null;

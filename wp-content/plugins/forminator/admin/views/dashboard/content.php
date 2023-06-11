@@ -14,9 +14,11 @@
 
 		<div class="sui-col-md-6">
 
-			<?php if ( ! FORMINATOR_PRO ) {
+			<?php
+			if ( ! FORMINATOR_PRO ) {
 				$this->template( 'dashboard/widgets/widget-upgrade' );
-			} ?>
+			}
+			?>
 
 			<?php $this->template( 'dashboard/widgets/widget-quiz' ); ?>
 
@@ -25,13 +27,11 @@
 	</div>
 
 	<?php
-	$notice_dismissed = get_option( 'forminator_dismiss_feature_11412', false );
+	$notice_dismissed = get_option( 'forminator_dismiss_feature_1231', false );
 	$version_upgraded = get_option( 'forminator_version_upgraded', false );
 
-	if ( ! $notice_dismissed && $version_upgraded && forminator_is_show_documentation_link() ) { ?>
-
-		<?php $this->template( 'dashboard/new-feature-notice' ); ?>
-
-	<?php } ?>
+//	if ( ! $notice_dismissed && $version_upgraded && forminator_is_show_documentation_link() && ! isset( $_GET['createnew'] ) ) {
+//		$this->template( 'dashboard/new-feature-notice' );
+//	} ?>
 
 </section>

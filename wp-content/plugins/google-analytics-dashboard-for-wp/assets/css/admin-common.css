@@ -76,10 +76,16 @@
 }
 
 .exactmetrics-submenu-highlight {
-	background: #7cc048;
+	background: #1da867;
 }
 
 .exactmetrics-submenu-highlight a span {
 	color: #fff;
 	font-weight: 600;
+}
+
+.exactmetrics-menu-new-indicator{
+	color:#f18200;
+	vertical-align:super;
+	font-size:9px
 }

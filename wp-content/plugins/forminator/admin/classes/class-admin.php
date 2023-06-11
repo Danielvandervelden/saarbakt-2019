@@ -21,27 +21,44 @@ class Forminator_Admin {
 	public function __construct() {
 		$this->includes();
 
-		// Init admin pages
+		// Init admin pages.
 		add_action( 'admin_menu', array( $this, 'add_dashboard_page' ) );
 		add_action( 'admin_notices', array( $this, 'show_stripe_updated_notice' ) );
 		add_action( 'admin_notices', array( $this, 'show_rating_notice' ) );
 		add_action( 'admin_notices', array( $this, 'show_pro_available_notice' ) );
-		add_action( 'admin_notices', array( $this, 'show_cf7_importer_notice' ) );
-		add_action( 'admin_notices', array( $this, 'show_prelaunch_subscriptions_notice' ) );
-		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts_for_notices' ) );
+		add_action( 'admin_notices', array( $this, 'show_hosting_notice' ) );
 
-		// Add plugin action links
+		// Show Promote free plan notice only for Free version, for admins and if WPMU DEV Dashboard is not activated.
+		if ( ! FORMINATOR_PRO && ! class_exists( 'WPMUDEV_Dashboard' ) && current_user_can( 'manage_options' )
+				// The notice was already dismissed.
+				&& ! self::was_notification_dismissed( 'forminator_promote_free_plan' )
+				// Remind me later was clicked.
+				&& ! self::maybe_remind_later()
+			) {
+
+			add_action( 'admin_notices', array( $this, 'promote_free_plan' ) );
+			add_action( 'admin_enqueue_scripts', array( $this, 'promote_free_plan_scripts' ) );
+		}
+
+		add_action( 'admin_notices', array( $this, 'check_stripe_addon_version' ) );
+		add_action( 'admin_notices', array( $this, 'show_cf7_importer_notice' ) );
+		add_action( 'admin_notices', array( $this, 'show_addons_update_notice' ) );
+
+		// Add plugin action links.
 		add_filter( 'plugin_action_links_' . FORMINATOR_PLUGIN_BASENAME, array( $this, 'add_plugin_action_links' ) );
 		if ( forminator_is_networkwide() ) {
-			add_filter( 'network_admin_plugin_action_links_' . FORMINATOR_PLUGIN_BASENAME, array(
-				$this,
-				'add_plugin_action_links'
-			) );
+			add_filter(
+				'network_admin_plugin_action_links_' . FORMINATOR_PLUGIN_BASENAME,
+				array(
+					$this,
+					'add_plugin_action_links',
+				)
+			);
 		}
-		// Add links next to plugin details
+		// Add links next to plugin details.
 		add_filter( 'plugin_row_meta', array( $this, 'plugin_row_meta' ), 10, 3 );
 
-		// Init Admin AJAX class
+		// Init Admin AJAX class.
 		new Forminator_Admin_AJAX();
 
 		/**
@@ -50,157 +67,50 @@ class Forminator_Admin {
 		do_action( 'forminator_admin_loaded' );
 	}
 
-	public function enqueue_scripts_for_notices() {
-		// Hide for Forminator Pro
-		if ( FORMINATOR_PRO ) {
-			return;
-		}
-
-		// Enable notifications for main site and super admins only
-		if ( ! is_main_site() || ! current_user_can( 'update_core' ) ) {
-			return;
-		}
-
-		if (
-			! isset( $_GET['page'] ) ||
-			( isset( $_GET['page'] ) && false === strpos( $_GET['page'], 'forminator' ) )
-		) {
-			return;
-		}
-
-		$dismissed_messages = get_user_meta( get_current_user_id(), 'frmt_dismissed_messages', true );
-
-		// Hide if already dismissed
-		if ( isset( $dismissed_messages['forminator_prelaunch_subscriptions_notice_dismissed'] ) &&
-			 $dismissed_messages['forminator_prelaunch_subscriptions_notice_dismissed'] )
-		{
-			return;
-		}
-
-		$forminator_data = new Forminator_Admin_Data();
-		$forminator_l10n = new Forminator_Admin_L10n();
-
-		wp_register_script(
-			'forminator-admin-discount',
-			forminator_plugin_url() . 'assets/js/discount.js',
-			array(
-				'jquery',
-				'wp-color-picker',
-				'react',
-				'react-dom',
-			),
-			FORMINATOR_VERSION,
-			true
-		);
-
-		wp_localize_script( 'forminator-admin-discount', 'forminatorData', $forminator_data->get_options_data() );
-		wp_localize_script( 'forminator-admin-discount', 'forminatorl10n', $forminator_l10n->get_l10n_strings() );
-
-		wp_enqueue_script( 'forminator-admin-discount' );
-	}
-
-	/**
-	 * Show Prelaunch Subscriptions notice
-	 *
-	 * @since 1.14.10
-	 */
-	public function show_prelaunch_subscriptions_notice() {
-		$dismissed_messages = get_user_meta( get_current_user_id(), 'frmt_dismissed_messages', true );
-
-		// Hide for Forminator Pro
-		if ( FORMINATOR_PRO ) {
-			return;
-		}
-
-		// Enable notifications for main site and super admins only
-		if ( ! is_main_site() || ! current_user_can( 'update_core' ) ) {
-			return;
-		}
-
-		if (
-			! isset( $_GET['page'] ) ||
-			( isset( $_GET['page'] ) && false === strpos( $_GET['page'], 'forminator' ) )
-		) {
-			return;
-		}
-
-		// Hide if already dismissed
-		if ( isset( $dismissed_messages['forminator_prelaunch_subscriptions_notice_dismissed'] ) &&
-			 $dismissed_messages['forminator_prelaunch_subscriptions_notice_dismissed'] )
-		{
-			return;
-		}
-
-		?>
-		<!-- Load shared module markup -->
-		<div
-			id="app"
-			class="sui-wrap sui-subscription-notice"
-			data-prop="forminator_prelaunch_subscriptions_notice_dismissed"
-			data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_dismiss_prelaunch_subscriptions' ) ); ?>"
-		></div>
-
-		<!-- Function to keep notice closed after user clicks on dismiss button -->
-		<script type="text/javascript">
-			( function( $ ) {
-				// Define global FORMI object if it doesn't exist.
-				if ( 'object' !== typeof window.FORMI ) {
-					window.FORMI = {};
-				}
-
-				FORMI.dismissNotice = function() {
-					var $notice = $( '#app' );
-					var ajaxUrl = '<?php echo forminator_ajax_url();// phpcs:ignore ?>';
-
-					jQuery.post(
-						ajaxUrl,
-						{
-							action: 'forminator_dismiss_prelaunch_subscriptions',
-							prop: $notice.data('prop'),
-							_ajax_nonce: $notice.data('nonce')
-						}
-					);
-				}
-			}( jQuery ) );
-		</script>
-	<?php }
-
 	/**
 	 * Include required files
 	 *
 	 * @since 1.0
 	 */
 	private function includes() {
-		// Admin pages
+		// Admin pages.
 		include_once forminator_plugin_dir() . 'admin/pages/dashboard-page.php';
 		include_once forminator_plugin_dir() . 'admin/pages/entries-page.php';
 		include_once forminator_plugin_dir() . 'admin/pages/integrations-page.php';
 		include_once forminator_plugin_dir() . 'admin/pages/settings-page.php';
 		include_once forminator_plugin_dir() . 'admin/pages/upgrade-page.php';
+		include_once forminator_plugin_dir() . 'admin/pages/addons-page.php';
+		include_once forminator_plugin_dir() . 'admin/pages/reports-page.php';
 
-		// Admin AJAX
+		// Admin AJAX.
 		include_once forminator_plugin_dir() . 'admin/classes/class-admin-ajax.php';
 
-		// Admin Data
+		// Admin Data.
 		include_once forminator_plugin_dir() . 'admin/classes/class-admin-data.php';
 
-		// Admin l10n
+		// Admin l10n.
 		include_once forminator_plugin_dir() . 'admin/classes/class-admin-l10n.php';
 
 		if ( forminator_is_import_plugin_enabled( 'cf7' ) ) {
-			//CF7 Import
+			// CF7 Import.
 			include_once forminator_plugin_dir() . 'admin/classes/thirdparty-importers/class-importer-cf7.php';
 		}
 
 		if ( forminator_is_import_plugin_enabled( 'ninjaforms' ) ) {
-			//Ninjaforms Import
+			// Ninjaforms Import.
 			include_once forminator_plugin_dir() . 'admin/classes/thirdparty-importers/class-importer-ninja.php';
 		}
 
 		if ( forminator_is_import_plugin_enabled( 'gravityforms' ) ) {
-			//Gravityforms CF7 Import
+			// Gravityforms CF7 Import.
 			include_once forminator_plugin_dir() . 'admin/classes/thirdparty-importers/class-importer-gravity.php';
 		}
+
+		// Admin Addons page.
+		include_once forminator_plugin_dir() . 'admin/classes/class-addons-page.php';
+
+        // Admin report page
+        include_once forminator_plugin_dir() . 'admin/classes/class-reports-page.php';
 
 	}
 
@@ -242,7 +152,7 @@ class Forminator_Admin {
 			'forminator'
 		);
 
-		//TODO: remove this after converted to JS
+		// TODO: remove this after converted to JS.
 		$addons = Forminator_Addon_Loader::get_instance()->get_addons()->to_array();
 		foreach ( $addons as $slug => $addon_array ) {
 			$addon_class = forminator_get_addon( $slug );
@@ -315,28 +225,52 @@ class Forminator_Admin {
 	}
 
 	/**
-	 * Check if we have any Stripe form
+	 * Add Add-ons page
 	 *
-	 * @since 1.9
-	 *
-	 * @return bool
+	 * @since 1.15
 	 */
-	public function has_stripe_forms() {
-		$forms = Forminator_Form_Model::model()->get_models_by_field( 'stripe-1' );
+	public function add_addons_page() {
+		add_action( 'admin_menu', array( $this, 'init_addons_page' ) );
+	}
 
-		if ( count( $forms ) > 0 ) {
-			return true;
-		}
+	/**
+	 * Initialize Add-ons page
+	 *
+	 * @since 1.15
+	 */
+	public function init_addons_page() {
+		$this->pages['forminator-addons'] = new Forminator_Addons_Page(
+			'forminator-addons',
+			'addons',
+			__( 'Forminator Add-ons', 'forminator' ),
+			__( 'Add-ons', 'forminator' ),
+			'forminator'
+		);
+	}
 
-		return false;
+	/**
+	 * Add Reports page
+	 *
+	 * @since 1.18.0
+	 */
+	public function add_reports_page() {
+		add_action( 'admin_menu', array( $this, 'init_reports_page' ) );
+	}
+
+	/**
+	 * Initialize Reports page
+	 *
+	 * @since 1.18.0
+	 */
+	public function init_reports_page() {
+		$this->pages['forminator-reports'] = new Forminator_Reports_Page( 'forminator-reports', 'common/reports', __( 'Reports', 'forminator' ), __( 'Reports', 'forminator' ), 'forminator' );
 	}
 
 	/**
 	 * Check if we have any old Stripe form
 	 *
-	 * @since 1.9
-	 *
 	 * @return bool
+	 * @since 1.9
 	 */
 	public function has_old_stripe_forms() {
 		$forms = Forminator_Form_Model::model()->get_models_by_field_and_version( 'stripe-1', '1.9-alpha.1' );
@@ -354,25 +288,23 @@ class Forminator_Admin {
 	 * Shown in forminator pages. Per user notification.
 	 */
 	public function show_pro_available_notice() {
-		$page = filter_input( INPUT_GET, 'page', FILTER_SANITIZE_STRING );
-		if ( 'forminator' !== substr( $page, 0, 10 ) || FORMINATOR_PRO ) {
+		if ( ( isset( $_GET['page'] ) && 'forminator' !== substr( $_GET['page'], 0, 10 ) ) || FORMINATOR_PRO ) {
 			return;
 		}
-
 		// The notice was already dismissed.
 		if ( self::was_notification_dismissed( 'forminator_pro_is_available' ) ) {
 			return;
 		}
 
 		// Show the notice only to users who can do something about this and who are members.
-		if ( ! self::user_can_update_plugins() || ! in_array( forminator_membership_status(), array( 'full', 'upgrade' ), true ) ) {
+		if ( ! self::user_can_update_plugins() || ! forminator_can_install_pro() ) {
 			return;
 		}
 
 		$url  = add_query_arg(
-			array( 'page' => 'wpmudev-plugins' ),
-			network_admin_url( 'admin.php' )
-		) . '#pid=2097296';
+            array( 'page' => 'wpmudev-plugins' ),
+            network_admin_url( 'admin.php' )
+        ) . '#pid=2097296';
 		$link = '<a type="button" href="' . esc_url( $url ) . '" target="_self" class="button button-primary">' . esc_html__( 'Upgrade' ) . '</a>';
 
 		$username = forminator_get_current_username();
@@ -385,9 +317,91 @@ class Forminator_Admin {
 		$message .= '<p>' . $link . '</p>';
 
 		echo '<div class="forminator-grouped-notice notice notice-info is-dismissible"'
-			. ' data-notice-slug="forminator_pro_is_available"'
+		     . ' data-notice-slug="forminator_pro_is_available"'
+		     . ' data-nonce="' . esc_attr( wp_create_nonce( 'forminator_dismiss_notice' ) ) . '">';
+		echo wp_kses_post( $message );
+		echo '</div>';
+	}
+
+	/**
+	 * Enqueue scripts for Promote Free Plan notice
+	 */
+	public function promote_free_plan_scripts() {
+		// Show the notice only on WP Dashboard page.
+		$screen = get_current_screen();
+		if ( 'dashboard' !== $screen->id ) {
+			return;
+		}
+
+		$dashboard_object = $this->pages['forminator-dashboard'];
+		$dashboard_object->enqueue_scripts( '' );
+	}
+
+	/**
+	 * Displays Promote Free Plan notice
+	 */
+	public function promote_free_plan() {
+		// Show the notice only on WP Dashboard page.
+		$screen = get_current_screen();
+		if ( 'dashboard' !== $screen->id ) {
+			return;
+		}
+
+		$button_1 = '<a href="https://wpmudev.com/register/?free_hub&utm_source=forminator&utm_medium=plugin&utm_campaign=forminator_wp_admin_free_plan_1" target="_blank" class="button button-primary">'
+				. esc_html__( 'Claim your free gift' )
+				. '</a>';
+		$button_2 = '<button class="button" id="forminator-promote-popup-open">' . esc_html__( 'Find out more' ) . '</button>';
+		$remind   = '<a style="margin-left:20px;text-decoration: none;" href="#" id="forminator-promote-remind-later" data-nonce="' . esc_attr( wp_create_nonce( 'forminator_promote_remind_later' ) ) . '">' . esc_html__( 'Remind me later', 'forminator' ) . '</a>';
+
+		$message  = '<p><strong>';
+		$message .= esc_html__( 'Managing multiple WP sites for clients? Here’s a free gift to make it easier', 'forminator' );
+		$message .= '</strong></p>';
+		$message .= '<p>';
+		$message .= esc_html__( 'In addition to Forminator, WPMU DEV has everything you need for fast and convenient site management.', 'forminator' );
+		$message .= '</p>';
+		$message .= '<p>';
+		$message .= esc_html__( 'Trusted by over 50K web developers. Completely free to try.', 'forminator' );
+		$message .= '</p>';
+		$message .= '<p>' . $button_1 . '&nbsp;&nbsp;&nbsp;&nbsp;' . $button_2 . $remind . '</p>';
+
+		echo '<div class="forminator-grouped-notice notice notice-info is-dismissible"'
+			. ' data-notice-slug="forminator_promote_free_plan"'
 			. ' data-nonce="' . esc_attr( wp_create_nonce( 'forminator_dismiss_notice' ) ) . '">';
-		echo $message;
+		echo wp_kses_post( $message );
+		echo '</div>';
+		$dashboard_object = $this->pages['forminator-dashboard'];
+		echo '<div class="' . esc_attr( $dashboard_object->get_sui_body_class() ) . '">';
+		echo '<div class="sui-wrap wpmudev-forminator-forminator">';
+		$dashboard_object->template( 'dashboard/promote-free-plan' );
+		echo '</div>';
+		echo '</div>';
+	}
+
+	/**
+	 * Displays an admin notice when Forminator version is 1.16.0 or higher and Stripe Addon version is less than 1.0.4
+	 * Shown in forminator pages. Per user notification.
+	 */
+	public function check_stripe_addon_version() {
+		// Show the notice only if Stripe Addon is active and its version is less than 1.0.4.
+		if ( ! defined( 'FORMINATOR_STRIPE_ADDON' ) || ! class_exists( 'Forminator_Stripe_Addon' )
+		     || version_compare( FORMINATOR_STRIPE_ADDON, '1.0.4', '>=' ) ) {
+			return;
+		}
+
+		// Show the notice only for administrators.
+		if ( ! current_user_can( 'administrator' ) ) {
+			return;
+		}
+
+		$message = '<p>';
+		/* translators: Forminator vesrion */
+		$message .= sprintf( esc_html__( 'We\'ve noticed you have updated to Forminator Pro version %s. Please ensure you also update your Forminator Stripe Subscriptions Add-on to version 1.0.4 or higher to ensure compatibility with the new submissions processes.', 'forminator' ), FORMINATOR_VERSION );
+		$message .= '</p>';
+
+		echo '<div class="forminator-grouped-notice notice notice-error"'
+		     . ' data-notice-slug="forminator_pro_is_available"'
+		     . '>';
+		echo wp_kses_post( $message );
 		echo '</div>';
 	}
 
@@ -395,12 +409,24 @@ class Forminator_Admin {
 	 * Check if the given notification was dismissed.
 	 *
 	 * @param string $notification_name Notification slug.
+	 *
 	 * @return bool
 	 */
 	public static function was_notification_dismissed( $notification_name ) {
 		$dismissed = get_user_meta( get_current_user_id(), 'frmt_dismissed_messages', true );
 
 		return ( is_array( $dismissed ) && in_array( $notification_name, $dismissed, true ) );
+	}
+
+	/**
+	 * Return true if Remind me later was clicked
+	 *
+	 * @return bool
+	 */
+	private static function maybe_remind_later() {
+		$option = get_transient( 'forminator_free_plan_remind_later_' . get_current_user_id() );
+
+		return ! ! $option;
 	}
 
 	/**
@@ -453,7 +479,7 @@ class Forminator_Admin {
 
                 var $self = jQuery(this);
                 var $notice = jQuery(e.currentTarget).closest('.forminator-notice');
-                var ajaxUrl = '<?php echo forminator_ajax_url(); ?>';
+                var ajaxUrl = '<?php echo esc_url( forminator_ajax_url() ); ?>';
 
                 jQuery.post(
                     ajaxUrl,
@@ -471,7 +497,7 @@ class Forminator_Admin {
                 e.preventDefault();
 
                 var $notice = jQuery(e.currentTarget).closest('.forminator-notice');
-                var ajaxUrl = '<?php echo forminator_ajax_url(); ?>';
+                var ajaxUrl = '<?php echo esc_url( forminator_ajax_url() ); ?>';
 
                 jQuery.post(
                     ajaxUrl,
@@ -505,36 +531,39 @@ class Forminator_Admin {
 		}
 		?>
 
-		<div class="forminator-notice notice notice-warning" data-prop="forminator_stripe_notice_dismissed" data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_dismiss_notification' ) ); ?>">
+		<div class="forminator-notice notice notice-warning" data-prop="forminator_stripe_notice_dismissed"
+             data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_dismiss_notification' ) ); ?>">
 
-			<p style="color: #72777C; line-height: 22px;"><?php echo sprintf( __( 'To make Forminator\'s Stripe field <a href="%s" target="_blank">SCA Compliant</a>, we have replaced the Stripe Checkout modal with Stripe Elements which adds an inline field to collect your customer\'s credit or debit card details. Your existing forms with Stripe field are automatically updated, but we recommend checking them to ensure everything works fine.', 'forminator' ), 'https://stripe.com/gb/guides/strong-customer-authentication' ); ?></p>
+            <p style="color: #72777C; line-height: 22px;"><?php echo wp_kses_post( sprintf( __( 'To make Forminator\'s Stripe field <a href="%s" target="_blank">SCA Compliant</a>, we have replaced the Stripe Checkout modal with Stripe Elements which adds an inline field to collect your customer\'s credit or debit card details. Your existing forms with Stripe field are automatically updated, but we recommend checking them to ensure everything works fine.', 'forminator' ), 'https://stripe.com/gb/guides/strong-customer-authentication' ) ); ?></p>
 
-			<p>
-				<a href="<?php echo esc_url( menu_page_url( 'forminator', false ) . '&show_stripe_dialog=true' ); ?>" class="button button-primary"><?php esc_html_e( 'Learn more', 'forminator' ); ?></a>
-				<a href="#" class="dismiss-notice" style="margin-left: 10px; text-decoration: none; color: #555; font-weight: 500;"><?php esc_html_e( 'Dismiss', 'forminator' ); ?></a>
-			</p>
+            <p>
+                <a href="<?php echo esc_url( menu_page_url( 'forminator', false ) . '&show_stripe_dialog=true' ); ?>"
+                   class="button button-primary"><?php esc_html_e( 'Learn more', 'forminator' ); ?></a>
+                <a href="#" class="dismiss-notice"
+                   style="margin-left: 10px; text-decoration: none; color: #555; font-weight: 500;"><?php esc_html_e( 'Dismiss', 'forminator' ); ?></a>
+            </p>
 
-		</div>
+        </div>
 
-		<script type="text/javascript">
-			jQuery( '.forminator-notice .dismiss-notice' ).on( 'click', function( e ) {
-				e.preventDefault();
+        <script type="text/javascript">
+            jQuery('.forminator-notice .dismiss-notice').on('click', function (e) {
+                e.preventDefault();
 
-				var $notice = jQuery( e.currentTarget ).closest( '.forminator-notice' );
-				var ajaxUrl = '<?php echo forminator_ajax_url();// phpcs:ignore ?>';
+                var $notice = jQuery(e.currentTarget).closest('.forminator-notice');
+                var ajaxUrl = '<?php echo esc_url( forminator_ajax_url() ); ?>';
 
-				jQuery.post(
-					ajaxUrl,
-					{
-						action: 'forminator_dismiss_notification',
-						prop: $notice.data('prop'),
-						_ajax_nonce: $notice.data('nonce')
-					}
-				).always( function() {
-					$notice.hide();
-				});
-			});
-		</script>
+                jQuery.post(
+                    ajaxUrl,
+                    {
+                        action: 'forminator_dismiss_notification',
+                        prop: $notice.data('prop'),
+                        _ajax_nonce: $notice.data('nonce')
+                    }
+                ).always(function () {
+                    $notice.hide();
+                });
+            });
+        </script>
 		<?php
 	}
 
@@ -564,32 +593,40 @@ class Forminator_Admin {
 			$milestone = ( 10 >= $published_modules ) ? 5 : 10;
 			?>
 
-			<div id="forminator-free-publish-notice" class="forminator-rating-notice notice notice-info fui-wordpress-notice" data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_dismiss_notification' ) ); ?>">
+            <div id="forminator-free-publish-notice"
+				 class="forminator-rating-notice notice notice-info fui-wordpress-notice"
+                 data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_dismiss_notification' ) ); ?>">
 
-				<p style="color: #72777C; line-height: 22px;"><?php printf( __( 'Awesome! You\'ve published more than %d modules with Forminator. Hope you are enjoying it so far. We have spent countless hours developing this free plugin for you, and we would really appreciate it if you could drop us a rating on wp.org to help us spread the word and boost our motivation.', 'forminator' ), $milestone ); ?></p>
+                <p style="color: #72777C; line-height: 22px;"><?php printf( esc_html__( 'Awesome! You\'ve published more than %d modules with Forminator. Hope you are enjoying it so far. We have spent countless hours developing this free plugin for you, and we would really appreciate it if you could drop us a rating on wp.org to help us spread the word and boost our motivation.', 'forminator' ), (int) $milestone ); ?></p>
 
-				<p>
-					<a type="button" href="#" target="_blank" class="button button-primary button-large" data-prop="forminator_rating_success"><?php esc_html_e( 'Rate Forminator', 'forminator' ); ?></a>
+                <p>
+                    <a type="button" href="#" target="_blank" class="button button-primary button-large"
+                       data-prop="forminator_rating_success"><?php esc_html_e( 'Rate Forminator', 'forminator' ); ?></a>
 
-					<button type="button" class="button button-large" style="margin-left: 11px;" data-prop="<?php echo 10 > $published_modules ?  'forminator_publish_rating_later' : 'forminator_publish_rating_later_dismiss'; ?>"><?php esc_html_e( 'Maybe later', 'forminator' ); ?></button>
+                    <button type="button" class="button button-large" style="margin-left: 11px;"
+                            data-prop="<?php echo 10 > $published_modules ? 'forminator_publish_rating_later' : 'forminator_publish_rating_later_dismiss'; ?>"><?php esc_html_e( 'Maybe later', 'forminator' ); ?></button>
 
-					<a href="#" class="dismiss" style="margin-left: 11px; color: #555; line-height: 16px; font-weight: 500; text-decoration: none;" data-prop="forminator_rating_dismissed"><?php esc_html_e( 'No Thanks', 'forminator' ); ?></a>
-				</p>
+                    <a href="#" class="dismiss"
+                       style="margin-left: 11px; color: #555; line-height: 16px; font-weight: 500; text-decoration: none;"
+                       data-prop="forminator_rating_dismissed"><?php esc_html_e( 'No Thanks', 'forminator' ); ?></a>
+                </p>
 
             </div>
 
-		<?php } else {
+			<?php
+		} else {
 
-			$install_date = get_site_option( 'forminator_free_install_date', false );
+			$install_date       = get_site_option( 'forminator_free_install_date', false );
 			$days_later_dismiss = get_option( 'forminator_days_rating_later_dismiss', false );
 
-			if ( $install_date && current_time( 'timestamp' ) > strtotime( '+7 days', $install_date ) && ! $publish_later && ! $publish_later_dismiss && ! $days_later_dismiss ) { ?>
+			if ( $install_date && current_time( 'timestamp' ) > strtotime( '+7 days', $install_date ) && ! $publish_later && ! $publish_later_dismiss && ! $days_later_dismiss ) {
+				?>
 
                 <div id="forminator-free-usage-notice"
-                     class="forminator-rating-notice notice notice-info fui-wordpress-notice"
+					 class="forminator-rating-notice notice notice-info fui-wordpress-notice"
                      data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_dismiss_notification' ) ); ?>">
 
-					<p style="color: #72777C; line-height: 22px;"><?php esc_html_e( 'Excellent! You\'ve been using Forminator for a while now. Hope you are enjoying it so far. We have spent countless hours developing this free plugin for you, and we would really appreciate it if you could drop us a rating on wp.org to help us spread the word and boost our motivation.', 'forminator' ); ?></p>
+                    <p style="color: #72777C; line-height: 22px;"><?php esc_html_e( 'Excellent! You\'ve been using Forminator for a while now. Hope you are enjoying it so far. We have spent countless hours developing this free plugin for you, and we would really appreciate it if you could drop us a rating on wp.org to help us spread the word and boost our motivation.', 'forminator' ); ?></p>
 
                     <p>
                         <a type="button" href="#" target="_blank" class="button button-primary button-large"
@@ -614,7 +651,7 @@ class Forminator_Admin {
 
                 var $notice = jQuery(e.currentTarget).closest('.forminator-rating-notice'),
                     prop = jQuery(this).data('prop'),
-                    ajaxUrl = '<?php echo forminator_ajax_url(); ?>';
+                    ajaxUrl = '<?php echo esc_url( forminator_ajax_url() ); ?>';
 
                 if ('forminator_rating_success' === prop) {
                     window.open('https://wordpress.org/support/plugin/forminator/reviews/#new-post', '_blank');
@@ -633,16 +670,16 @@ class Forminator_Admin {
             });
         </script>
 
-	<?php }
+		<?php
+	}
 
 	/**
 	 * Show action links on the plugin screen.
 	 *
-	 * @since 1.13
-	 *
 	 * @param array $links Plugin Action links.
 	 *
 	 * @return mixed
+	 * @since 1.13
 	 */
 	public function add_plugin_action_links( $links ) {
 		// Settings link.
@@ -652,14 +689,18 @@ class Forminator_Admin {
 		// Documentation link.
 		$action_links['docs'] = '<a href="' . forminator_get_link( 'docs', 'forminator_pluginlist_docs' ) . '" aria-label="' . esc_attr( __( 'Docs', 'forminator' ) ) . '" target="_blank">' . esc_html__( 'Docs', 'forminator' ) . '</a>';
 
-		// WPMUDEV membership status.
-		$membership = forminator_membership_status();
+		// Check if the current logged-in member has access Forminator Pro.
+		$can_install_pro = forminator_can_install_pro();
 
 		// Upgrade or Renew links.
-		if ( ! FORMINATOR_PRO || 'upgrade' === $membership ) {
-			$action_links['upgrade'] = '<a href="' . forminator_get_link( 'plugin', 'forminator_pluginlist_upgrade' ) . '" aria-label="' . esc_attr( __( 'Upgrade to Forminator Pro', 'forminator' ) ) . '" style="color: #8D00B1;" target="_blank">' . esc_html__( 'Upgrade', 'forminator' ) . '</a>';
-		} elseif ( 'expired' === $membership || 'free' === $membership ) {
-			$action_links['renew'] = '<a href="' . forminator_get_link( 'plugin', 'forminator_pluginlist_renew' ) . '" aria-label="' . esc_attr( __( 'Upgrade 35% OFF Sale', 'forminator' ) ) . '" style="color: #8D00B1;" target="_blank">' . esc_html__( 'Upgrade 35% OFF Sale', 'forminator' ) . '</a>';
+		if ( ! FORMINATOR_PRO ) {
+			if ( $can_install_pro ) {
+				$action_links['upgrade'] = '<a href="' . forminator_get_link( 'plugin', 'forminator_pluginlist_upgrade' ) . '" aria-label="' . esc_attr( __( 'Upgrade to Forminator Pro', 'forminator' ) ) . '" style="color: #8D00B1;" target="_blank">' . esc_html__( 'Upgrade', 'forminator' ) . '</a>';
+			} else {
+				$action_links['renew'] = '<a href="' . forminator_get_link( 'plugin', 'forminator_pluginlist_renew' ) . '" aria-label="' . esc_attr( __( 'Upgrade 30% OFF Sale', 'forminator' ) ) . '" style="color: #8D00B1;" target="_blank">' . esc_html__( 'Upgrade 30% OFF Sale', 'forminator' ) . '</a>';
+			}
+		} elseif ( ! class_exists( 'WPMUDEV_Dashboard' ) ) {
+			$action_links['renew'] = '<a href="' . forminator_get_link( 'plugin', 'forminator_pluginlist_renew' ) . '" aria-label="' . esc_attr( __( 'Renew Membership', 'forminator' ) ) . '" style="color: #8D00B1;" target="_blank">' . esc_html__( 'Renew Membership', 'forminator' ) . '</a>';
 		}
 
 		return array_merge( $action_links, $links );
@@ -668,13 +709,12 @@ class Forminator_Admin {
 	/**
 	 * Show row meta on the plugin screen.
 	 *
-	 * @since 1.13
-	 *
 	 * @param mixed $links Plugin Row Meta.
 	 * @param mixed $file Plugin Base file.
 	 * @param array $plugin_data Plugin data.
 	 *
 	 * @return array
+	 * @since 1.13
 	 */
 	public function plugin_row_meta( $links, $file, $plugin_data ) {
 		if ( FORMINATOR_PLUGIN_BASENAME === $file ) {
@@ -684,19 +724,19 @@ class Forminator_Admin {
 			}
 
 			// Change AuthorURI link.
-			if ( isset( $links[1] ) ){
+			if ( isset( $links[1] ) ) {
 				$author_uri = FORMINATOR_PRO ? 'https://wpmudev.com/' : 'https://profiles.wordpress.org/wpmudev/';
 				$author_uri = sprintf(
 					'<a href="%s" target="_blank">%s</a>',
 					$author_uri,
 					__( 'WPMU DEV' )
 				);
-				$links[1] = sprintf( __( 'By %s' ), $author_uri );
+				$links[1]   = sprintf( __( 'By %s' ), $author_uri );
 			}
 
 			if ( ! FORMINATOR_PRO ) {
 				// Change AuthorURI link.
-				if( isset( $links[2] ) && false === strpos( $links[2], 'target="_blank"' ) ) {
+				if ( isset( $links[2] ) && false === strpos( $links[2], 'target="_blank"' ) ) {
 					if ( ! isset( $plugin_data['slug'] ) && $plugin_data['Name'] ) {
 						$links[2] = sprintf(
 							'<a href="%s" class="thickbox open-plugin-details-modal" aria-label="%s" data-title="%s">%s</a>',
@@ -734,5 +774,172 @@ class Forminator_Admin {
 		}
 
 		return $links;
+	}
+
+	/**
+	 * Show addons update notice
+	 */
+	public function show_addons_update_notice() {
+		if ( ! FORMINATOR_PRO ) {
+			return;
+		}
+
+		$version = '';
+		$addons  = $this->pages['forminator-addons']->get_addons_by_action();
+		if ( empty( $addons['update'] ) ) {
+			return;
+		}
+		foreach ( $addons['update'] as $update ) {
+			$version .= $update->version_latest . '_';
+		}
+
+		$notice_dismissed = get_option( 'forminator_addons_update_' . $version . 'dismiss', false );
+		if ( $notice_dismissed ) {
+			return;
+		}
+
+		$notice_later = get_option( 'forminator_addons_update_' . $version . 'later', false );
+		if ( $notice_later && current_time( 'timestamp' ) < strtotime( '+7 days', $notice_later ) ) {
+			return;
+		}
+		?>
+
+        <div id="forminator-addons-update-notice"
+			 class="forminator-update-notice notice notice-info fui-wordpress-notice is-dismissible"
+             data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_dismiss_notification' ) ); ?>">
+            <p style="color: #72777C; line-height: 22px;">
+                <strong>
+					<?php echo esc_html__( 'New update available for one or more Add-ons.', 'forminator' ); ?>
+                </strong>
+            </p>
+            <p style="color: #72777C; line-height: 22px;">
+				<?php esc_html_e( 'A new update is available for one or more of your Forminator Add-ons. Click on the button below to check and update the required Add-on.', 'forminator' ); ?>
+            </p>
+            <p><a type="button"
+                  href="<?php echo esc_url( menu_page_url( 'forminator-addons', false ) ); ?>"
+                  target="_blank" class="button button-primary button-large"
+                ><?php esc_html_e( 'View and Update', 'forminator' ); ?></a>
+				<?php if ( ! $notice_later ) { ?>
+                    <a href="#" class="forminator-notice-dismiss"
+                       data-prop="forminator_addons_update_<?php echo esc_attr( $version ); ?>later"
+                       style="margin-left: 11px; color: #555; line-height: 16px; font-weight: 500; text-decoration: none;"
+                       data-prop-value="<?php echo esc_attr( current_time( 'timestamp' ) ); ?>"><?php esc_html_e( 'Remind me later', 'forminator' ); ?></a>
+				<?php } ?>
+            </p>
+            <button type="button" class="notice-dismiss forminator-notice-dismiss"
+                    data-prop="forminator_addons_update_<?php echo esc_attr( $version ); ?>dismiss">
+                <span class="screen-reader-text"></span>
+            </button>
+        </div>
+        <script type="text/javascript">
+            jQuery('.forminator-update-notice .forminator-notice-dismiss').on('click', function (e) {
+                e.preventDefault();
+
+                var $notice = jQuery(e.currentTarget).closest('.forminator-update-notice'),
+                    prop = jQuery(this).data('prop'),
+                    value = jQuery(this).data('prop-value'),
+                    ajaxUrl = '<?php echo esc_url( forminator_ajax_url() ); ?>';
+                jQuery.post(
+                    ajaxUrl,
+                    {
+                        action: 'forminator_dismiss_notification',
+                        prop: prop,
+                        value: 'undefined' !== typeof value ? value : '',
+                        _ajax_nonce: $notice.data('nonce')
+                    }
+                ).always(function () {
+                    $notice.hide();
+                });
+            });
+        </script>
+		<?php
+	}
+
+	/**
+	 * Show hosting promotion banner
+	 *
+	 * To test:
+	 * update_option( 'forminator_free_install_date', strtotime( '-31 days', current_time( 'timestamp' ) ) );
+	 * update_option( 'forminator_hosting_banner_later', strtotime( '-8 days', current_time( 'timestamp' ) ) );
+	 */
+	public function show_hosting_notice() {
+		if ( ! current_user_can( 'manage_options' ) || forminator_is_site_connected_to_hub() || FORMINATOR_PRO ) {
+			return;
+		}
+
+		// Check if the page is a forminator page but not edit module pages.
+		$page = Forminator_Core::sanitize_text_field( 'page' );
+		preg_match( '/^(forminator-)([a-z]+)(-wizard)/', $page, $page_slug );
+		if ( isset( $page_slug[0] ) || 0 !== strpos( $page, 'forminator' ) ) {
+			return;
+		}
+
+		// Check if 30days has passed since install date. I shall return...
+		$install_date = get_site_option( 'forminator_free_install_date', false );
+		if ( $install_date && current_time( 'timestamp' ) < strtotime( '+30 days', $install_date ) ) {
+			return;
+		}
+
+		$notice_dismissed = get_option( 'forminator_hosting_banner_dismiss', false );
+		if ( $notice_dismissed ) {
+			return;
+		}
+
+		$notice_later = get_option( 'forminator_hosting_banner_later', false );
+		if ( $notice_later && current_time( 'timestamp' ) < strtotime( '+7 days', $notice_later ) ) {
+			return;
+		}
+
+		wp_enqueue_script(
+			'forminator-hosting-banner',
+			forminator_plugin_url() . 'build/hosting.js',
+			array(
+				'jquery',
+				'react',
+				'react-dom',
+			),
+			FORMINATOR_VERSION,
+			true
+		);
+		?>
+
+        <div id="shared-notifications-banner" class="sui-wrap"
+             data-prop="forminator_hosting_banner_dismiss"
+             data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_dismiss_notification' ) ); ?>"
+        ></div>
+
+        <script type="text/javascript">
+          ( function( $ ) {
+            if ( 'object' !== typeof window.FORMI ) {
+              window.FORMI = {};
+            }
+            FORMI.dismissNotice = function() {
+              hanleAjaxCall( 'forminator_hosting_banner_dismiss', '' );
+            };
+            FORMI.reminderLater = function() {
+              hanleAjaxCall( 'forminator_hosting_banner_later', <?php echo current_time( 'timestamp' ); ?> );
+            }
+
+			// Dismiss notice if claim button is also clicked.
+            $( 'body' ).on( 'click', '#shared-notifications-banner .sui-module-notice-banner__cta-action > a', function (e) {
+				$( '#shared-notifications-banner' ).find( '.sui-module-notice-banner__close' ).trigger( 'click' );
+			});
+
+            function hanleAjaxCall( prop, value ) {
+              var $notice = $( '#shared-notifications-banner' );
+              var ajaxUrl = '<?php echo forminator_ajax_url(); ?>';
+              jQuery.post(
+                ajaxUrl,
+                {
+                  action: 'forminator_dismiss_notification',
+                  prop: prop,
+                  value: value,
+                  _ajax_nonce: $notice.data('nonce')
+                }
+              );
+            }
+          }( jQuery ) );
+        </script>
+		<?php
 	}
 }

@@ -49,7 +49,7 @@ class Forminator_Google_Config
       'cache_class'   => 'Forminator_Google_Cache_File',
       'logger_class'  => 'Forminator_Google_Logger_Null',
 
-      // Don't change these unless you're working against a special development
+      // Don't change these unless you're working against a special development.
       // or testing environment.
       'base_path' => 'https://www.googleapis.com',
 
@@ -77,22 +77,22 @@ class Forminator_Google_Config
           // Disable the use of gzip on calls if set to true. Defaults to false.
           'disable_gzip' => self::GZIP_ENABLED,
 
-          // We default gzip to disabled on uploads even if gzip is otherwise
+          // We default gzip to disabled on uploads even if gzip is otherwise.
           // enabled, due to some issues seen with small packet sizes for uploads.
-          // Please test with this option before enabling gzip for uploads in
+          // Please test with this option before enabling gzip for uploads in.
           // a production environment.
           'enable_gzip_for_uploads' => self::GZIP_UPLOADS_DISABLED,
         ),
-        // If you want to pass in OAuth 2.0 settings, they will need to be
+        // If you want to pass in OAuth 2.0 settings, they will need to be.
         // structured like this.
         'Forminator_Google_Auth_OAuth2' => array(
-          // Keys for OAuth 2.0 access, see the API console at
-          // https://developers.google.com/console
+          // Keys for OAuth 2.0 access, see the API console at.
+          // https://developers.google.com/console.
           'client_id' => '',
           'client_secret' => '',
           'redirect_uri' => '',
 
-          // Simple API access key, also from the API console. Ensure you get
+          // Simple API access key, also from the API console. Ensure you get.
           // a Server key, and not a Browser key.
           'developer_key' => '',
 
@@ -109,16 +109,16 @@ class Forminator_Google_Config
               'https://www.googleapis.com/oauth2/v1/certs',
         ),
         'Forminator_Google_Task_Runner' => array(
-          // Delays are specified in seconds
+          // Delays are specified in seconds.
           'initial_delay' => 1,
           'max_delay' => 60,
-          // Base number for exponential backoff
+          // Base number for exponential backoff.
           'factor' => 2,
-          // A random number between -jitter and jitter will be added to the
-          // factor on each iteration to allow for better distribution of
+          // A random number between -jitter and jitter will be added to the.
+          // factor on each iteration to allow for better distribution of.
           // retries.
           'jitter' => .5,
-          // Maximum number of retries allowed
+          // Maximum number of retries allowed.
           'retries' => 0
         ),
         'Forminator_Google_Service_Exception' => array(

@@ -10,10 +10,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 abstract class Forminator_Admin_View_Page extends Forminator_Admin_Page {
 		/**
-	 * Current model
-	 *
-	 * @var object|bool
-	 */
+		 * Current model
+		 *
+		 * @var object|bool
+		 */
 	protected $model = false;
 
 	/**
@@ -78,6 +78,13 @@ abstract class Forminator_Admin_View_Page extends Forminator_Admin_Page {
 	 * @var int
 	 */
 	protected $page_number = 1;
+
+	/**
+	 * Page num
+	 *
+	 * @var int
+	 */
+	protected $pagenum = 1;
 
 	/**
 	 * Filters to be used
@@ -174,7 +181,7 @@ abstract class Forminator_Admin_View_Page extends Forminator_Admin_Page {
 	 *
 	 * @since 1.0
 	 *
-	 * @param string $slug - the field slug
+	 * @param string $slug - the field slug.
 	 *
 	 * @return string
 	 */
@@ -268,6 +275,7 @@ abstract class Forminator_Admin_View_Page extends Forminator_Admin_Page {
 	 *
 	 * @since 1.0
 	 * @return Forminator_Entries_List_Table
+	 * todo looks like it's Unused method (if so Forminator_Entries_List_Table is unused class)
 	 */
 	public function get_table() {
 		return new Forminator_Entries_List_Table(
@@ -298,16 +306,22 @@ abstract class Forminator_Admin_View_Page extends Forminator_Admin_Page {
 	 *
 	 * @param string $position
 	 */
-	public function bulk_actions( $position = 'top' ) { ?>
+	public function bulk_actions( $position = 'top', $is_registration = false ) { ?>
 
-		<select name="<?php echo ( 'top' === $position ) ? 'entries-action' : 'entries-action-bottom'; ?>"
-				class="sui-select-sm sui-select-inline"
-				style="min-width: 200px;">
-			<option value=""><?php esc_html_e( "Bulk Actions", 'forminator' ); ?></option>
-			<option value="delete-all"><?php esc_html_e( "Delete Entries", 'forminator' ); ?></option>
+		<select
+			name="<?php echo ( 'top' === $position ) ? 'entries-action' : 'entries-action-bottom'; ?>"
+			class="sui-select sui-select-sm sui-select-inline"
+			data-width="200px"
+			data-placeholder="<?php esc_html_e( 'Bulk Actions', 'forminator' ); ?>"
+		>
+			<option></option>
+			<?php if ( $is_registration ) { ?>
+				<option value="approve-users"><?php esc_html_e( 'Approve Users', 'forminator' ); ?></option>
+			<?php } ?>
+			<option value="delete-all"><?php esc_html_e( 'Delete Entries', 'forminator' ); ?></option>
 		</select>
 
-		<button class="sui-button"><?php esc_html_e( "Apply", 'forminator' ); ?></button>
+		<button class="sui-button"><?php esc_html_e( 'Apply', 'forminator' ); ?></button>
 
 		<?php
 	}
@@ -323,15 +337,15 @@ abstract class Forminator_Admin_View_Page extends Forminator_Admin_Page {
 			$per_page = $this->per_page;
 			$offset   = ( $paged - 1 ) * $per_page;
 
-			$this->total_entries = Forminator_Form_Entry_Model::count_entries( $this->model->id );
+			$this->total_entries = Forminator_Form_Entry_Model::count_entries( $this->model->id, false, true );
 
 			$args = array(
-				'form_id'  => $this->model->id,
-				'is_spam'  => 0,
-				'per_page' => $per_page,
-				'offset'   => $offset,
-				'order_by' => 'entries.date_created',
-				'order'    => 'DESC',
+				'form_id'  		=> $this->model->id,
+				'is_spam'  		=> 0,
+				'per_page' 		=> $per_page,
+				'offset'   		=> $offset,
+				'order_by' 		=> 'entries.date_created',
+				'order'    		=> 'DESC',
 			);
 
 			$args = wp_parse_args( $this->filters, $args );
@@ -360,7 +374,7 @@ abstract class Forminator_Admin_View_Page extends Forminator_Admin_Page {
 			$this->model = false;
 		}
 
-		$this->pagenum = isset( $_REQUEST['paged'] ) ? absint( $_REQUEST['paged'] ) : 0; // WPCS: CSRF OK
+		$this->pagenum = absint( Forminator_Core::sanitize_text_field( 'paged' ) );
 
 		$this->parse_filters();
 		$this->parse_order();
@@ -372,16 +386,17 @@ abstract class Forminator_Admin_View_Page extends Forminator_Admin_Page {
 	}
 
 	/**
-	 * Parsing filters from $_REQUEST
+	 * Parsing filters
 	 *
 	 * @since 1.5.4
 	 */
 	protected function parse_filters() {
-		$request_data = $_REQUEST;// WPCS CSRF ok.
-		$data_range   = isset( $request_data['date_range'] ) ? sanitize_text_field( $request_data['date_range'] ) : '';
-		$search       = isset( $request_data['search'] ) ? sanitize_text_field( $request_data['search'] ) : '';
-		$min_id       = isset( $request_data['min_id'] ) ? sanitize_text_field( $request_data['min_id'] ) : '';
-		$max_id       = isset( $request_data['max_id'] ) ? sanitize_text_field( $request_data['max_id'] ) : '';
+		$data_range   = Forminator_Core::sanitize_text_field( 'date_range' );
+		$user_status  = Forminator_Core::sanitize_text_field( 'user_status' );
+		$search       = Forminator_Core::sanitize_text_field( 'search' );
+		$min_id       = Forminator_Core::sanitize_text_field( 'min_id' );
+		$max_id       = Forminator_Core::sanitize_text_field( 'max_id' );
+		$entry_status = Forminator_Core::sanitize_text_field( 'entry_status' );
 
 		$filters = array();
 		if ( ! empty( $data_range ) ) {
@@ -398,6 +413,10 @@ abstract class Forminator_Admin_View_Page extends Forminator_Admin_Page {
 			$filters['search'] = $search;
 		}
 
+		if ( $user_status ) {
+			$filters['user_status'] = $user_status;
+		}
+
 		if ( ! empty( $min_id ) ) {
 			$min_id = intval( $min_id );
 			if ( $min_id > 0 ) {
@@ -412,11 +431,15 @@ abstract class Forminator_Admin_View_Page extends Forminator_Admin_Page {
 			}
 		}
 
+		if ( $entry_status ) {
+			$filters['entry_status'] = $entry_status;
+		}
+
 		$this->filters = $filters;
 	}
 
 	/**
-	 * Parsing order from $_REQUEST
+	 * Parsing order
 	 *
 	 * @since 1.5.4
 	 */
@@ -430,51 +453,19 @@ abstract class Forminator_Admin_View_Page extends Forminator_Admin_Page {
 			'DESC',
 			'ASC',
 		);
-		$request_data = $_REQUEST;// WPCS CSRF ok.
-		$order_by     = 'entries.date_created';
-		if ( isset( $request_data['order_by' ] ) ) {
-			switch ( $request_data['order_by' ] ) {
-				case 'entries.entry_id':
-					$order_by = 'entries.entry_id';
-					break;
-				case 'entries.date_created':
-					$order_by = 'entries.date_created';
-					break;
-				default:
-					break;
-			}
+
+		$order_by = Forminator_Core::sanitize_text_field( 'order_by' );
+		if ( ! in_array( $order_by, $valid_order_bys, true ) ) {
+			$order_by = 'entries.date_created';
+		}
+		$this->order['order_by'] = $order_by;
+
+		$order = strtoupper( Forminator_Core::sanitize_text_field( 'order' ) );
+		if ( ! in_array( $order, $valid_orders, true ) ) {
+			$order = 'DESC';
 		}
 
-		$order = 'DESC';
-		if ( isset( $request_data['order'] ) ) {
-			switch ( $request_data['order' ] ) {
-				case 'DESC':
-					$order = 'DESC';
-					break;
-				case 'ASC':
-					$order = 'ASC';
-					break;
-				default:
-					break;
-			}
-		}
-
-		if ( ! empty( $order_by ) ) {
-			if ( ! in_array( $order, $valid_order_bys, true ) ) {
-				$order_by = 'entries.date_created';
-			}
-
-			$this->order['order_by'] = $order_by;
-		}
-
-		if ( ! empty( $order ) ) {
-			$order = strtoupper( $order );
-			if ( ! in_array( $order, $valid_orders, true ) ) {
-				$order = 'DESC';
-			}
-
-			$this->order['order'] = $order;
-		}
+		$this->order['order'] = $order;
 	}
 
 	/**
@@ -489,7 +480,7 @@ abstract class Forminator_Admin_View_Page extends Forminator_Admin_Page {
 	 */
 	protected function attach_addon_on_render_entry( Forminator_Form_Entry_Model $entry_model ) {
 		$additional_items = array();
-		//find all registered addons, so history can be shown even for deactivated addons
+		// find all registered addons, so history can be shown even for deactivated addons.
 		$registered_addons = $this->get_registered_addons();
 
 		$method = 'get_addon_' . static::$module_slug . '_hooks';
@@ -563,61 +554,53 @@ abstract class Forminator_Admin_View_Page extends Forminator_Admin_Page {
 	 * @since 1.0
 	 */
 	public function process_request() {
-
 		if ( isset( $_GET['err_msg'] ) ) {
 			$this->error_message = wp_kses_post( $_GET['err_msg'] );
 		}
 
 		// it should be before nonce check cus we use filter on Submissions page without nonce :facepalm:.
-		if ( isset( $_REQUEST['field'] ) ) {
-			$this->visible_fields     = $_REQUEST['field']; // wpcs XSRF ok, via GET
+		if ( isset( $_GET['field'] ) ) {
+			$this->visible_fields     = Forminator_Core::sanitize_array( $_GET['field'] );
 			$this->checked_fields     = count( $this->visible_fields );
 			$this->fields_is_filtered = true;
 		}
 
+		$action = Forminator_Core::sanitize_text_field( 'entries-action' );
+		if ( ! $action ) {
+			$action = Forminator_Core::sanitize_text_field( 'entries-action-bottom' );
+		}
+		$nonce = Forminator_Core::sanitize_text_field( 'forminatorEntryNonce' );
 		/**
 		 * Start modifying data
 		 */
-		if ( ! isset( $_REQUEST['forminatorEntryNonce'] ) ) {
+		if ( ! $nonce || ! wp_verify_nonce( $nonce, 'forminator' . forminator_get_prefix( static::$module_slug, '', true ) . 'Entries' ) ) {
 			return;
 		}
 
-		$nonce = $_REQUEST['forminatorEntryNonce']; // WPCS: CSRF OK
-		if ( ! wp_verify_nonce( $nonce, 'forminator' . forminator_get_prefix( static::$module_slug, '', true ) . 'Entries' ) ) {
-			return;
+		switch ( $action ) {
+			case 'approve-users':
+				$this->approve_users();
+				break;
+			case 'delete-all':
+				$this->delete_all_action();
+				break;
+			default:
+				break;
 		}
 
-		if ( isset( $_REQUEST['entries-action'] ) || isset( $_REQUEST['entries-action-bottom'] ) ) {
-			$action = '';
-			if ( ! empty( $_REQUEST['entries-action'] ) ) {
-				$action = sanitize_text_field( $_REQUEST['entries-action'] );
-			} elseif ( isset( $_REQUEST['entries-action-bottom'] ) ) {
-				$action = sanitize_text_field( $_REQUEST['entries-action-bottom'] );
-			}
+		$forminator_action = Forminator_Core::sanitize_text_field( 'forminator_action' );
 
-			switch ( $action ) {
-				case 'delete-all' :
-					$this->delete_all_action();
-					break;
-				default:
-					break;
-			}
-		}
-
-		if ( isset( $_POST['forminator_action'] ) ) {
-			switch ( $_POST['forminator_action'] ) {
-				case 'delete':
-					if ( isset( $_POST['id'] ) ) {
-						$id = $_POST['id'];
-
-						$this->delete_action( $id );
-						$this->maybe_redirect_to_referer();
-						exit;
-					}
-					break;
-				default:
-					break;
-			}
+		switch ( $forminator_action ) {
+			case 'delete':
+				$id = filter_input( INPUT_POST, 'id', FILTER_VALIDATE_INT );
+				if ( $id ) {
+					$this->delete_action( $id );
+					$this->maybe_redirect_to_referer();
+					exit;
+				}
+				break;
+			default:
+				break;
 		}
 	}
 
@@ -637,8 +620,9 @@ abstract class Forminator_Admin_View_Page extends Forminator_Admin_Page {
 		if ( 'forminator-' . forminator_get_prefix( static::$module_slug, 'c' ) . '-view' === $this->page_slug ) {
 			$form_type = forminator_get_prefix( static::$module_slug, 'post_type' );
 			$url       = '?page=forminator-entries&form_type=' . $form_type;
-			if ( isset( $_REQUEST['form_id'] ) ) { // WPCS: CSRF OK
-				$url .= '&form_id=' .  intval( $_REQUEST['form_id'] ); // WPCS: CSRF OK
+			$form_id   = (int) Forminator_Core::sanitize_text_field( 'form_id' );
+			if ( $form_id ) {
+				$url .= '&form_id=' . $form_id;
 			}
 			if ( wp_safe_redirect( $url ) ) {
 				exit;

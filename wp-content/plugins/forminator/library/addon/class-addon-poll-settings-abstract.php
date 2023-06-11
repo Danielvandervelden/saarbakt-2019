@@ -49,7 +49,6 @@ abstract class Forminator_Addon_Poll_Settings_Abstract extends Forminator_Addon_
 	 *
 	 * @example $_activation_error_message can be dynamically set on activate() to display custom error messages when activatation failed
 	 *          Default is empty, which will be replaced by forminator default messages
-	 *
 	 */
 
 	/**
@@ -98,6 +97,8 @@ abstract class Forminator_Addon_Poll_Settings_Abstract extends Forminator_Addon_
 	 */
 	protected $poll = null;
 
+	protected static $module_slug = 'poll';
+
 	/**
 	 * Forminator_Addon_Poll_Settings_Abstract constructor.
 	 *
@@ -111,24 +112,13 @@ abstract class Forminator_Addon_Poll_Settings_Abstract extends Forminator_Addon_
 	public function __construct( Forminator_Addon_Abstract $addon, $poll_id ) {
 		$this->addon   = $addon;
 		$this->poll_id = $poll_id;
-		$this->poll    = Forminator_Poll_Model::model()->load( $this->poll_id );
+		$this->poll    = Forminator_Base_Form_Model::get_model( $this->poll_id );
 		if ( ! $this->poll ) {
 			/* translators: ... */
 			throw new Forminator_Addon_Exception( sprintf( __( 'Poll with id %d could not be found', 'forminator' ), $this->poll_id ) );
 		}
 		$this->poll_fields   = forminator_addon_format_poll_fields( $this->poll );
 		$this->poll_settings = forminator_addon_format_poll_settings( $this->poll );
-	}
-
-
-	/**
-	 * Meta key that will be used to save addon poll setting on WP post_meta
-	 *
-	 * @since 1.6.1
-	 * @return string
-	 */
-	final public function get_poll_settings_meta_key() {
-		return 'forminator_addon_' . $this->addon->get_slug() . '_poll_settings';
 	}
 
 	/**
@@ -168,8 +158,8 @@ abstract class Forminator_Addon_Poll_Settings_Abstract extends Forminator_Addon_
 	 * @return array
 	 */
 	final public function get_poll_settings_values() {
-		// get single meta key
-		$values = get_post_meta( $this->poll_id, $this->get_poll_settings_meta_key(), true );
+		// get single meta key.
+		$values = get_post_meta( $this->poll_id, $this->get_settings_meta_key(), true );
 
 		if ( ! $values ) {
 			$values = array();
@@ -184,7 +174,7 @@ abstract class Forminator_Addon_Poll_Settings_Abstract extends Forminator_Addon_
 		 * @since 1.6.1
 		 *
 		 * @param mixed $values
-		 * @param int   $poll_id current poll id
+		 * @param int   $poll_id current poll id.
 		 */
 		$values = apply_filters( 'forminator_addon_' . $addon_slug . '_get_poll_settings_values', $values, $poll_id );
 
@@ -209,11 +199,11 @@ abstract class Forminator_Addon_Poll_Settings_Abstract extends Forminator_Addon_
 		 *
 		 * @since 1.6.1
 		 *
-		 * @param mixed $values  current poll settings values
-		 * @param int   $poll_id current poll id
+		 * @param mixed $values  current poll settings values.
+		 * @param int   $poll_id current poll id.
 		 */
 		$values = apply_filters( 'forminator_addon_' . $addon_slug . '_save_poll_settings_values', $values, $poll_id );
-		update_post_meta( $this->poll_id, $this->get_poll_settings_meta_key(), $values );
+		update_post_meta( $this->poll_id, $this->get_settings_meta_key(), $values );
 	}
 
 	/**
@@ -338,9 +328,9 @@ abstract class Forminator_Addon_Poll_Settings_Abstract extends Forminator_Addon_
 	 * @return array
 	 */
 	public function poll_settings_wizards() {
-		// What this function return should looks like
+		// What this function return should looks like.
 		$steps = array(
-			// First Step / step `0`
+			// First Step / step `0`.
 			array(
 				/**
 				 * Value of `callback` will be passed as first argument of `call_user_func`
@@ -352,7 +342,6 @@ abstract class Forminator_Addon_Poll_Settings_Abstract extends Forminator_Addon_
 				 * This callback should return an array @see Forminator_Addon_Abstract::sample_setting_first_step()
 				 *
 				 * @see Forminator_Addon_Abstract::sample_setting_first_step()
-				 *
 				 */
 				'callback'     => array( $this, 'sample_setting_first_step' ),
 				/**
@@ -431,12 +420,12 @@ abstract class Forminator_Addon_Poll_Settings_Abstract extends Forminator_Addon_
 	 *
 	 * @param      $multi_id
 	 * @param      $settings
-	 * @param bool $replace
+	 * @param bool     $replace
 	 */
 	public function save_multi_id_poll_setting_values( $multi_id, $settings, $replace = false ) {
 		$this->addon_poll_settings = $this->get_poll_settings_values();
 
-		// merge old values if not replace
+		// merge old values if not replace.
 		if ( isset( $this->addon_poll_settings[ $multi_id ] ) && ! $replace ) {
 			$current_settings = $this->addon_poll_settings[ $multi_id ];
 			$settings         = array_merge( $current_settings, $settings );
@@ -475,7 +464,7 @@ abstract class Forminator_Addon_Poll_Settings_Abstract extends Forminator_Addon_
 	 *
 	 * @param        $multi_id
 	 * @param        $key
-	 * @param mixed  $default
+	 * @param mixed    $default
 	 *
 	 * @return mixed|string
 	 */
@@ -587,7 +576,7 @@ abstract class Forminator_Addon_Poll_Settings_Abstract extends Forminator_Addon_
 		do_action( "forminator_addon_{$addon_slug}_on_import_poll_settings_data", $poll_id, $import_data );
 
 		try {
-			// pre-basic-validation
+			// pre-basic-validation.
 			if ( empty( $import_data ) ) {
 				throw new Forminator_Addon_Exception( 'import_data_empty' );
 			}
@@ -607,7 +596,7 @@ abstract class Forminator_Addon_Poll_Settings_Abstract extends Forminator_Addon_
 
 		} catch ( Forminator_Addon_Exception $e ) {
 			forminator_addon_maybe_log( $e->getMessage() );
-			//do nothing
+			// do nothing.
 		}
 
 	}

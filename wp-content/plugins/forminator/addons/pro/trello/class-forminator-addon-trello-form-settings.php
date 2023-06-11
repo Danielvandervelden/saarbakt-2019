@@ -42,7 +42,7 @@ class Forminator_Addon_Trello_Form_Settings extends Forminator_Addon_Form_Settin
 	 * @return array
 	 */
 	public function form_settings_wizards() {
-		// numerical array steps
+		// numerical array steps.
 		return array(
 			array(
 				'callback'     => array( $this, 'setup_name' ),
@@ -347,7 +347,7 @@ class Forminator_Addon_Trello_Form_Settings extends Forminator_Addon_Form_Settin
 
 			if ( empty( $lists ) ) {
 				/* translators: ... */
-				throw new Forminator_Addon_Trello_Exception( sprintf( __( 'No list found on Trello Board of %1$s. Please create one.', 'forminator' ), $board_name ) );
+				throw new Forminator_Addon_Trello_Exception( sprintf( __( 'No list found on Trello Board of %1$s. Please create one.', 'forminator' ), esc_html( $board_name ) ) );
 			}
 
 			$template_params['lists'] = $lists;
@@ -494,7 +494,7 @@ class Forminator_Addon_Trello_Form_Settings extends Forminator_Addon_Form_Settin
 		$members = array();
 
 		try {
-			// get available labels
+			// get available labels.
 			$api            = $this->addon->get_api();
 			$labels_request = $api->get_board_labels( $board_id );
 
@@ -511,16 +511,16 @@ class Forminator_Addon_Trello_Form_Settings extends Forminator_Addon_Form_Settin
 				}
 			}
 
-			// get available members
+			// get available members.
 			$members_request = $api->get_board_members( $board_id );
 
 			foreach ( $members_request as $data ) {
 				if ( isset( $data->id ) && isset( $data->username ) ) {
 					$display_name = $data->username;
-					// its from API var
+					// its from API var.
 					// phpcs:ignore WordPress.NamingConventions.ValidVariableName.NotSnakeCaseMemberVar
 					if ( isset( $data->fullName ) && ! empty( $data->fullName ) ) {
-						// its from API var
+						// its from API var.
 						// phpcs:ignore WordPress.NamingConventions.ValidVariableName.NotSnakeCaseMemberVar
 						$display_name = $data->fullName;
 					}
@@ -573,7 +573,7 @@ class Forminator_Addon_Trello_Form_Settings extends Forminator_Addon_Form_Settin
 					$input_exceptions->add_input_exception( 'Please pick valid position.', 'position_error' );
 				}
 
-				// optional label
+				// optional label.
 				if ( ! empty( $label_ids ) && is_array( $label_ids ) ) {
 					$labels_keys = array_keys( $labels );
 					foreach ( $label_ids as $label_id ) {
@@ -586,7 +586,7 @@ class Forminator_Addon_Trello_Form_Settings extends Forminator_Addon_Form_Settin
 					$label_ids = array();
 				}
 
-				// optional member
+				// optional member.
 				if ( ! empty( $member_ids ) && is_array( $member_ids ) ) {
 					$members_keys = array_keys( $members );
 					foreach ( $member_ids as $member_id ) {
@@ -711,7 +711,7 @@ class Forminator_Addon_Trello_Form_Settings extends Forminator_Addon_Form_Settin
 		foreach ( $form_settings_values as $key => $value ) {
 			$multi_ids[] = array(
 				'id'    => $key,
-				// use name that was added by user on creating connection
+				// use name that was added by user on creating connection.
 				'label' => isset( $value['name'] ) ? $value['name'] : $key,
 			);
 		}
@@ -737,7 +737,7 @@ class Forminator_Addon_Trello_Form_Settings extends Forminator_Addon_Form_Settin
 	 * @param array $submitted_data
 	 */
 	public function disconnect_form( $submitted_data ) {
-		// only execute if multi_id provided on submitted data
+		// only execute if multi_id provided on submitted data.
 		if ( isset( $submitted_data['multi_id'] ) && ! empty( $submitted_data['multi_id'] ) ) {
 			$addon_form_settings = $this->get_form_settings_values();
 			unset( $addon_form_settings[ $submitted_data['multi_id'] ] );

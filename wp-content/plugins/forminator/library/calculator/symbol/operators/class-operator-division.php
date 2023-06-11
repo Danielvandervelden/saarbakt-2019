@@ -23,10 +23,10 @@ class Forminator_Calculator_Symbol_Operator_Division extends Forminator_Calculat
 	 * @inheritdoc
 	 */
 	public function operate( $left_number, $right_number ) {
-		// backward compat, PHP < 7 return false when division by zero executed
-		// PHP >= return INF and throw exception
+		// backward compat, PHP < 7 return false when division by zero executed.
+		// PHP >= return INF and throw exception.
 		if ( empty( $right_number ) ) {
-			// infinite result
+			// infinite result.
 			return INF;
 		}
 

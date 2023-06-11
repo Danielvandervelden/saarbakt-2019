@@ -1,6 +1,6 @@
 <?php
 
-// File generated from our OpenAPI spec
+// File generated from our OpenAPI spec.
 
 namespace Forminator\Stripe;
 
@@ -96,7 +96,7 @@ class CreditNote extends ApiResource
     const PATH_LINES = '/lines';
 
     /**
-     * @param string $id the ID of the credit note on which to retrieve the credit note line items
+     * @param string $id the ID of the credit note on which to retrieve the credit note line items.
      * @param null|array $params
      * @param null|array|string $opts
      *

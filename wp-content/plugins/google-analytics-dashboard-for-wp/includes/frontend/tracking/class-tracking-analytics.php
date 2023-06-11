@@ -52,12 +52,12 @@ class ExactMetrics_Tracking_Analytics extends ExactMetrics_Tracking_Abstract {
 	 * for the frontend_output() function to output. These are
 	 * generally dimensions and turned on GA features.
 	 *
+	 * @return array Array of the options to use.
 	 * @since 6.0.0
 	 * @access public
 	 *
-	 * @return array Array of the options to use.
 	 */
-	public function frontend_tracking_options( ) {
+	public function frontend_tracking_options() {
 		global $wp_query;
 		$options = array();
 
@@ -69,9 +69,10 @@ class ExactMetrics_Tracking_Analytics extends ExactMetrics_Tracking_Abstract {
 		$track_user = exactmetrics_track_user();
 
 		if ( ! $track_user ) {
-			$options['create'] = "'create', '" . esc_js( $ua_code ) . "', '" . esc_js( 'auto' ) . "'";
+			$options['create']   = "'create', '" . esc_js( $ua_code ) . "', '" . esc_js( 'auto' ) . "'";
 			$options['forceSSL'] = "'set', 'forceSSL', true";
-			$options['send'] = "'send','pageview'";
+			$options['send']     = "'send','pageview'";
+
 			return $options;
 		}
 
@@ -97,9 +98,9 @@ class ExactMetrics_Tracking_Analytics extends ExactMetrics_Tracking_Abstract {
 		$create = apply_filters( 'exactmetrics_frontend_tracking_options_analytics_create', $create );
 
 		if ( $create && ! empty( $create ) && is_array( $create ) ) {
-			$create = json_encode( $create );
-			$create = str_replace( '"', "'",  $create );
-			$options['create'] = "'create', '" . esc_js( $ua_code ). "', '" . esc_js( $domain ) . "', " . $create;
+			$create            = json_encode( $create );
+			$create            = str_replace( '"', "'", $create );
+			$options['create'] = "'create', '" . esc_js( $ua_code ) . "', '" . esc_js( $domain ) . "', " . $create;
 		} else {
 			$options['create'] = "'create', '" . esc_js( $ua_code ) . "', '" . esc_js( $domain ) . "'";
 		}
@@ -135,7 +136,7 @@ class ExactMetrics_Tracking_Analytics extends ExactMetrics_Tracking_Abstract {
 		// Add cross-domain tracking.
 		if ( is_array( $cross_domains ) && ! empty( $cross_domains ) ) {
 			$options['cross_domain_tracking'] = "'require', 'linker'";
-			$cross_domains_strings = array();
+			$cross_domains_strings            = array();
 			foreach ( $cross_domains as $cross_domain ) {
 				if ( ! isset( $cross_domain['domain'] ) ) {
 					continue;
@@ -175,6 +176,7 @@ class ExactMetrics_Tracking_Analytics extends ExactMetrics_Tracking_Abstract {
 		}
 
 		$options = apply_filters( 'exactmetrics_frontend_tracking_options_analytics_end', $options );
+
 		return $options;
 	}
 
@@ -185,149 +187,157 @@ class ExactMetrics_Tracking_Analytics extends ExactMetrics_Tracking_Abstract {
 	 * to output in the head of the page for the given
 	 * tracking method.
 	 *
+	 * @return string Javascript to output.
 	 * @since 6.0.0
 	 * @access public
 	 *
-	 * @return string Javascript to output.
 	 */
-	public function frontend_output( ) {
-		$options        = $this->frontend_tracking_options();
-		$src     	    = apply_filters( 'exactmetrics_frontend_output_analytics_src', '//www.google-analytics.com/analytics.js' );
-		$compat_mode     = exactmetrics_get_option( 'gatracker_compatibility_mode', false );
-		$compat    	 	= $compat_mode ? 'window.ga = __gaTracker;' : '';
-		$track_user 	= exactmetrics_track_user();
-		$ua         	= exactmetrics_get_ua();
-		$output     	= '';
-		$reason     	= '';
-		$attr_string    = exactmetrics_get_frontend_analytics_script_atts();
+	public function frontend_output() {
+		$options     = $this->frontend_tracking_options();
+		$src         = apply_filters( 'exactmetrics_frontend_output_analytics_src', '//www.google-analytics.com/analytics.js' );
+		$compat_mode = apply_filters( 'exactmetrics_get_option_gatracker_compatibility_mode', true );
+		$compat      = $compat_mode ? 'window.ga = __gaTracker;' : '';
+		$track_user  = exactmetrics_track_user();
+		$ua          = exactmetrics_get_ua();
+		$output      = '';
+		$reason      = '';
+		$attr_string = exactmetrics_get_frontend_analytics_script_atts();
 		ob_start();
 		?>
-<!-- This site uses the Google Analytics by ExactMetrics plugin v<?php echo EXACTMETRICS_VERSION; ?> - Using Analytics tracking - https://www.exactmetrics.com/ -->
-<?php if ( ! $track_user ) {
-	if ( empty( $ua ) ) {
-		$reason = __( 'Note: ExactMetrics is not currently configured on this site. The site owner needs to authenticate with Google Analytics in the ExactMetrics settings panel.', 'google-analytics-dashboard-for-wp' );
-	    $output .=  '<!-- ' . esc_html( $reason ) . ' -->' . PHP_EOL;
-	} else if ( current_user_can( 'exactmetrics_save_settings' ) ) {
-		$reason = __( 'Note: ExactMetrics does not track you as a logged-in site administrator to prevent site owners from accidentally skewing their own Google Analytics data.'. PHP_EOL . 'If you are testing Google Analytics code, please do so either logged out or in the private browsing/incognito mode of your web browser.', 'google-analytics-dashboard-for-wp' );
-	    $output .=  '<!-- ' . esc_html( $reason ) . ' -->' . PHP_EOL;
-	} else {
-		$reason = __( 'Note: The site owner has disabled Google Analytics tracking for your user role.', 'google-analytics-dashboard-for-wp' );
-	    $output .=  '<!-- ' . esc_html( $reason ) . ' -->' . PHP_EOL;
-	}
-	echo $output;
-} ?>
-<?php if ( $ua ) { ?>
-<script<?php echo $attr_string;?>>
-    (window.gaDevIds=window.gaDevIds||[]).push("dNDMyYj");
-	var em_version         = '<?php echo EXACTMETRICS_VERSION; ?>';
-	var em_track_user      = <?php echo ( $track_user ? 'true' : 'false' ); ?>;
-	var em_no_track_reason = <?php echo ( $reason ? "'" . esc_js( $reason)  . "'": "''" ); ?>;
-	<?php do_action( 'exactmetrics_tracking_analytics_frontend_output_after_em_track_user' ); ?>
-
-<?php if ( $this->should_do_optout() ) { ?>
-	var disableStr = 'ga-disable-<?php echo exactmetrics_get_ua(); ?>';
-
-	/* Function to detect opted out users */
-	function __gaTrackerIsOptedOut() {
-		return document.cookie.indexOf(disableStr + '=true') > -1;
-	}
-
-	/* Disable tracking if the opt-out cookie exists. */
-	if ( __gaTrackerIsOptedOut() ) {
-		window[disableStr] = true;
-	}
-
-	/* Opt-out function */
-	function __gaTrackerOptout() {
-	  document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
-	  window[disableStr] = true;
-	}
-
-	if ( 'undefined' === typeof gaOptout ) {
-		function gaOptout() {
-			__gaTrackerOptout();
-		}
-	}
-	<?php } ?>
-
-	if ( em_track_user ) {
-		(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-			(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-			m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-		})(window,document,'script','<?php echo $src; ?>','__gaTracker');
-
-<?php
-	echo $compat;
-
-	if ( count( $options ) >= 1 ) {
-		foreach ( $options as $item ) {
-			if ( ! is_array( $item ) ) {
-				echo '		__gaTracker(' . $item . ");\n";
-			} else if ( ! empty ( $item['value'] ) ) {
-				echo '	' . $item['value'] . "\n";
+		<!-- This site uses the Google Analytics by ExactMetrics plugin v<?php echo EXACTMETRICS_VERSION; ?> - Using Analytics tracking - https://www.exactmetrics.com/ -->
+		<?php if ( ! $track_user ) {
+			if ( empty( $ua ) ) {
+				$reason = __( 'Note: ExactMetrics is not currently configured on this site. The site owner needs to authenticate with Google Analytics in the ExactMetrics settings panel.', 'google-analytics-dashboard-for-wp' );
+				$output .= '<!-- ' . esc_html( $reason ) . ' -->' . PHP_EOL;
+			} else if ( current_user_can( 'exactmetrics_save_settings' ) ) {
+				$reason = __( 'Note: ExactMetrics does not track you as a logged-in site administrator to prevent site owners from accidentally skewing their own Google Analytics data.' . PHP_EOL . 'If you are testing Google Analytics code, please do so either logged out or in the private browsing/incognito mode of your web browser.', 'google-analytics-dashboard-for-wp' );
+				$output .= '<!-- ' . esc_html( $reason ) . ' -->' . PHP_EOL;
+			} else {
+				$reason = __( 'Note: The site owner has disabled Google Analytics tracking for your user role.', 'google-analytics-dashboard-for-wp' );
+				$output .= '<!-- ' . esc_html( $reason ) . ' -->' . PHP_EOL;
 			}
-		}
-	}
-	if ( $compat_mode ) {
-		// Ensure that GA is fully loaded and assign to ga.
-		echo "		__gaTracker( function() { window.ga = __gaTracker; } );\n";
-	}
-	?>
-	} else {
-<?php if ( $this->should_do_optout() ) { ?>
-		console.log( "<?php echo esc_js( $reason );?>" );
-		(function() {
-			/* https://developers.google.com/analytics/devguides/collection/analyticsjs/ */
-			var noopfn = function() {
-				return null;
-			};
-			var noopnullfn = function() {
-				return null;
-			};
-			var Tracker = function() {
-				return null;
-			};
-			var p = Tracker.prototype;
-			p.get = noopfn;
-			p.set = noopfn;
-			p.send = noopfn;
-			var __gaTracker = function() {
-				var len = arguments.length;
-				if ( len === 0 ) {
-					return;
-				}
-				var f = arguments[len-1];
-				if ( typeof f !== 'object' || f === null || typeof f.hitCallback !== 'function' ) {
-					console.log( '<?php echo esc_js( __("Not running function", "google-analytics-dashboard-for-wp" ) );?> __gaTracker(' + arguments[0] + " ....) <?php echo esc_js( __( "because you are not being tracked.", 'google-analytics-dashboard-for-wp' ) );?> " + em_no_track_reason );
-					return;
-				}
-				try {
-					f.hitCallback();
-				} catch (ex) {
+			echo $output;
+		} ?>
+		<?php if ( $ua ) { ?>
+			<script<?php echo $attr_string; ?>>
+				(window.gaDevIds = window.gaDevIds || []).push("dNDMyYj");
+				var em_version = '<?php echo EXACTMETRICS_VERSION; ?>';
+				var em_track_user = <?php echo( $track_user ? 'true' : 'false' ); ?>;
+				var em_no_track_reason = <?php echo( $reason ? "'" . esc_js( $reason ) . "'" : "''" ); ?>;
+				<?php do_action( 'exactmetrics_tracking_analytics_frontend_output_after_em_track_user' ); ?>
 
+				<?php if ( $this->should_do_optout() ) { ?>
+				var disableStr = 'ga-disable-<?php echo exactmetrics_get_ua(); ?>';
+
+				/* Function to detect opted out users */
+				function __gaTrackerIsOptedOut() {
+					return document.cookie.indexOf(disableStr + '=true') > -1;
 				}
-			};
-			__gaTracker.create = function() {
-				return new Tracker();
-			};
-			__gaTracker.getByName = noopnullfn;
-			__gaTracker.getAll = function() {
-				return [];
-			};
-			__gaTracker.remove = noopfn;
-			window['__gaTracker'] = __gaTracker;
-			<?php echo $compat; ?>
-		})();
-	<?php } ?>
-	}
-</script>
-<?php } else {  ?>
-<!-- No UA code set -->
-<?php } ?>
-<!-- / Google Analytics by ExactMetrics -->
-<?php
+
+				/* Disable tracking if the opt-out cookie exists. */
+				if (__gaTrackerIsOptedOut()) {
+					window[disableStr] = true;
+				}
+
+				/* Opt-out function */
+				function __gaTrackerOptout() {
+					document.cookie = disableStr + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+					window[disableStr] = true;
+				}
+
+				if ('undefined' === typeof gaOptout) {
+					function gaOptout() {
+						__gaTrackerOptout();
+					}
+				}
+				<?php } ?>
+
+				if (em_track_user) {
+					(function (i, s, o, g, r, a, m) {
+						i['GoogleAnalyticsObject'] = r;
+						i[r] = i[r] || function () {
+							(i[r].q = i[r].q || []).push(arguments)
+						}, i[r].l = 1 * new Date();
+						a = s.createElement(o),
+							m = s.getElementsByTagName(o)[0];
+						a.async = 1;
+						a.src = g;
+						m.parentNode.insertBefore(a, m)
+					})(window, document, 'script', '<?php echo $src; ?>', '__gaTracker');
+
+					<?php
+					echo $compat;
+
+					if ( count( $options ) >= 1 ) {
+						foreach ( $options as $item ) {
+							if ( ! is_array( $item ) ) {
+								echo '		__gaTracker(' . $item . ");\n";
+							} else if ( ! empty ( $item['value'] ) ) {
+								echo '	' . $item['value'] . "\n";
+							}
+						}
+					}
+					if ( $compat_mode ) {
+						// Ensure that GA is fully loaded and assign to ga.
+						echo "		__gaTracker( function() { window.ga = __gaTracker; } );\n";
+					}
+					?>
+				} else {
+					<?php if ( $this->should_do_optout() ) { ?>
+					console.log("<?php echo esc_js( $reason );?>");
+					(function () {
+						/* https://developers.google.com/analytics/devguides/collection/analyticsjs/ */
+						var noopfn = function () {
+							return null;
+						};
+						var noopnullfn = function () {
+							return null;
+						};
+						var Tracker = function () {
+							return null;
+						};
+						var p = Tracker.prototype;
+						p.get = noopfn;
+						p.set = noopfn;
+						p.send = noopfn;
+						var __gaTracker = function () {
+							var len = arguments.length;
+							if (len === 0) {
+								return;
+							}
+							var f = arguments[len - 1];
+							if (typeof f !== 'object' || f === null || typeof f.hitCallback !== 'function') {
+								console.log('<?php echo esc_js( __( "Not running function", "google-analytics-dashboard-for-wp" ) );?> __gaTracker(' + arguments[0] + " ....) <?php echo esc_js( __( "because you are not being tracked.", 'google-analytics-dashboard-for-wp' ) );?> " + em_no_track_reason);
+								return;
+							}
+							try {
+								f.hitCallback();
+							} catch (ex) {
+
+							}
+						};
+						__gaTracker.create = function () {
+							return new Tracker();
+						};
+						__gaTracker.getByName = noopnullfn;
+						__gaTracker.getAll = function () {
+							return [];
+						};
+						__gaTracker.remove = noopfn;
+						window['__gaTracker'] = __gaTracker;
+						<?php echo $compat; ?>
+					})();
+					<?php } ?>
+				}
+			</script>
+		<?php } else { ?>
+			<!-- No UA code set -->
+		<?php } ?>
+		<!-- / Google Analytics by ExactMetrics -->
+		<?php
 		$output = ob_get_contents();
 		ob_end_clean();
+
 		return $output;
 	}
 

@@ -94,7 +94,7 @@ class Forminator_Google_Http_MediaFileUpload
     $this->progress = 0;
     $this->boundary = $boundary;
 
-    // Process Media Request
+    // Process Media Request.
     $this->process();
   }
 

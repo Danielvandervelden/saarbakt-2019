@@ -49,8 +49,8 @@ abstract class Forminator_Calculator_Symbol_Operator_Abstract extends Forminator
 	 * If this class does NOT return a value of type int or float,
 	 * an exception will be thrown.
 	 *
-	 * @param  int|float $left_number  The number that stand left to the operator
-	 * @param  int|float $right_number The number that stands right to the operator
+	 * @param  int|float $left_number  The number that stand left to the operator.
+	 * @param  int|float $right_number The number that stands right to the operator.
 	 *
 	 * @return int|float
 	 */

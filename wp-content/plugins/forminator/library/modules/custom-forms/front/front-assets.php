@@ -53,12 +53,12 @@ class Forminator_Assets_Enqueue_Form extends Forminator_Assets_Enqueue {
 
 		// FIELD: calculation picker.
 		if ( $render_obj->has_field_type( 'calculation' )
-		     || $render_obj->has_field_type( 'currency' )
-		     || $render_obj->has_field_type( 'number' ) ) {
+			 || $render_obj->has_field_type( 'currency' )
+			 || $render_obj->has_field_type( 'number' ) ) {
 			$this->load_number_scripts();
 		}
 
-		// $this->get_module_design() returns the design
+		// $this->get_module_design() returns the design.
 	}
 
 	/**
@@ -81,7 +81,7 @@ class Forminator_Assets_Enqueue_Form extends Forminator_Assets_Enqueue {
 				array(),
 				FORMINATOR_VERSION
 			);
-		} else if ( isset( $form_settings['fields-style'] ) && 'enclosed' === $form_settings['fields-style'] ) {
+		} elseif ( isset( $form_settings['fields-style'] ) && 'enclosed' === $form_settings['fields-style'] ) {
 
 			wp_enqueue_style(
 				'forminator-grid-enclosed',
@@ -114,31 +114,31 @@ class Forminator_Assets_Enqueue_Form extends Forminator_Assets_Enqueue {
 		$has_phone_international = $render_obj->has_field_type_with_setting_value( 'phone', 'validation', 'international' );
 		$has_phone_settings      = ( $has_phone_national || $has_phone_international );
 
-		$has_address_country     = $render_obj->has_field_type_with_setting_value( 'address', 'address_country', 'true' );
+		$has_address_country = $render_obj->has_field_type_with_setting_value( 'address', 'address_country', 'true' );
 
-		$has_select_single       = $render_obj->has_field_type_with_setting_value( 'select', 'value_type', 'single' );
-		$has_select_multiple     = $render_obj->has_field_type_with_setting_value( 'select', 'value_type', 'multiselect' );
+		$has_select_single   = $render_obj->has_field_type_with_setting_value( 'select', 'value_type', 'single' );
+		$has_select_multiple = $render_obj->has_field_type_with_setting_value( 'select', 'value_type', 'multiselect' );
 
-		$has_datepicker          = $render_obj->has_field_type_with_setting_value( 'date', 'field_type', 'picker' );
-		$has_dateselect          = $render_obj->has_field_type_with_setting_value( 'date', 'field_type', 'select' );
+		$has_datepicker = $render_obj->has_field_type_with_setting_value( 'date', 'field_type', 'picker' );
+		$has_dateselect = $render_obj->has_field_type_with_setting_value( 'date', 'field_type', 'select' );
 
-		$has_timepicker          = $render_obj->has_field_type( 'time' );
+		$has_timepicker = $render_obj->has_field_type( 'time' );
 
-		$has_uploader            = $render_obj->has_field_type( 'upload' );
+		$has_uploader = $render_obj->has_field_type( 'upload' );
 
-		$has_post_feat_image     = $render_obj->has_field_type_with_setting_value( 'postdata', 'post_image', true );
-		$has_post_categories     = $render_obj->has_field_type_with_setting_value( 'postdata', 'category', true );
-		$has_post_tags           = $render_obj->has_field_type_with_setting_value( 'postdata', 'post_tag', true );
-		$has_multi_categories    = $render_obj->has_field_type_with_setting_value( 'postdata', 'category_multiple', '1' );
-		$has_multi_tags          = $render_obj->has_field_type_with_setting_value( 'postdata', 'post_tag_multiple', '1' );
+		$has_post_feat_image  = $render_obj->has_field_type_with_setting_value( 'postdata', 'post_image', true );
+		$has_post_categories  = $render_obj->has_field_type_with_setting_value( 'postdata', 'category', true );
+		$has_post_tags        = $render_obj->has_field_type_with_setting_value( 'postdata', 'post_tag', true );
+		$has_multi_categories = $render_obj->has_field_type_with_setting_value( 'postdata', 'category_multiple', '1' );
+		$has_multi_tags       = $render_obj->has_field_type_with_setting_value( 'postdata', 'post_tag_multiple', '1' );
 
-		$has_currency            = $render_obj->has_field_type( 'currency' );
-		$has_paypal              = $render_obj->has_field_type( 'paypal' );
-		$has_stripe              = $render_obj->has_field_type( 'stripe' );
+		$has_currency = $render_obj->has_field_type( 'currency' );
+		$has_paypal   = $render_obj->has_field_type( 'paypal' );
+		$has_stripe   = $render_obj->has_field_type( 'stripe' );
 
-		$has_password            = $render_obj->has_field_type( 'password' );
+		$has_password = $render_obj->has_field_type( 'password' );
 
-		$has_signature           = $render_obj->has_field_type( 'signature' );
+		$has_signature = $render_obj->has_field_type( 'signature' );
 
 		// Forminator UI - Base stylesheet.
 		if ( 'none' !== $form_design ) {
@@ -177,38 +177,6 @@ class Forminator_Assets_Enqueue_Form extends Forminator_Assets_Enqueue {
 		}
 	}
 
-	public function load_base_scripts() {
-		// LOAD: Forminator validation scripts
-		wp_enqueue_script(
-			'forminator-jquery-validate',
-			forminator_plugin_url() . 'assets/js/library/jquery.validate.min.js',
-			array( 'jquery' ),
-			FORMINATOR_VERSION,
-			false
-		);
-
-		// LOAD: Forminator UI JS
-		wp_enqueue_script(
-			'forminator-form',
-			forminator_plugin_url() . 'assets/forminator-ui/js/forminator-form.min.js',
-			array( 'jquery' ),
-			FORMINATOR_VERSION,
-			false
-		);
-
-		// LOAD: Forminator front scripts
-		wp_enqueue_script(
-			'forminator-front-scripts',
-			forminator_plugin_url() . 'build/front/front.multi.min.js',
-			array( 'jquery', 'forminator-form', 'forminator-jquery-validate' ),
-			FORMINATOR_VERSION,
-			false
-		);
-
-		// Localize front script
-		wp_localize_script( 'forminator-front-scripts', 'ForminatorFront', forminator_localize_data() );
-	}
-
 	/**
 	 * Load date field scripts
 	 *
@@ -217,33 +185,41 @@ class Forminator_Assets_Enqueue_Form extends Forminator_Assets_Enqueue {
 	public function load_date_scripts() {
 		global $wp_locale;
 
-		wp_enqueue_script(
-			'forminator-custom-form-moment',
-			forminator_plugin_url() . 'assets/js/library/moment.min.js',
-			array( 'jquery' ),
-			'2.22.2',
-			true
-		);
+		wp_enqueue_script( 'moment' );
 
-		// load date picker scripts always
+		// load date picker scripts always.
 		wp_enqueue_script( 'jquery-ui-datepicker' );
 
-		//localize Datepicker js
+		// localize Datepicker js.
 		$datepicker_date_format = str_replace(
 			array(
-				'd', 'j', 'l', 'z', // Day.
-				'F', 'M', 'n', 'm', // Month.
-				'Y', 'y'            // Year.
+				'd',
+				'j',
+				'l',
+				'z', // Day.
+				'F',
+				'M',
+				'n',
+				'm', // Month.
+				'Y',
+				'y',            // Year.
 			),
 			array(
-				'dd', 'd', 'DD', 'o',
-				'MM', 'M', 'm', 'mm',
-				'yy', 'y'
+				'dd',
+				'd',
+				'DD',
+				'o',
+				'MM',
+				'M',
+				'm',
+				'mm',
+				'yy',
+				'y',
 			),
 			get_option( 'date_format' )
 		);
 
-		$datepicker_data        = array(
+		$datepicker_data = array(
 			'monthNames'      => array_values( $wp_locale->month ),
 			'monthNamesShort' => array_values( $wp_locale->month_abbrev ),
 			'dayNames'        => array_values( $wp_locale->weekday ),
@@ -266,13 +242,17 @@ class Forminator_Assets_Enqueue_Form extends Forminator_Assets_Enqueue {
 
 		// Load int-tels.
 		$style_src     = forminator_plugin_url() . 'assets/css/intlTelInput.min.css';
-		$style_version = "4.0.3";
+		$style_version = '4.0.3';
 
 		$script_src     = forminator_plugin_url() . 'assets/js/library/intlTelInput.min.js';
+		$script_src_cleave     = forminator_plugin_url() . 'assets/js/library/cleave.min.js';
+		$script_src_cleave_phone     = forminator_plugin_url() . 'assets/js/library/cleave-phone.i18n.js';
 		$script_version = FORMINATOR_VERSION;
 
-		wp_enqueue_style( 'intlTelInput-forminator-css', $style_src, array(), $style_version ); // intlTelInput
-		wp_enqueue_script( 'forminator-intlTelInput', $script_src, array( 'jquery' ), $script_version, false ); // intlTelInput
+		wp_enqueue_style( 'intlTelInput-forminator-css', $style_src, array(), $style_version ); // intlTelInput.
+		wp_enqueue_script( 'forminator-intlTelInput', $script_src, array( 'jquery' ), $script_version, false ); // intlTelInput.
+		wp_enqueue_script( 'forminator-cleave', $script_src_cleave, array( 'jquery' ), $script_version, false ); // intlTelInput.
+		wp_enqueue_script( 'forminator-cleave-phone', $script_src_cleave_phone, array( 'jquery' ), $script_version, false ); // intlTelInput.
 	}
 
 	/**
@@ -281,10 +261,29 @@ class Forminator_Assets_Enqueue_Form extends Forminator_Assets_Enqueue {
 	 * @since 1.11
 	 */
 	private function load_number_scripts() {
-		$script_src     = forminator_plugin_url() . 'assets/js/library/jquery.number.min.js';
 		$script_version = FORMINATOR_VERSION;
 
-		wp_enqueue_script( 'forminator-number-formatting', $script_src, array( 'jquery' ), $script_version, false ); // mask
+		wp_enqueue_script(
+			'forminator-inputmask',
+			forminator_plugin_url() . 'assets/js/library/inputmask.min.js',
+			array( 'jquery' ),
+			$script_version,
+			false
+		); // inputmask.
+		wp_enqueue_script(
+			'forminator-jquery-inputmask',
+			forminator_plugin_url() . 'assets/js/library/jquery.inputmask.min.js',
+			array( 'jquery' ),
+			$script_version,
+			false
+		); // jquery inputmask.
+		wp_enqueue_script(
+			'forminator-inputmask-binding',
+			forminator_plugin_url() . 'assets/js/library/inputmask.binding.js',
+			array( 'jquery' ),
+			$script_version,
+			false
+		); // inputmask binding.
 	}
 
 	/**
@@ -293,11 +292,13 @@ class Forminator_Assets_Enqueue_Form extends Forminator_Assets_Enqueue {
 	 * @since 1.14.10
 	 */
 	public function load_select_styles( $render_obj ) {
-		$form_design   = $this->get_module_design();
-		$form_settings = $this->get_settings();
+		$form_design = $this->get_module_design();
+		if ( 'none' === $form_design ) {
+			return;
+		}
 
 		$has_name_multi_select      = $render_obj->has_field_type_with_setting_value( 'name', 'multiple_name', 'true' );
-		$has_name_prefix_select     = $render_obj->has_field_type_with_setting_value( 'name', 'prefix', 'true' );
+		$has_name_prefix_select     = $render_obj->has_field_type_with_setting_value( 'name', 'prefix', true );
 		$has_address_select         = $render_obj->has_field_type( 'address' );
 		$has_address_country_select = $render_obj->has_field_type_with_setting_value( 'address', 'address_country', 'true' );
 		$has_select                 = $render_obj->has_field_type( 'select' );
@@ -317,7 +318,7 @@ class Forminator_Assets_Enqueue_Form extends Forminator_Assets_Enqueue {
 			|| ( $has_timepicker && ( $has_time_input || $has_time_select ) )
 			|| $has_post_categories;
 
-		if ( $has_element && 'none' !== $form_design ) {
+		if ( $has_element ) {
 			// Load Forminator styles for select2.
 			wp_enqueue_style(
 				'forminator-forms-' . $form_design . '-select2',
@@ -329,11 +330,13 @@ class Forminator_Assets_Enqueue_Form extends Forminator_Assets_Enqueue {
 	}
 
 	public function load_select_scripts( $render_obj ) {
-		$form_design   = $this->get_module_design();
-		$form_settings = $this->get_settings();
+		$form_design = $this->get_module_design();
+		if ( 'none' === $form_design ) {
+			return;
+		}
 
 		$has_name_multi_select      = $render_obj->has_field_type_with_setting_value( 'name', 'multiple_name', 'true' );
-		$has_name_prefix_select     = $render_obj->has_field_type_with_setting_value( 'name', 'prefix', 'true' );
+		$has_name_prefix_select     = $render_obj->has_field_type_with_setting_value( 'name', 'prefix', true );
 		$has_address_select         = $render_obj->has_field_type( 'address' );
 		$has_address_country_select = $render_obj->has_field_type_with_setting_value( 'address', 'address_country', 'true' );
 		$has_select                 = $render_obj->has_field_type( 'select' );
@@ -353,7 +356,7 @@ class Forminator_Assets_Enqueue_Form extends Forminator_Assets_Enqueue {
 			|| ( $has_timepicker && ( $has_time_input || $has_time_select ) )
 			|| $has_post_categories;
 
-		if ( 'none' !== $form_design && $has_element ) {
+		if ( $has_element ) {
 			wp_enqueue_script(
 				'forminator-select2',
 				forminator_plugin_url() . 'assets/forminator-ui/js/select2.full.min.js',

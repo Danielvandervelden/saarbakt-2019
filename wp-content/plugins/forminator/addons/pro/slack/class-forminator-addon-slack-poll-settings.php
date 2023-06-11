@@ -50,7 +50,7 @@ class Forminator_Addon_Slack_Poll_Settings extends Forminator_Addon_Poll_Setting
 	 * @return array
 	 */
 	public function poll_settings_wizards() {
-		// numerical array steps
+		// numerical array steps.
 		return array(
 			array(
 				'callback'     => array( $this, 'pick_name' ),
@@ -575,7 +575,7 @@ class Forminator_Addon_Slack_Poll_Settings extends Forminator_Addon_Poll_Setting
 		foreach ( $this->get_poll_settings_values() as $key => $value ) {
 			$multi_ids[] = array(
 				'id'    => $key,
-				// use name that was added by user on creating connection
+				// use name that was added by user on creating connection.
 				'label' => isset( $value['name'] ) ? $value['name'] : $key,
 			);
 		}
@@ -591,7 +591,7 @@ class Forminator_Addon_Slack_Poll_Settings extends Forminator_Addon_Poll_Setting
 	 * @param array $submitted_data
 	 */
 	public function disconnect_poll( $submitted_data ) {
-		// only execute if multi_id provided on submitted data
+		// only execute if multi_id provided on submitted data.
 		if ( isset( $submitted_data['multi_id'] ) && ! empty( $submitted_data['multi_id'] ) ) {
 			$addon_poll_settings = $this->get_poll_settings_values();
 			unset( $addon_poll_settings[ $submitted_data['multi_id'] ] );

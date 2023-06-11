@@ -86,22 +86,22 @@ class Forminator_Calculation extends Forminator_Field {
 	 * @since 1.7
 	 *
 	 * @param $field
-	 * @param $settings
+	 * @param Forminator_Render_Form $views_obj Forminator_Render_Form object.
 	 *
 	 * @return mixed
 	 */
-	public function markup( $field, $settings = array() ) {
+	public function markup( $field, $views_obj ) {
 
+		$settings            = $views_obj->model->settings;
 		$this->field         = $field;
 		$this->form_settings = $settings;
-
-		$this->init_autofill( $settings );
+		$hidden_behavior     = self::get_property( 'hidden_behavior', $field );
 
 		$html        = '';
 		$wrapper     = array();
 		$id          = self::get_property( 'element_id', $field );
 		$name        = $id;
-		$id          = $id . '-field';
+		$id          = $id . '-field' . '_' . Forminator_CForm_Front::$uid;
 		$required    = self::get_property( 'required', $field, false );
 		$value       = esc_html( self::get_post_data( $name, self::get_property( 'default_value', $field ) ) );
 		$label       = esc_html( self::get_property( 'field_label', $field, '' ) );
@@ -111,20 +111,56 @@ class Forminator_Calculation extends Forminator_Field {
 		$is_hidden   = self::get_property( 'hidden', $field, false, 'bool' );
 		$suffix      = self::get_property( 'suffix', $field );
 		$prefix      = self::get_property( 'prefix', $field );
-		$precision   = $this->get_calculable_precision( array(), $field );
+		$precision   = self::get_calculable_precision( $field );
+		$separator   = self::get_property( 'separators', $field, 'blank' );
+		$separators  = $this->forminator_separators( $separator, $field );
+
+		$point = ! empty( $precision ) ? $separators['point'] : '';
+
+		if( is_numeric( $formula ) ) {
+			$formula = $formula . '*1';
+		}
+
+		$fields_in_formula = Forminator_CForm_Front_Action::calculator_pull_fields( $formula );
+		$full_matches      = $fields_in_formula[0];
+		foreach ( $fields_in_formula[1] as $key => $field_id ) {
+			if ( ! isset( $full_matches[ $key ] ) ) {
+				continue;
+			}
+			$form_id = isset( $this->form_settings['form_id'] ) ? $this->form_settings['form_id'] : 0;
+			if ( ! empty( $form_id ) ) {
+				if ( false !== strpos( $field_id, 'number-' ) || false !== strpos( $field_id, 'currency-' ) ) {
+					$field_form		= Forminator_Form_Model::model()->load( $form_id );
+					$formula_field 	= $field_form->get_field( $field_id, true );
+					$calc_enabled 	= self::get_property( 'calculations', $formula_field, true, 'bool' );
+					if ( ! $calc_enabled ) {
+						$field_val		= Forminator_CForm_Front_Action::replace_to( $field_id, $formula );
+						$find_str		= $full_matches[ $key ];
+						$replace_with	= '(' . ( $field_val ) . ')';
+						$formula 		= implode( $replace_with, explode( $find_str, $formula, 2 ) );
+					}
+				}
+			}
+		}
 
 		$number_attr = array(
-			'type'            => 'number',
-			'name'            => $name,
-			'value'           => $value,
-			'id'              => $id,
-			'class'           => 'forminator-calculation',
-			'data-formula'    => $formula,
-			'data-required'   => $required,
-			'data-precision'  => $precision,
-			'data-is-hidden'  => $is_hidden,
-			'disabled'        => 'disabled', // mark as disabled so this value won't send to backend later
+			'name'               => $name,
+			'value'              => $value,
+			'id'                 => $id,
+			'class'              => 'forminator-calculation',
+			'data-formula'       => $formula,
+			'data-required'      => $required,
+			'data-decimal-point' => $point,
+			'data-precision'     => $precision,
+			'data-is-hidden'     => $is_hidden,
+			'disabled'           => 'disabled', // mark as disabled so this value won't send to backend later.
+			'data-decimals'      => $precision,
+			'data-inputmask'     => "'groupSeparator': '" . $separators['separator'] . "', 'radixPoint': '" . $point . "', 'digits': '" . $precision . "'",
 		);
+
+		if ( $hidden_behavior && 'zero' === $hidden_behavior ) {
+			$number_attr['data-hidden-behavior'] = $hidden_behavior;
+		}
 
 		if ( empty( $prefix ) && empty( $suffix ) ) {
 			$number_attr['class'] .= ' forminator-input';
@@ -133,9 +169,9 @@ class Forminator_Calculation extends Forminator_Field {
 		if ( ! empty( $prefix ) || ! empty( $suffix ) ) {
 			$wrapper = array(
 				'<div class="forminator-input forminator-input-with-prefix">',
-				sprintf( '<span class="forminator-suffix">%s</span></div>', $suffix ),
+				sprintf( '<span class="forminator-suffix">%s</span></div>', esc_html( $suffix ) ),
 				'',
-				$prefix,
+				esc_html( $prefix ),
 			);
 		}
 
@@ -181,22 +217,44 @@ class Forminator_Calculation extends Forminator_Field {
 	 * @since 1.7
 	 *
 	 * @param array        $field
-	 * @param array|string $data - the data to be sanitized
+	 * @param array|string $data - the data to be sanitized.
 	 *
 	 * @return array|string $data - the data after sanitization
 	 */
 	public function sanitize( $field, $data ) {
-		// Sanitize
+		// Sanitize.
 		$data = forminator_sanitize_field( $data );
 
 		return apply_filters( 'forminator_field_calculation_sanitize', $data, $field );
 	}
 
 	/**
+	 * Get calculable value for repeted item in Group fields
+	 *
+	 * @param array  $submitted_field_data Submitted data.
+	 * @param array  $field_settings Field settings.
+	 * @param string $group_suffix Group suffix.
+	 * @param array  $grouped_fields Fields in the same group.
+	 * @return string Formula
+	 */
+	public static function get_calculable_repeater_value( $submitted_field_data, $field_settings, $group_suffix, $grouped_fields ) {
+		$calculable_value = self::get_calculable_value( $submitted_field_data, $field_settings );
+		if ( ! $group_suffix ) {
+			return $calculable_value;
+		}
+
+		foreach ( $grouped_fields as $group_field_slug ) {
+			$calculable_value = str_replace( '{' . $group_field_slug . '}', '{' . $group_field_slug . $group_suffix . '}', $calculable_value );
+		}
+
+		return $calculable_value;
+	}
+
+	/**
 	 * @since 1.7
 	 * @inheritdoc
 	 */
-	public function get_calculable_value( $submitted_data, $field_settings ) {
+	public static function get_calculable_value( $submitted_field_data, $field_settings ) {
 		$formula = self::get_property( 'formula', $field_settings, '', 'str' );
 
 		/**
@@ -210,39 +268,13 @@ class Forminator_Calculation extends Forminator_Field {
 		 *
 		 * @return string|int|float formula, or hardcoded value
 		 */
-		$formula = apply_filters( 'forminator_field_calculation_calculable_value', $formula, $submitted_data, $field_settings );
+		$formula = apply_filters( 'forminator_field_calculation_calculable_value', $formula, Forminator_CForm_Front_Action::$prepared_data, $field_settings );
 
 		if ( empty( $formula ) ) {
 			return 0.0;
 		}
 
 		return $formula;
-	}
-
-	/**
-	 *
-	 * @since 1.7
-	 * @inheritdoc
-	 */
-	public function get_calculable_precision( $submitted_data, $field_settings ) {
-		$precision = self::get_property( 'precision', $field_settings, 2, 'num' );
-
-		/**
-		 * Filter precision being used on calculable value
-		 *
-		 * @since 1.7
-		 *
-		 * @param int|float $precision
-		 * @param array     $submitted_data
-		 * @param array     $field_settings
-		 *
-		 * @return int|float number precision casted into integer later
-		 */
-		$precision = apply_filters( 'forminator_field_calculation_calculable_precision', $precision, $submitted_data, $field_settings );
-
-		$precision = (int) $precision;
-
-		return $precision;
 	}
 
 	/**
@@ -267,93 +299,5 @@ class Forminator_Calculation extends Forminator_Field {
 		$message = apply_filters( 'forminator_field_calculation_default_error_message', $message );
 
 		return $message;
-	}
-
-	/**
-	 * Get converted formula
-	 * replace variable with submitted data
-	 * expand nested calculation
-	 *
-	 * @since 1.7
-	 *
-	 * @param array                        $submitted_data
-	 * @param array                        $field_settings
-	 *
-	 * @param Forminator_Form_Model $custom_form
-	 *
-	 * @return string
-	 */
-	public function get_converted_formula( $submitted_data, $pseudo_submitted_data, $field_settings, $custom_form, $hidden_fields = array() ) {
-		$formula           = $this->get_calculable_value( $submitted_data, $field_settings );
-		$converted_formula = forminator_calculator_maybe_replace_fields_on_formula( $formula, $submitted_data, $pseudo_submitted_data, $custom_form, $hidden_fields );
-
-		/**
-		 * Filter converted formula from calculation field
-		 *
-		 * @since 1.7
-		 *
-		 * @param string                       $converted_formula
-		 * @param array                        $field_settings
-		 * @param array                        $submitted_data
-		 * @param Forminator_Form_Model $custom_form
-		 */
-		$converted_formula = apply_filters( 'forminator_field_calculation_converted_formula', $converted_formula, $field_settings, $submitted_data, $custom_form );
-
-		return $converted_formula;
-	}
-
-	/**
-	 * Get calculated value
-	 *
-	 * @since 1.7
-	 *
-	 * @param string $converted_formula
-	 * @param array  $submitted_data
-	 * @param array  $field_settings
-	 *
-	 * @return double
-	 * @throws Forminator_Calculator_Exception
-	 */
-	public function get_calculated_value( $converted_formula, $submitted_data, $field_settings ) {
-		$has_paypal = false;
-		$precision = $this->get_calculable_precision( $submitted_data, $field_settings );
-
-		$calculator = new Forminator_Calculator( $converted_formula );
-		$calculator->set_is_throwable( true );
-
-		$result = $calculator->calculate();
-
-		$result = floatval( $result );
-
-		// Check if has paypal
-		foreach ( $submitted_data as $key => $val ) {
-			if ( false !== strpos( $key, 'paypal-' ) ) {
-				$has_paypal = true;
-			}
-		}
-
-		if ( $has_paypal ) {
-			$result = round( $result, $precision, PHP_ROUND_HALF_DOWN );
-		} else {
-			$result = round( $result, $precision );
-		}
-
-		if ( is_finite( $result ) && $precision > 0 ) {
-			$result = number_format( $result, $precision, '.', ',' );
-		}
-
-		/**
-		 * Filter Calculated value of calculation field
-		 *
-		 * @since 1.7
-		 *
-		 * @param double $result
-		 * @param string $converted_formula
-		 * @param array  $submitted_data
-		 * @param array  $field_settings
-		 */
-		$result = apply_filters( 'forminator_field_calculation_calculated_value', $result, $converted_formula, $submitted_data, $field_settings );
-
-		return $result;
 	}
 }

@@ -1,6 +1,6 @@
 <?php
 
-// File generated from our OpenAPI spec
+// File generated from our OpenAPI spec.
 
 namespace Forminator\Stripe;
 
@@ -159,7 +159,7 @@ class Invoice extends ApiResource
     }
 
     /**
-     * @param string $id the ID of the invoice on which to retrieve the lines
+     * @param string $id the ID of the invoice on which to retrieve the lines.
      * @param null|array $params
      * @param null|array|string $opts
      *

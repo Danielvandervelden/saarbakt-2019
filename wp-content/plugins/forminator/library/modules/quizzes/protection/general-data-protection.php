@@ -51,7 +51,6 @@ class Forminator_Quiz_General_Data_Protection extends Forminator_General_Data_Pr
 		$global_retain_number = get_option( 'forminator_retain_quiz_submissions_interval_number', 0 );
 		$global_retain_unit   = get_option( 'forminator_retain_quiz_submissions_interval_unit', 'days' );
 
-
 		$quiz_status = 'any';
 
 		/**
@@ -89,8 +88,7 @@ class Forminator_Quiz_General_Data_Protection extends Forminator_General_Data_Pr
 				$is_overridden = filter_var( $settings['enable-submissions-retention'], FILTER_VALIDATE_BOOLEAN );
 			}
 
-
-			// use overridden settings
+			// use overridden settings.
 			if ( $is_overridden ) {
 				$retain_number = 0;
 				if ( isset( $settings['submissions-retention-number'] ) ) {
@@ -101,9 +99,8 @@ class Forminator_Quiz_General_Data_Protection extends Forminator_General_Data_Pr
 				if ( isset( $settings['submissions-retention-unit'] ) ) {
 					$retain_unit = $settings['submissions-retention-unit'];
 				}
-
 			} else {
-				// Use GLOBAL settings
+				// Use GLOBAL settings.
 				$retain_number = $global_retain_number;
 				$retain_unit   = $global_retain_unit;
 

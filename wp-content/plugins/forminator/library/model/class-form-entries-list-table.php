@@ -139,7 +139,7 @@ class Forminator_Entries_List_Table extends WP_List_Table {
 	 *
 	 * @since 1.0
 	 *
-	 * @param bool $with_id Whether to set the id attribute or not
+	 * @param bool $with_id Whether to set the id attribute or not.
 	 */
 	public function print_column_headers( $with_id = true ) {
 		list( $columns, $hidden, $sortable, $primary ) = $this->get_column_info();
@@ -147,13 +147,10 @@ class Forminator_Entries_List_Table extends WP_List_Table {
 		$current_url = set_url_scheme( 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] );
 		$current_url = remove_query_arg( 'paged', $current_url );
 
-		if ( isset( $_GET['orderby'] ) ) { // WPCS: CSRF OK
-			$current_orderby = sanitize_text_field( $_GET['orderby'] );
-		} else {
-			$current_orderby = '';
-		}
+		$current_orderby = Forminator_Core::sanitize_text_field( 'orderby' );
 
-		if ( isset( $_GET['order'] ) && 'desc' === $_GET['order'] ) { // phpcs:ignore
+		$order = Forminator_Core::sanitize_text_field( 'order' );
+		if ( 'desc' === $order ) {
 			$current_order = 'desc';
 		} else {
 			$current_order = 'asc';
@@ -194,7 +191,7 @@ class Forminator_Entries_List_Table extends WP_List_Table {
 					$class[] = $desc_first ? 'asc' : 'desc';
 				}
 
-				$column_display_name = '<a href="' . esc_url( add_query_arg( compact( 'orderby', 'order' ), $current_url ) ) . '"><span>' . $column_display_name . '</span><span class="sorting-indicator"></span></a>';
+				$column_display_name = '<a href="' . esc_url( add_query_arg( compact( 'orderby', 'order' ), $current_url ) ) . '"><span>' . esc_html( $column_display_name ) . '</span><span class="sorting-indicator"></span></a>';
 			}
 
 			$tag   = 'th';
@@ -205,7 +202,7 @@ class Forminator_Entries_List_Table extends WP_List_Table {
 				$class = "class='" . join( ' ', $class ) . "'";
 			}
 
-			echo "<$tag $scope $id $class>$column_display_name</$tag>"; // phpcs:ignore
+			echo "<$tag $scope $id $class>$column_display_name</$tag>"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		}
 	}
 
@@ -264,7 +261,7 @@ class Forminator_Entries_List_Table extends WP_List_Table {
 	 */
 	public function column_date( $item ) {
 		?>
-		<p class="wpmudev-cell-content"><?php echo esc_attr( $item->date_created ); ?></p>
+		<p class="wpmudev-cell-content"><?php echo esc_html( $item->date_created ); ?></p>
 		<?php
 	}
 
@@ -272,8 +269,8 @@ class Forminator_Entries_List_Table extends WP_List_Table {
 	 * Dynamic column support
 	 *
 	 * @since 1.0
-	 * @param Forminator_Form_Entry_Model $item - the current item
-	 * @param string $column_name - the column name
+	 * @param Forminator_Form_Entry_Model $item - the current item.
+	 * @param string                      $column_name - the column name.
 	 *
 	 * @return mixed
 	 */

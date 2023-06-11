@@ -1,6 +1,6 @@
 <?php
-$section = isset( $_GET['section'] ) ? sanitize_text_field( $_GET['section'] ) : 'dashboard';
-$nonce = wp_create_nonce( 'forminator_save_dashboard_settings' );
+$section = Forminator_Core::sanitize_text_field( 'section', 'dashboard' );
+$nonce   = wp_create_nonce( 'forminator_save_dashboard_settings' );
 ?>
 
 <div class="sui-box" data-nav="dashboard" style="<?php echo esc_attr( 'dashboard' !== $section ? 'display: none;' : '' ); ?>">

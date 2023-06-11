@@ -49,8 +49,8 @@ class RequestOptions
      * Unpacks an options array and merges it into the existing RequestOptions
      * object.
      *
-     * @param null|array|RequestOptions|string $options a key => value array
-     * @param bool $strict when true, forbid string form and arbitrary keys in array form
+     * @param null|array|RequestOptions|string $options a key => value array.
+     * @param bool $strict when true, forbid string form and arbitrary keys in array form.
      *
      * @return RequestOptions
      */
@@ -83,8 +83,8 @@ class RequestOptions
     /**
      * Unpacks an options array into an RequestOptions object.
      *
-     * @param null|array|RequestOptions|string $options a key => value array
-     * @param bool $strict when true, forbid string form and arbitrary keys in array form
+     * @param null|array|RequestOptions|string $options a key => value array.
+     * @param bool $strict when true, forbid string form and arbitrary keys in array form.
      *
      * @throws \Forminator\Stripe\Exception\InvalidArgumentException
      *

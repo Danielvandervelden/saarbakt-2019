@@ -58,13 +58,13 @@ class Forminator_Google_Client
   private $deferExecution = false;
 
   /** @var array $scopes */
-  // Scopes requested by the client
+  // Scopes requested by the client.
   protected $requestedScopes = array();
 
   // definitions of services that are discovered.
   protected $services = array();
 
-  // Used to track authenticated state, can't discover services after doing authenticate()
+  // Used to track authenticated state, can't discover services after doing authenticate().
   private $authenticated = false;
 
   /**
@@ -280,7 +280,7 @@ class Forminator_Google_Client
   {
     $token = $this->getAuth()->getAccessToken();
     // The response is json encoded, so could be the string null.
-    // It is arguable whether this check should be here or lower
+    // It is arguable whether this check should be here or lower.
     // in the library.
     return (null == $token || 'null' == $token || '[]' == $token) ? null : $token;
   }

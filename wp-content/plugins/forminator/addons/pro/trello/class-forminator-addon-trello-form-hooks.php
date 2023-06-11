@@ -4,7 +4,6 @@
  * Class Forminator_Addon_Trello_Form_Hooks
  *
  * @since 1.0 Trello Addon
- *
  */
 class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abstract {
 
@@ -52,7 +51,7 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 	 *
 	 * @return array
 	 */
-	public function add_entry_fields( $submitted_data, $form_entry_fields = array() ) {
+	public function add_entry_fields( $submitted_data, $form_entry_fields = array(), $entry = null ) {
 
 		$form_id                = $this->form_id;
 		$form_settings_instance = $this->form_settings_instance;
@@ -64,8 +63,8 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 *
 		 * @param array $submitted_data
 		 * @param array $form_entry_fields
-		 * @param int $form_id current Form ID
-		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance
+		 * @param int $form_id current Form ID.
+		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance.
 		 */
 		$submitted_data = apply_filters(
 			'forminator_addon_trello_form_submitted_data',
@@ -82,8 +81,8 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 *
 		 * @param array $form_entry_fields
 		 * @param array $submitted_data
-		 * @param int $form_id current Form ID
-		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance
+		 * @param int $form_id current Form ID.
+		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance.
 		 */
 		$form_entry_fields = apply_filters(
 			'forminator_addon_trello_form_entry_fields',
@@ -104,19 +103,19 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 *
 		 * @since 1.2
 		 *
-		 * @param int $form_id current Form ID
+		 * @param int $form_id current Form ID.
 		 * @param array $submitted_data
-		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance
+		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance.
 		 */
 		do_action( 'forminator_addon_trello_before_create_card', $form_id, $submitted_data, $form_settings_instance );
 
 		foreach ( $addon_setting_values as $key => $addon_setting_value ) {
-			// save it on entry field, with name `status-$MULTI_ID`, and value is the return result on sending data to trello
+			// save it on entry field, with name `status-$MULTI_ID`, and value is the return result on sending data to trello.
 			if ( $form_settings_instance->is_multi_form_settings_complete( $key ) ) {
-				// exec only on completed connection
+				// exec only on completed connection.
 				$data[] = array(
 					'name'  => 'status-' . $key,
-					'value' => $this->get_status_on_create_card( $key, $submitted_data, $addon_setting_value, $form_entry_fields ),
+					'value' => $this->get_status_on_create_card( $key, $submitted_data, $addon_setting_value, $form_entry_fields, $entry ),
 				);
 			}
 		}
@@ -128,10 +127,10 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 * @since 1.2
 		 *
 		 * @param array $entry_fields
-		 * @param int $form_id current Form ID
+		 * @param int $form_id current Form ID.
 		 * @param array $submitted_data
 		 * @param array $form_entry_fields
-		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance
+		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance.
 		 */
 		$data = apply_filters(
 			'forminator_addon_trello_entry_fields',
@@ -152,20 +151,21 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 	 * @since 1.0 Trello Addon
 	 *
 	 * @param string $connection_id
-	 * @param array $submitted_data
-	 * @param array $connection_settings
-	 * @param array $form_entry_fields
+	 * @param array  $submitted_data
+	 * @param array  $connection_settings
+	 * @param array  $form_entry_fields
 	 *
 	 * @return array `is_sent` true means its success send data to Trello, false otherwise
 	 */
-	private function get_status_on_create_card( $connection_id, $submitted_data, $connection_settings, $form_entry_fields ) {
-		// initialize as null
+	private function get_status_on_create_card( $connection_id, $submitted_data, $connection_settings, $form_entry_fields, $entry = null ) {
+		// initialize as null.
 		$api = null;
 
 		$form_id                = $this->form_id;
 		$form_settings_instance = $this->form_settings_instance;
+		$uploads                = $this->get_uploads( $form_entry_fields );
 
-		//check required fields
+		// check required fields
 		try {
 			$api  = $this->addon->get_api();
 			$args = array();
@@ -178,9 +178,9 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 
 			if ( isset( $connection_settings['card_name'] ) ) {
 				$card_name = $connection_settings['card_name'];
-				// disable all_fields here
+				// disable all_fields here.
 				$card_name = str_ireplace( '{all_fields}', '', $card_name );
-				$card_name = forminator_addon_replace_custom_vars( $card_name, $submitted_data, $this->custom_form, $form_entry_fields, false );
+				$card_name = forminator_addon_replace_custom_vars( $card_name, $submitted_data, $this->custom_form, $form_entry_fields, false, $entry );
 
 				/**
 				 * Filter Card Name to passed on to Create Trello Card API
@@ -188,13 +188,13 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 				 * @since 1.2
 				 *
 				 * @param string $card_name
-				 * @param int $form_id Current Form id
-				 * @param string $connection_id ID of current connection
+				 * @param int $form_id Current Form id.
+				 * @param string $connection_id ID of current connection.
 				 * @param array $submitted_data
-				 * @param array $connection_settings current connection setting, contains options of like `name`, `list_id` etc
-				 * @param array $form_entry_fields default entry fields of form
-				 * @param array $form_settings Displayed Form settings
-				 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance
+				 * @param array $connection_settings current connection setting, contains options of like `name`, `list_id` etc.
+				 * @param array $form_entry_fields default entry fields of form.
+				 * @param array $form_settings Displayed Form settings.
+				 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance.
 				 */
 				$card_name    = apply_filters(
 					'forminator_addon_trello_card_name',
@@ -215,7 +215,7 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 				$card_description       = $connection_settings['card_description'];
 				$all_fields_to_markdown = $this->all_fields_to_markdown();
 				$card_description       = str_ireplace( '{all_fields}', $all_fields_to_markdown, $card_description );
-				$card_description       = forminator_addon_replace_custom_vars( $card_description, $submitted_data, $this->custom_form, $form_entry_fields, false );
+				$card_description       = forminator_addon_replace_custom_vars( $card_description, $submitted_data, $this->custom_form, $form_entry_fields, false, $entry );
 
 				/**
 				 * Filter Card Description to passed on to Create Trello Card API
@@ -223,13 +223,13 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 				 * @since 1.2
 				 *
 				 * @param string $card_description
-				 * @param int $form_id Current Form id
-				 * @param string $connection_id ID of current connection
+				 * @param int $form_id Current Form id.
+				 * @param string $connection_id ID of current connection.
 				 * @param array $submitted_data
-				 * @param array $connection_settings current connection setting, contains options of like `name`, `list_id` etc
-				 * @param array $form_entry_fields default entry fields of form
-				 * @param array $form_settings Displayed Form settings
-				 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance
+				 * @param array $connection_settings current connection setting, contains options of like `name`, `list_id` etc.
+				 * @param array $form_entry_fields default entry fields of form.
+				 * @param array $form_settings Displayed Form settings.
+				 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance.
 				 */
 				$card_description = apply_filters(
 					'forminator_addon_trello_card_description',
@@ -246,8 +246,15 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 			}
 
 			if ( isset( $connection_settings['due_date'] ) && ! empty( $connection_settings['due_date'] ) ) {
-				$due_date            = forminator_addon_replace_custom_vars( $connection_settings['due_date'], $submitted_data, $this->custom_form, $form_entry_fields, false );
-				$args['due']         = $due_date;
+				$due_date = forminator_addon_replace_custom_vars( $connection_settings['due_date'], $submitted_data, $this->custom_form, $form_entry_fields, false, $entry );
+				if ( false !== strpos( $connection_settings['due_date'], '{' ) ) {
+					$date_field       = str_replace( array( '{', '}' ), '', $connection_settings['due_date'] );
+					$date_field_index = array_search( $date_field, array_column( $form_entry_fields, 'name' ) );
+					$date_format      = Forminator_Field::get_property( 'date_format', $form_entry_fields[ $date_field_index ]['field_array'] );
+					$due_date         = forminator_reformat_date( $due_date, $date_format, 'F j Y' );
+				}
+
+				$args['due'] = $due_date;
 			}
 
 			if ( isset( $connection_settings['position'] ) ) {
@@ -275,12 +282,12 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 			 * @since 1.2
 			 *
 			 * @param array $args
-			 * @param int $form_id Current Form id
-			 * @param string $connection_id ID of current connection
+			 * @param int $form_id Current Form id.
+			 * @param string $connection_id ID of current connection.
 			 * @param array $submitted_data
-			 * @param array $connection_settings current connection setting, contains options of like `name`, `list_id` etc
-			 * @param array $form_settings Displayed Form settings
-			 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance
+			 * @param array $connection_settings current connection setting, contains options of like `name`, `list_id` etc.
+			 * @param array $form_settings Displayed Form settings.
+			 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance.
 			 */
 			$args = apply_filters(
 				'forminator_addon_trello_create_card_args',
@@ -294,12 +301,18 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 			);
 
 			$api->create_card( $args );
+			$this->add_attachments( $api, $uploads );
 
 			forminator_addon_maybe_log( __METHOD__, 'Success Send Data' );
 
+			$multi_global_ids = $this->addon->get_multi_global_ids();
+			$name_suffix      = ! empty( $this->addon->multi_global_id )
+					&& ! empty( $multi_global_ids[ $this->addon->multi_global_id ] )
+					? ' - ' . $multi_global_ids[ $this->addon->multi_global_id ] : '';
+
 			return array(
 				'is_sent'         => true,
-				'connection_name' => $connection_settings['name'],
+				'connection_name' => $connection_settings['name'] . $name_suffix,
 				'description'     => __( 'Successfully send data to Trello', 'forminator' ),
 				'data_sent'       => $api->get_last_data_sent(),
 				'data_received'   => $api->get_last_data_received(),
@@ -322,7 +335,6 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 
 	/**
 	 * Special Replacer `{all_fields}` to markdown with Trello Flavour
-	 *
 	 */
 	private function all_fields_to_markdown() {
 		$form_fields = $this->form_settings_instance->get_form_fields();
@@ -350,7 +362,7 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 				}
 				$post_element_id = str_ireplace( '-post-image', '', $post_element_id );
 
-				// only add postdata as single
+				// only add postdata as single.
 				if ( in_array( $post_element_id, $post_element_ids, true ) ) {
 					continue;
 				}
@@ -389,7 +401,7 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 * @since 1.2
 		 *
 		 * @param string $markdown
-		 * @param array $form_fields all fields on form
+		 * @param array $form_fields all fields on form.
 		 */
 		$markdown = apply_filters(
 			'forminator_addon_trello_all_fields_markdown',
@@ -420,9 +432,9 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 * @since 1.2
 		 *
 		 * @param string $markdown
-		 * @param string $type field type
-		 * @param string $label field label
-		 * @param string $value field string
+		 * @param string $type field type.
+		 * @param string $label field label.
+		 * @param string $value field string.
 		 */
 		$markdown = apply_filters(
 			'forminator_addon_trello_field_markdown',
@@ -458,8 +470,8 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 * @since 1.2
 		 *
 		 * @param array $addon_meta_data
-		 * @param int $form_id current Form ID
-		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance
+		 * @param int $form_id current Form ID.
+		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_trello_metadata',
@@ -547,7 +559,7 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		}
 
 		if ( Forminator_Addon_Trello::is_show_full_log() ) {
-			// too long to be added on entry data enable this with `define('FORMINATOR_ADDON_TRELLO_SHOW_FULL_LOG', true)`
+			// too long to be added on entry data enable this with `define('FORMINATOR_ADDON_TRELLO_SHOW_FULL_LOG', true)`.
 			if ( isset( $status['url_request'] ) ) {
 				$sub_entries[] = array(
 					'label' => __( 'API URL', 'forminator' ),
@@ -572,7 +584,7 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 
 		$additional_entry_item['sub_entries'] = $sub_entries;
 
-		// return single array
+		// return single array.
 		return $additional_entry_item;
 	}
 
@@ -597,9 +609,9 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 *
 		 * @since 1.2
 		 *
-		 * @param array $export_headers headers to be displayed on export file
-		 * @param int $form_id current Form ID
-		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance
+		 * @param array $export_headers headers to be displayed on export file.
+		 * @param int $form_id current Form ID.
+		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance.
 		 */
 		$export_headers = apply_filters(
 			'forminator_addon_trello_export_headers',
@@ -634,8 +646,8 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 * @since 1.2
 		 *
 		 * @param array $addon_meta_data
-		 * @param int $form_id current Form ID
-		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance
+		 * @param int $form_id current Form ID.
+		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_trello_metadata',
@@ -653,11 +665,11 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 *
 		 * @since 1.2
 		 *
-		 * @param array $export_columns column to be exported
-		 * @param int $form_id current Form ID
-		 * @param Forminator_Form_Entry_Model $entry_model Form Entry Model
-		 * @param array $addon_meta_data meta data saved by addon on entry fields
-		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance
+		 * @param array $export_columns column to be exported.
+		 * @param int $form_id current Form ID.
+		 * @param Forminator_Form_Entry_Model $entry_model Form Entry Model.
+		 * @param array $addon_meta_data meta data saved by addon on entry fields.
+		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance.
 		 */
 		$export_columns = apply_filters(
 			'forminator_addon_trello_export_columns',
@@ -678,7 +690,7 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 	 *
 	 * @param        $addon_meta_data
 	 * @param        $key
-	 * @param string $default
+	 * @param string          $default
 	 *
 	 * @return string
 	 */
@@ -690,15 +702,15 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 
 		$addon_meta_data = $addon_meta_data[0];
 
-		// make sure its `status`, because we only add this
+		// make sure its `status`, because we only add this.
 		if ( 'status' !== $addon_meta_data['name'] ) {
 			if ( stripos( $addon_meta_data['name'], 'status-' ) === 0 ) {
 				$meta_data = array();
 				foreach ( $addon_meta_datas as $addon_meta_data ) {
-					// make it like single value so it will be processed like single meta data
+					// make it like single value so it will be processed like single meta data.
 					$addon_meta_data['name'] = 'status';
 
-					// add it on an array for next recursive process
+					// add it on an array for next recursive process.
 					$meta_data[] = $this->get_from_addon_meta_data( array( $addon_meta_data ), $key, $default );
 				}
 
@@ -733,12 +745,12 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 	 * @since 1.0 Trello Addon
 	 *
 	 * @param Forminator_Form_Entry_Model $entry_model
-	 * @param  array $addon_meta_data
+	 * @param  array                       $addon_meta_data
 	 *
 	 * @return bool
 	 */
 	public function on_before_delete_entry( Forminator_Form_Entry_Model $entry_model, $addon_meta_data ) {
-		// attach hook first
+		// attach hook first.
 		$form_id                = $this->form_id;
 		$form_settings_instance = $this->form_settings_instance;
 
@@ -749,9 +761,9 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 * @since 1.1
 		 *
 		 * @param array $addon_meta_data
-		 * @param int $form_id current Form ID
-		 * @param Forminator_Form_Entry_Model $entry_model Forminator Entry Model
-		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance
+		 * @param int $form_id current Form ID.
+		 * @param Forminator_Form_Entry_Model $entry_model Forminator Entry Model.
+		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance.
 		 */
 		$addon_meta_data = apply_filters(
 			'forminator_addon_trello_metadata',
@@ -766,10 +778,10 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 *
 		 * @since 1.1
 		 *
-		 * @param int $form_id current Form ID
-		 * @param Forminator_Form_Entry_Model $entry_model Forminator Entry Model
-		 * @param array $addon_meta_data addon meta data
-		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance
+		 * @param int $form_id current Form ID.
+		 * @param Forminator_Form_Entry_Model $entry_model Forminator Entry Model.
+		 * @param array $addon_meta_data addon meta data.
+		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance.
 		 */
 		do_action(
 			'forminator_addon_trello_on_before_delete_submission',
@@ -790,7 +802,7 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 
 				foreach ( $addon_meta_data as $addon_meta_datum ) {
 
-					// basic data validation
+					// basic data validation.
 					if ( ! isset( $addon_meta_datum['value'] ) || ! is_array( $addon_meta_datum['value'] ) ) {
 						continue;
 					}
@@ -821,16 +833,16 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 				}
 			}
 
-			//delete mode!
+			// delete mode!
 			return true;
 
 		} catch ( Forminator_Addon_Trello_Exception $e ) {
-			// handle all internal addon exceptions with `Forminator_Addon_Trello_Exception`
+			// handle all internal addon exceptions with `Forminator_Addon_Trello_Exception`.
 
-			// use wp_error, for future usage it can be returned to page entries
+			// use wp_error, for future usage it can be returned to page entries.
 			$wp_error
 				= new WP_Error( 'forminator_addon_trello_delete_card', $e->getMessage() );
-			// handle this in addon by self, since page entries cant handle error messages on delete yet
+			// handle this in addon by self, since page entries cant handle error messages on delete yet.
 			wp_die(
 				esc_html( $wp_error->get_error_message() ),
 				esc_html( $this->addon->get_title() ),
@@ -873,7 +885,7 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 * @param string $card_delete_mode
 		 * @param array $addon_meta_datum
 		 * @param int $form_id
-		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance
+		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance.
 		 */
 		$args = apply_filters(
 			'forminator_addon_trello_delete_card_args',
@@ -901,13 +913,12 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 		 *
 		 * @since 1.2
 		 *
-		 * @param array $args args sent to Trello API
+		 * @param array $args args sent to Trello API.
 		 * @param string $card_id
 		 * @param string $card_delete_mode
 		 * @param array $addon_meta_datum
 		 * @param int $form_id
-		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance
-		 *
+		 * @param Forminator_Addon_Trello_Form_Settings $form_settings_instance Trello Addon Form Settings instance.
 		 */
 		do_action(
 			'forminator_addon_trello_delete_card',
@@ -918,5 +929,43 @@ class Forminator_Addon_Trello_Form_Hooks extends Forminator_Addon_Form_Hooks_Abs
 			$form_id,
 			$form_settings_instance
 		);
+	}
+
+	/**
+	 * Get uploads to be added as attachments
+	 */
+	private function get_uploads( $fields ) {
+		$uploads = array();
+
+		foreach ( $fields as $i => $val ) {
+			if ( 0 === stripos( $val['name'], 'upload-' ) ) {
+				if ( ! empty( $val['value'] ) ) {
+					$file_url = $val['value']['file']['file_url'];
+
+					if ( is_array( $file_url ) ) {
+						foreach ( $file_url as $url ) {
+							$uploads[] = $url;
+						}
+					} else {
+						$uploads[] = $file_url;
+					}
+				}
+			}
+		}
+
+		return $uploads;
+	}
+
+	/**
+	 * Add attachments to created card
+	 */
+	private function add_attachments( $api, $uploads ) {
+		$card_id = $api->get_card_id();
+
+		if ( ! empty( $uploads ) ) {
+			foreach ( $uploads as $upload ) {
+				$api->add_attachment( $card_id, $upload );
+			}
+		}
 	}
 }

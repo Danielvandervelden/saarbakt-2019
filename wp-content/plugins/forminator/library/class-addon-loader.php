@@ -138,6 +138,9 @@ class Forminator_Addon_Loader {
 		$active_addons = array_unique( $active_addons );
 
 		$this->activated_addons = $active_addons;
+		if ( in_array( 'zapier', $active_addons, true ) ) {
+			add_action( 'forminator_addons_loaded', array( $this, 'update_zapier_to_webhook' ) );
+		}
 
 		/**
 		 * Initiate standard default error messages
@@ -149,7 +152,7 @@ class Forminator_Addon_Loader {
 			'update_form_settings' => __( 'Failed to update form settings', 'forminator' ),
 		);
 
-		// Only enable wp_ajax hooks
+		// Only enable wp_ajax hooks.
 		Forminator_Addon_Admin_Ajax::get_instance();
 	}
 
@@ -158,11 +161,14 @@ class Forminator_Addon_Loader {
 	 *
 	 * @since 1.1
 	 *
-	 * @param Forminator_Addon_Abstract|string $class_name instance of Addon or its classname
+	 * @param Forminator_Addon_Abstract|string $class_name instance of Addon or its classname.
 	 *
 	 * @return bool
 	 */
 	public function register( $class_name ) {
+		if ( 'FortressDB_Forminator_Addon' === $class_name ) {
+			return;
+		}
 		try {
 
 			/**
@@ -175,7 +181,7 @@ class Forminator_Addon_Loader {
 			 *
 			 * @since 1.1
 			 *
-			 * @param Forminator_Addon_Abstract|string $class_name instance of Addon or its class name
+			 * @param Forminator_Addon_Abstract|string $class_name instance of Addon or its class name.
 			 */
 			do_action( 'forminator_before_addon_registered', $class_name );
 
@@ -197,8 +203,8 @@ class Forminator_Addon_Loader {
 			 *
 			 * @since 1.1
 			 *
-			 * @param Forminator_Addon_Abstract $addon_class       Current Addon class instance
-			 * @param array                     $registered_addons Current registered addons
+			 * @param Forminator_Addon_Abstract $addon_class       Current Addon class instance.
+			 * @param array                     $registered_addons Current registered addons.
 			 */
 			$addon_class = apply_filters( 'forminator_addon_instance', $addon_class, $registered_addons );
 
@@ -221,7 +227,7 @@ class Forminator_Addon_Loader {
 			 *
 			 * @since 1.1
 			 *
-			 * @param Forminator_Addon_Abstract $addon_class Current addon that successfully registered
+			 * @param Forminator_Addon_Abstract $addon_class Current addon that successfully registered.
 			 */
 			do_action( 'forminator_after_addon_registered', $addon_class );
 
@@ -284,7 +290,7 @@ class Forminator_Addon_Loader {
 			throw new Forminator_Addon_Exception( 'Addon with ' . $class_name . ' does not have slug' );
 		}
 
-		// FIFO
+		// FIFO.
 		if ( isset( $this->addons[ $slug ] ) ) {
 			throw new Forminator_Addon_Exception( 'Addon with slug ' . $slug . ' already exist' );
 		}
@@ -292,10 +298,10 @@ class Forminator_Addon_Loader {
 			throw new Forminator_Addon_Exception( 'Addon with slug ' . $slug . ' does not have valid version' );
 		}
 
-		// check version changed if active
+		// check version changed if active.
 		if ( $this->addon_is_active( $slug ) ) {
 			try {
-				// silent
+				// silent.
 				if ( $addon_class->is_version_changed() ) {
 					$addon_class->version_changed( $addon_class->get_installed_version(), $addon_class->get_installed_version() );
 				}
@@ -392,7 +398,7 @@ class Forminator_Addon_Loader {
 		 *
 		 * @since 1.1
 		 *
-		 * @param Forminator_Addon_Abstract $addon Current deactivated addon
+		 * @param Forminator_Addon_Abstract $addon Current deactivated addon.
 		 */
 		do_action( 'forminator_after_addon_deactivated', $addon );
 
@@ -410,7 +416,7 @@ class Forminator_Addon_Loader {
 		$addon                    = $this->get_addon( $slug );
 		$this->activated_addons[] = $slug;
 		update_option( self::$_active_addons_option, $this->activated_addons );
-		// take from __get version since its new addon
+		// take from __get version since its new addon.
 		update_option( $addon->get_version_options_name(), $addon->get_version() );
 	}
 
@@ -423,31 +429,40 @@ class Forminator_Addon_Loader {
 	 * @param $slug
 	 */
 	public function force_remove_activated_addons( $slug ) {
-		$addon = $this->get_addon( $slug );
+		$addon   = $this->get_addon( $slug );
+		$options = array();
 
-		$index = array_search( $slug, $this->activated_addons, true );
-		if ( false !== $index ) {
-			unset( $this->activated_addons[ $index ] );
-			// reset keys
-			$this->activated_addons = array_values( $this->activated_addons );
-			update_option( self::$_active_addons_option, $this->activated_addons );
-		}
+		$setting_form_meta_name = 'forminator_addon_' . $slug . '_form_settings';
 
 		if ( $addon ) {
 			$version_options_name  = $addon->get_version_options_name();
 			$settions_options_name = $addon->get_settings_options_name();
+
+			$options = get_option( $settions_options_name );
+			unset( $options[ $addon->multi_global_id ] );
+			update_option( $settions_options_name, $options );
+			$setting_form_meta_name .= '_' . $addon->multi_global_id;
 		} else {
-			// probably just want to remove the options
+			// probably just want to remove the options.
 			$version_options_name  = 'forminator_addon_' . $slug . '_version';
 			$settions_options_name = 'forminator_addon_' . $slug . '_settings';
 		}
-		$setting_form_meta_name =  'forminator_addon_' . $slug . '_form_settings';
 
-		//delete version
-		delete_option( $version_options_name );
-		//delete general settings
-		delete_option( $settions_options_name );
-		//delete post meta
+		if ( empty( $options ) ) {
+			// delete version.
+			delete_option( $version_options_name );
+			// delete general settings.
+			delete_option( $settions_options_name );
+
+			$index = array_search( $slug, $this->activated_addons, true );
+			if ( false !== $index ) {
+				unset( $this->activated_addons[ $index ] );
+				// reset keys.
+				$this->activated_addons = array_values( $this->activated_addons );
+				update_option( self::$_active_addons_option, $this->activated_addons );
+			}
+		}
+		// delete post meta.
 		delete_post_meta_by_key( $setting_form_meta_name );
 
 		/**
@@ -455,7 +470,7 @@ class Forminator_Addon_Loader {
 		 *
 		 * @since 1.1
 		 *
-		 * @param string $slug addon `slug` removed
+		 * @param string $slug addon `slug` removed.
 		 * @param Forminator_Addon_Abstract|null Addon instance or null when addon instance unavailable
 		 */
 		do_action( 'forminator_after_activated_addons_removed', $slug, $addon );
@@ -479,11 +494,10 @@ class Forminator_Addon_Loader {
 		 *
 		 * @since 1.1
 		 *
-		 * @param string                         $slug  Slug of addon that will be activated
-		 * @param Forminator_Addon_Abstract|null $addon addon instance or null, when its not unavailable
+		 * @param string                         $slug  Slug of addon that will be activated.
+		 * @param Forminator_Addon_Abstract|null $addon addon instance or null, when its not unavailable.
 		 */
 		do_action( 'forminator_before_addon_activated', $slug, $addon );
-
 
 		if ( is_null( $addon ) ) {
 			$this->last_error_message = __( 'Addon not found', 'forminator' );
@@ -521,7 +535,7 @@ class Forminator_Addon_Loader {
 		 *
 		 * @since 1.1
 		 *
-		 * @param Forminator_Addon_Abstract $addon Current activated addon
+		 * @param Forminator_Addon_Abstract $addon Current activated addon.
 		 */
 		do_action( 'forminator_after_addon_activated', $addon );
 
@@ -542,7 +556,7 @@ class Forminator_Addon_Loader {
 		 *
 		 * @since 1.1
 		 *
-		 * @param string $last_error_message Current last error message
+		 * @param string $last_error_message Current last error message.
 		 */
 		$last_error_message = apply_filters( 'forminator_addon_loader_last_error_message', $last_error_message );
 
@@ -585,6 +599,22 @@ class Forminator_Addon_Loader {
 		foreach ( $unavailable_addons as $unavailable_addon ) {
 			$this->force_remove_activated_addons( $unavailable_addon );
 		}
+	}
+
+	/**
+	 * Update old Zapier Integration to new Webhook Integration
+	 */
+	public function update_zapier_to_webhook() {
+		// Activate Webhook Integration.
+		$this->add_activated_addons( 'webhook' );
+
+		// Rename module Zapier settings.
+		global $wpdb;
+		$wpdb->query( "UPDATE $wpdb->postmeta SET meta_key = 'forminator_addon_webhook_form_settings' WHERE meta_key = 'forminator_addon_zapier_form_settings'" );
+		$wpdb->query( "UPDATE $wpdb->postmeta SET meta_key = 'forminator_addon_webhook_poll_settings' WHERE meta_key = 'forminator_addon_zapier_poll_settings'" );
+		$wpdb->query( "UPDATE $wpdb->postmeta SET meta_key = 'forminator_addon_webhook_quiz_settings' WHERE meta_key = 'forminator_addon_zapier_quiz_settings'" );
+
+		$this->force_remove_activated_addons( 'zapier' );
 	}
 
 	/**

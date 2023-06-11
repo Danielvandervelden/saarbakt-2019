@@ -78,9 +78,9 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 			foreach ( $entry_ids as $entry_id ) {
 				$entry_model = new Forminator_Form_Entry_Model( $entry_id );
 
-				// avoid overhead
+				// avoid overhead.
 				if ( ! isset( self::$custom_form_model_instances[ $entry_model->form_id ] ) ) {
-					$model                                                      = Forminator_Form_Model::model()->load( $entry_model->form_id );
+					$model = Forminator_Base_Form_Model::get_model( $entry_model->form_id );
 					self::$custom_form_model_instances[ $entry_model->form_id ] = $model;
 				} else {
 					$model = self::$custom_form_model_instances[ $entry_model->form_id ];
@@ -90,11 +90,11 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 				if ( is_object( $model ) ) {
 					$mappers = self::get_custom_form_export_mappers( $model );
 					foreach ( $mappers as $mapper ) {
-						//its from model's property
+						// its from model's property.
 						if ( isset( $mapper['property'] ) ) {
 							if ( property_exists( $entry_model, $mapper['property'] ) ) {
 								$property = $mapper['property'];
-								// casting property to string
+								// casting property to string.
 								$data[] = array(
 									'name'  => $mapper['label'],
 									'value' => (string) $entry_model->$property,
@@ -105,7 +105,6 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 									'value' => '',
 								);
 							}
-
 						} elseif ( isset( $mapper['meta_property'] ) ) {
 							if ( isset( $entry_model->meta_data[ $mapper['meta_property'] ] ) ) {
 								$entry_meta_data_val = $entry_model->meta_data[ $mapper['meta_property'] ];
@@ -120,7 +119,7 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 								);
 							}
 						} else {
-							// meta_key based
+							// meta_key based.
 							$meta_value = $entry_model->get_meta( $mapper['meta_key'], '' );
 							if ( ! isset( $mapper['sub_metas'] ) ) {
 								$data[] = array(
@@ -128,7 +127,7 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 									'value' => Forminator_Form_Entry_Model::meta_value_to_string( $mapper['type'], $meta_value ),
 								);
 							} else {
-								// sub_metas available
+								// sub_metas available.
 								foreach ( $mapper['sub_metas'] as $sub_meta ) {
 									$sub_key = $sub_meta['key'];
 									if ( isset( $meta_value[ $sub_key ] ) && ! empty( $meta_value[ $sub_key ] ) ) {
@@ -148,11 +147,9 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 								}
 							}
 						}
-
 					}
-
 				} else {
-					// fallback to dump the rows
+					// fallback to dump the rows.
 					$data [] = array(
 						'name'  => __( 'Entry ID', 'forminator' ),
 						'value' => '#' . $entry_model->entry_id,
@@ -163,9 +160,9 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 					);
 
 					foreach ( $entry_model->meta_data as $key => $meta_datum ) {
-						$meta_datum_value = $meta_datum['value'];
+						$meta_datum_value   = $meta_datum['value'];
 						$meta_datum_encoded = $meta_datum_value;
-						// check nested array
+						// check nested array.
 						if ( is_array( $meta_datum_value ) ) {
 							foreach ( $meta_datum_value as $value ) {
 								if ( is_array( $value ) ) {
@@ -176,7 +173,7 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 
 						$data [] = array(
 							'name'  => $key,
-							'value' => Forminator_Form_Entry_Model::meta_value_to_string( '', $meta_datum_encoded, false ),
+							'value' => Forminator_Form_Entry_Model::meta_value_to_string( '', $meta_datum_encoded ),
 						);
 
 					}
@@ -233,26 +230,25 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 	 */
 	public static function get_custom_form_export_mappers( $model ) {
 		/** @var  Forminator_Form_Model $model */
-		$fields              = $model->get_fields();
-		$ignored_field_types = Forminator_Form_Entry_Model::ignored_fields();
+		$fields = $model->get_real_fields();
 
 		/** @var  Forminator_Form_Field_Model $fields */
 		$mappers = array(
 			array(
-				// read form model's meta property
-				'property' => 'entry_id', // must be on export
+				// read form model's meta property.
+				'property' => 'entry_id', // must be on export.
 				'label'    => __( 'Entry ID', 'forminator' ),
 				'type'     => 'entry_id',
 			),
 			array(
-				// read form model's property
-				'property' => 'date_created_sql', // must be on export
+				// read form model's property.
+				'property' => 'date_created_sql', // must be on export.
 				'label'    => __( 'Submission Date', 'forminator' ),
 				'type'     => 'entry_date_created',
 			),
 			array(
-				// read form model's meta property
-				'meta_property' => '_forminator_user_ip', // must be on export
+				// read form model's meta property.
+				'meta_property' => '_forminator_user_ip', // must be on export.
 				'label'         => __( 'IP Address', 'forminator' ),
 				'type'          => '_forminator_user_ip',
 			),
@@ -261,18 +257,13 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 		foreach ( $fields as $field ) {
 			$field_type = $field->__get( 'type' );
 
-			if ( in_array( $field_type, $ignored_field_types, true ) ) {
-				continue;
-			}
-
-			// base mapper for every field
+			// base mapper for every field.
 			$mapper             = array();
 			$mapper['meta_key'] = $field->slug;
 			$mapper['label']    = $field->get_label_for_entry();
 			$mapper['type']     = $field_type;
 
-
-			// fields that should be displayed as multi column (sub_metas)
+			// fields that should be displayed as multi column (sub_metas).
 			if ( 'name' === $field_type ) {
 				$is_multiple_name = filter_var( $field->__get( 'multiple_name' ), FILTER_VALIDATE_BOOLEAN );
 				if ( $is_multiple_name ) {
@@ -280,9 +271,9 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 					$first_name_enabled  = filter_var( $field->__get( 'fname' ), FILTER_VALIDATE_BOOLEAN );
 					$middle_name_enabled = filter_var( $field->__get( 'mname' ), FILTER_VALIDATE_BOOLEAN );
 					$last_name_enabled   = filter_var( $field->__get( 'lname' ), FILTER_VALIDATE_BOOLEAN );
-					// at least one sub field enabled
+					// at least one sub field enabled.
 					if ( $prefix_enabled || $first_name_enabled || $middle_name_enabled || $last_name_enabled ) {
-						// sub metas
+						// sub metas.
 						$mapper['sub_metas'] = array();
 						if ( $prefix_enabled ) {
 							$default_label         = Forminator_Form_Entry_Model::translate_suffix( 'prefix' );
@@ -318,13 +309,11 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 								'label' => $mapper['label'] . ' - ' . ( $label ? $label : $default_label ),
 							);
 						}
-
 					} else {
-						// if no subfield enabled when multiple name remove mapper (means dont show it on export)
+						// if no subfield enabled when multiple name remove mapper (means dont show it on export).
 						$mapper = array();
 					}
 				}
-
 			} elseif ( 'address' === $field_type ) {
 				$street_enabled  = filter_var( $field->__get( 'street_address' ), FILTER_VALIDATE_BOOLEAN );
 				$line_enabled    = filter_var( $field->__get( 'address_line' ), FILTER_VALIDATE_BOOLEAN );
@@ -383,7 +372,7 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 						);
 					}
 				} else {
-					// if no subfield enabled when multiple name remove mapper (means dont show it on export)
+					// if no subfield enabled when multiple name remove mapper (means dont show it on export).
 					$mapper = array();
 				}
 			}
@@ -422,7 +411,7 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 			$entry_model = new Forminator_Form_Entry_Model( $entry_id );
 
 			if ( ! empty( $entry_model->form_id ) ) {
-				$custom_form = Forminator_Form_Model::model()->load( $entry_model->form_id );
+				$custom_form = Forminator_Base_Form_Model::get_model( $entry_model->form_id );
 				if ( $custom_form instanceof Forminator_Form_Model ) {
 					$settings = $custom_form->settings;
 					if ( isset( $settings['enable-submissions-erasure'] ) ) {
@@ -450,7 +439,6 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 				$response['messages'][]     = sprintf( __( 'Form #%1$s submission #%2$s has been retained.', 'forminator' ), $entry_model->form_id, $entry_id );
 				$response['items_retained'] = true;
 			}
-
 		}
 
 		return $response;
@@ -466,21 +454,11 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 	public function personal_data_cleanup() {
 		$overridden_forms_privacy = get_option( 'forminator_form_privacy_settings', array() );
 
-		// process overridden
-		foreach ( $overridden_forms_privacy as $form_id => $retentions ) {
-			$retain_number = (int) $retentions['submissions_retention_number'];
-			$retain_unit   = $retentions['submissions_retention_unit'];
-
-			$retain_time = $this->get_retain_time( $retain_number, $retain_unit );
-			if ( ! $retain_time ) {
-				continue;
-			}
-
-			$this->delete_older_entries( $form_id, $retain_time );
-		}
-
+		// Cleanup per each form setting
+		$this->cleanup_expired_entries( $overridden_forms_privacy );
 		$this->cleanup_ip_address();
 
+		// Global retention settings
 		$retain_number = get_option( 'forminator_retain_submissions_interval_number', 0 );
 		$retain_unit   = get_option( 'forminator_retain_submissions_interval_unit', 'days' );
 
@@ -494,13 +472,45 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 		foreach ( $entry_ids as $entry_id ) {
 			$entry_model = new Forminator_Form_Entry_Model( $entry_id );
 			if ( in_array( $entry_model->form_id, array_keys( $overridden_forms_privacy ) ) ) { // phpcs:ignore WordPress.PHP.StrictInArray.MissingTrueStrict
-				// use overridden settings
+				// use overridden settings.
 				continue;
 			}
 			Forminator_Form_Entry_Model::delete_by_entry( $entry_id );
 		}
 
 		return true;
+	}
+
+	/**
+	 * Delete entries that have exceeded the retention period
+	 * Overrides global setting
+	 *
+	 * @param array $overridden_forms_privacy
+	 *
+	 * @since 1.17.0
+	 */
+	public function cleanup_expired_entries( $overridden_forms_privacy ) {
+		foreach ( $overridden_forms_privacy as $form_id => $retentions ) {
+
+			if ( ! strpos( $form_id, '-draft' ) ) {
+				$is_draft 	   = false;
+				$retain_number = (int) $retentions['submissions_retention_number'];
+				$retain_unit   = $retentions['submissions_retention_unit'];
+			} else {
+				$is_draft 	   = true;
+				$form_id 	   = (int) str_replace( '-draft', '', $form_id );
+				$retain_number = (int) $retentions['draft_retention_number'];
+				$retain_unit   = $retentions['draft_retention_unit'];
+			}
+
+			$retain_time = $this->get_retain_time( $retain_number, $retain_unit );
+			if ( ! $retain_time ) {
+				continue;
+			}
+
+			// this function takes the retention time and compares it to date created
+			$this->delete_older_entries( $form_id, $retain_time, $is_draft );
+		}
 	}
 
 	/**
@@ -517,7 +527,7 @@ class Forminator_CForm_General_Data_Protection extends Forminator_General_Data_P
 			return false;
 		}
 
-		// todo : select only un-anonymized
+		// todo : select only un-anonymized.
 		$entry_ids = Forminator_Form_Entry_Model::get_older_entry_ids( $retain_time, 'custom-forms' );
 
 		foreach ( $entry_ids as $entry_id ) {

@@ -117,7 +117,7 @@ class Forminator_Google_Auth_AssertionCredentials
     $header = array('typ' => 'JWT', 'alg' => 'RS256');
 
     $payload = json_encode($payload);
-    // Handle some overzealous escaping in PHP json that seemed to cause some errors
+    // Handle some overzealous escaping in PHP json that seemed to cause some errors.
     // with claimsets.
     $payload = str_replace('\/', '/', $payload);
 

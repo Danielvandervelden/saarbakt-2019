@@ -2,11 +2,11 @@
 
 namespace Yoast\WP\ACF\Tests;
 
-use PHPUnit\Framework\TestCase;
-use Yoast_ACF_Analysis_Facade;
+use Yoast\PHPUnitPolyfills\TestCases\TestCase;
 use Yoast_ACF_Analysis_Configuration;
-use Yoast_ACF_Analysis_String_Store;
+use Yoast_ACF_Analysis_Facade;
 use Yoast_ACF_Analysis_Registry;
+use Yoast_ACF_Analysis_String_Store;
 
 /**
  * Class Registry_Test.

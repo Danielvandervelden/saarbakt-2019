@@ -69,7 +69,7 @@ class Forminator_Addon_Mailchimp_Wp_Api {
 	 * @throws Forminator_Addon_Mailchimp_Wp_Api_Exception
 	 */
 	public function __construct( $api_key ) {
-		//prerequisite
+		// prerequisite
 		if ( ! $api_key ) {
 			throw new Forminator_Addon_Mailchimp_Wp_Api_Exception( __( 'Missing required API Key', 'forminator' ) );
 		}
@@ -79,7 +79,7 @@ class Forminator_Addon_Mailchimp_Wp_Api {
 		$exploded    = explode( '-', $this->_api_key );
 		$data_center = end( $exploded );
 
-		// endpoint data center are taken from api key
+		// endpoint data center are taken from api key.
 		$this->_endpoint = str_replace( '{dc}', $data_center, $this->_endpoint );
 	}
 
@@ -94,7 +94,7 @@ class Forminator_Addon_Mailchimp_Wp_Api {
 	 * @throws Forminator_Addon_Mailchimp_Wp_Api_Exception
 	 */
 	public static function get_instance( $api_key = null ) {
-		if ( is_null( self::$_instance ) ) {
+		if ( is_null( self::$_instance ) || self::$_instance->_api_key !== $api_key ) {
 			self::$_instance = new self( $api_key );
 		}
 
@@ -119,7 +119,7 @@ class Forminator_Addon_Mailchimp_Wp_Api {
 		 *
 		 * @since 1.1
 		 *
-		 * @param string $user_agent current user agent
+		 * @param string $user_agent current user agent.
 		 */
 		$user_agent = apply_filters( 'forminator_addon_mailchimp_api_user_agent', $user_agent );
 
@@ -140,145 +140,166 @@ class Forminator_Addon_Mailchimp_Wp_Api {
 	 * @throws Forminator_Addon_Mailchimp_Wp_Api_Not_Found_Exception
 	 */
 	private function request( $verb, $path, $args = array() ) {
-		// Adding extra user agent for wp remote request
-		add_filter( 'http_headers_useragent', array( $this, 'filter_user_agent' ) );
-		$url  = trailingslashit( $this->_endpoint ) . $path;
-		$verb = ! empty( $verb ) ? $verb : 'GET';
+		try {
+			// Adding extra user agent for wp remote request.
+			add_filter( 'http_headers_useragent', array( $this, 'filter_user_agent' ) );
+			$url  = trailingslashit( $this->_endpoint ) . $path;
+			$verb = ! empty( $verb ) ? $verb : 'GET';
 
-		/**
-		 * Filter mailchimp url to be used on sending api request
-		 *
-		 * @since 1.1
-		 *
-		 * @param string $url  full url with scheme
-		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`
-		 * @param string $path requested path resource
-		 * @param array  $args argument sent to this function
-		 */
-		$url = apply_filters( 'forminator_addon_mailchimp_api_url', $url, $verb, $path, $args );
+			/**
+			 * Filter mailchimp url to be used on sending api request
+			 *
+			 * @since 1.1
+			 *
+			 * @param string $url  full url with scheme.
+			 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`.
+			 * @param string $path requested path resource.
+			 * @param array  $args argument sent to this function.
+			 */
+			$url = apply_filters( 'forminator_addon_mailchimp_api_url', $url, $verb, $path, $args );
 
-		$this->_last_url_request = $url;
+			$this->_last_url_request = $url;
 
-		$headers = array(
-			'Authorization' => 'ForminatorMailChimp ' . $this->_api_key,
-		);
+			$headers = array(
+				'Authorization' => 'ForminatorMailChimp ' . $this->_api_key,
+			);
 
-		/**
-		 * Filter mailchimp headers to sent on api request
-		 *
-		 * @since 1.1
-		 *
-		 * @param array  $headers
-		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`
-		 * @param string $path requested path resource
-		 * @param array  $args argument sent to this function
-		 */
-		$headers = apply_filters( 'forminator_addon_mailchimp_api_request_headers', $headers, $verb, $path, $args );
+			/**
+			 * Filter mailchimp headers to sent on api request
+			 *
+			 * @since 1.1
+			 *
+			 * @param array  $headers
+			 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`.
+			 * @param string $path requested path resource.
+			 * @param array  $args argument sent to this function.
+			 */
+			$headers = apply_filters( 'forminator_addon_mailchimp_api_request_headers', $headers, $verb, $path, $args );
 
-		$_args = array(
-			'method'  => $verb,
-			'headers' => $headers,
-		);
+			$_args = array(
+				'method'  => $verb,
+				'headers' => $headers,
+			);
 
-		$request_data = $args;
-		/**
-		 * Filter mailchimp request data to be used on sending api request
-		 *
-		 * @since 1.1
-		 *
-		 * @param array  $request_data it will be `http_build_query`-ed when `GET` or `wp_json_encode`-ed otherwise
-		 * @param string $verb         `GET` `POST` `PUT` `DELETE` `PATCH`
-		 * @param string $path         requested path resource
-		 */
-		$args = apply_filters( 'forminator_addon_mailchimp_api_request_data', $request_data, $verb, $path );
+			$request_data = $args;
+			/**
+			 * Filter mailchimp request data to be used on sending api request
+			 *
+			 * @since 1.1
+			 *
+			 * @param array  $request_data it will be `http_build_query`-ed when `GET` or `wp_json_encode`-ed otherwise.
+			 * @param string $verb         `GET` `POST` `PUT` `DELETE` `PATCH`.
+			 * @param string $path         requested path resource.
+			 */
+			$args = apply_filters( 'forminator_addon_mailchimp_api_request_data', $request_data, $verb, $path );
 
-		if ( 'GET' === $verb ) {
-			$url .= ( '?' . http_build_query( $args ) );
-		} else {
-			$_args['body'] = wp_json_encode( $args );
-		}
-
-		$this->_last_data_sent = $args;
-
-		$res = wp_remote_request( $url, $_args );
-
-		remove_filter( 'http_headers_useragent', array( $this, 'filter_user_agent' ) );
-
-		if ( is_wp_error( $res ) || ! $res ) {
-			forminator_addon_maybe_log( __METHOD__, $res );
-			throw new Forminator_Addon_Mailchimp_Wp_Api_Exception( __( 'Failed to process request, make sure API KEY is correct and your server has internet connection.', 'forminator' ) );
-		}
-
-		$body = wp_remote_retrieve_body( $res );
-
-		$response = null;
-
-		// DELETE probably won't receiving contents on success
-		if ( 'DELETE' !== $verb ) {
-			// Got no response from API
-			if ( empty( $body ) ) {
-				forminator_addon_maybe_log( __METHOD__, $res );
-				throw new Forminator_Addon_Mailchimp_Wp_Api_Exception(
-					__(
-						'Failed to process request, make sure API KEY is correct and your server has internet connection.',
-						'forminator'
-					)
-				);
+			if ( 'GET' === $verb ) {
+				$url .= ( '?' . http_build_query( $args ) );
+			} else {
+				$_args['body'] = wp_json_encode( $args );
 			}
-		}
 
-		if ( ! empty( $body ) ) {
-			$response      = json_decode( $body );
-			$response_code = wp_remote_retrieve_response_code( $res );
+			$this->_last_data_sent = $args;
 
-			// check response status from API
-			if ( isset( $response_code ) ) {
-				if ( $response_code >= 400 ) {
-					forminator_addon_maybe_log( __METHOD__, $response );
-					$msg = '';
-					if ( isset( $response->detail ) ) {
-						// if exist, error detail is given by mailchimp here
-						$msg = $response->detail;
-					}
-					$this->_last_data_received = $response;
-					if ( 404 === $response_code ) {
-						/* translators: ... */
-						throw new Forminator_Addon_Mailchimp_Wp_Api_Not_Found_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), $msg ) );
-					}
-					/* translators: ... */
-					throw new Forminator_Addon_Mailchimp_Wp_Api_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), $msg ) );
+			$res = wp_remote_request( $url, $_args );
+
+			remove_filter( 'http_headers_useragent', array( $this, 'filter_user_agent' ) );
+
+			if ( is_wp_error( $res ) || ! $res ) {
+				forminator_addon_maybe_log( __METHOD__, $res );
+				throw new Forminator_Addon_Mailchimp_Wp_Api_Exception( __( 'Failed to process request, make sure API KEY is correct and your server has internet connection.', 'forminator' ) );
+			}
+
+			$body = wp_remote_retrieve_body( $res );
+
+			$response = null;
+
+			// DELETE probably won't receiving contents on success.
+			if ( 'DELETE' !== $verb ) {
+				// Got no response from API.
+				if ( empty( $body ) ) {
+					forminator_addon_maybe_log( __METHOD__, $res );
+					throw new Forminator_Addon_Mailchimp_Wp_Api_Exception(
+						__(
+							'Failed to process request, make sure API KEY is correct and your server has internet connection.',
+							'forminator'
+						)
+					);
 				}
 			}
 
-			// Probably response is failed to be json decoded
-			if ( is_null( $response ) ) {
-				$this->_last_data_received = $body;
-				forminator_addon_maybe_log( __METHOD__, $res );
-				/* translators: ... */
-				throw new Forminator_Addon_Mailchimp_Wp_Api_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), json_last_error_msg() ) );
+			if ( ! empty( $body ) ) {
+				$response      = json_decode( $body );
+				$response_code = wp_remote_retrieve_response_code( $res );
+
+				// check response status from API.
+				if ( isset( $response_code ) ) {
+					if ( $response_code >= 400 ) {
+						forminator_addon_maybe_log( __METHOD__, $response );
+						$msg = '';
+						if ( isset( $response->detail ) ) {
+							// if exist, error detail is given by mailchimp here.
+							$msg = $response->detail;
+						}
+						$this->_last_data_received = $response;
+						if ( 404 === $response_code ) {
+							/* translators: ... */
+							throw new Forminator_Addon_Mailchimp_Wp_Api_Not_Found_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), esc_html( $msg ) ) );
+						}
+						/* translators: ... */
+						throw new Forminator_Addon_Mailchimp_Wp_Api_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), esc_html( $msg ) ) );
+					}
+				}
+
+				// Probably response is failed to be json decoded.
+				if ( is_null( $response ) ) {
+					$this->_last_data_received = $body;
+					forminator_addon_maybe_log( __METHOD__, $res );
+					/* translators: ... */
+					throw new Forminator_Addon_Mailchimp_Wp_Api_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), json_last_error_msg() ) );
+				}
 			}
+
+			$wp_response = $res;
+
+			// in case not receving json decoded body use $wp_response.
+			if ( is_null( $response ) ) {
+				$response = $wp_response;
+			}
+			/**
+			 * Filter mailchimp api response returned to addon
+			 *
+			 * @since 1.1
+			 *
+			 * @param mixed          $response
+			 * @param string         $body        original content of http response's body.
+			 * @param array|WP_Error $wp_response original wp remote request response.
+			 */
+			$response = apply_filters( 'forminator_addon_mailchimp_api_response', $response, $body, $wp_response );
+
+			$this->_last_data_received = $response;
+		} catch ( Forminator_Addon_Mailchimp_Wp_Api_Exception $e ) {
+			$response = $e;
 		}
-
-		$wp_response = $res;
-
-		// in case not receving json decoded body use $wp_response
-		if ( is_null( $response ) ) {
-			$response = $wp_response;
-		}
-		/**
-		 * Filter mailchimp api response returned to addon
-		 *
-		 * @since 1.1
-		 *
-		 * @param mixed          $response
-		 * @param string         $body        original content of http response's body
-		 * @param array|WP_Error $wp_response original wp remote request response
-		 */
-		$response = apply_filters( 'forminator_addon_mailchimp_api_response', $response, $body, $wp_response );
-
-		$this->_last_data_received = $response;
 
 		return $response;
+	}
+
+	/**
+	 * Ping Mailchimp API to check if API key is valid
+	 *
+	 * @since 1.21.0 Mailchimp Addon
+	 *
+	 * @param $args
+	 *
+	 * @return array|mixed|object
+	 * @throws Forminator_Addon_Mailchimp_Wp_Api_Exception
+	 */
+	public function ping() {
+		return $this->request(
+			'GET',
+			'ping'
+		);
 	}
 
 	/**
@@ -468,11 +489,91 @@ class Forminator_Addon_Mailchimp_Wp_Api {
 
 		$args = array_merge( $default_args, $args );
 
-		return $this->request(
+		$groups = $this->request(
 			'GET',
 			'lists/' . $list_id . '/interest-categories',
 			$args
 		);
+
+		if ( is_wp_error( $groups ) ) {
+			$groups = array();
+		} else {
+			$groups = (array) $groups->categories;
+		}
+
+		return $groups;
+	}
+
+	/**
+	 * Get members by list ID
+	 *
+	 * @param string $list_id List ID.
+	 * @return array
+	 */
+	private function get_members( $list_id ) {
+		$data = $this->request(
+			'GET',
+			'lists/' . $list_id . '/members'
+		);
+
+		return $data && is_object( $data ) && ! empty( $data->members ) ? $data->members : array();
+	}
+
+
+	/**
+	 * Gets all the GDPR fields under a list
+	 *
+	 * @param string $list_id List ID.
+	 * @return array
+	 */
+	public function get_gdpr_fields( $list_id ) {
+		$gdpr_fieds = array();
+		$members    = $this->get_members( $list_id );
+		if ( ! $members ) {
+			$email = 'dummy@incsub.com';
+			$args  = array(
+				'email_address' => $email,
+				'status'        => 'unsubscribed',
+			);
+			$this->add_member_to_list( $list_id, $args );
+			$members = $this->get_members( $list_id );
+			$this->delete_member( $list_id, md5( strtolower( $email ) ) );
+		}
+
+		if ( empty( $members ) || ! is_array( $members ) || empty( $members[0]->marketing_permissions ) || ! is_array( $members[0]->marketing_permissions ) ) {
+			return $gdpr_fieds;
+		}
+
+		foreach ( $members[0]->marketing_permissions as $value ) {
+			if ( ! isset( $value->marketing_permission_id ) || ! isset( $value->text ) ) {
+				continue;
+			}
+			$gdpr_fieds[ $value->marketing_permission_id ] = $value->text;
+		}
+
+		return $gdpr_fieds;
+	}
+
+	/**
+	 * Gets all the tags/static segments on a list
+	 *
+	 * @param string $list_id List ID.
+	 * @return array|mixed|object|WP_Error
+	 */
+	public function get_tags( $list_id ) {
+		$tags = $this->request(
+			'GET',
+			'lists/' . $list_id . '/segments',
+			array(
+				'count' => 1000,
+				'type'  => 'static',
+			)
+		);
+
+		$tags    = $tags->segments;
+		$options = wp_list_pluck( $tags, 'name', 'id' );
+
+		return $options;
 	}
 
 	/**
@@ -505,12 +606,39 @@ class Forminator_Addon_Mailchimp_Wp_Api {
 	}
 
 	/**
+	 * Gets all the interests under a group list
+	 *
+	 * @param string $list_id List id.
+	 * @param string $category_id Category id.
+	 * @param int    $count Count.
+	 *
+	 * @return array|mixed|object|WP_Error
+	 */
+	public function get_interests( $list_id, $category_id, $count = 1000 ) {
+		$response = $this->request(
+			'GET',
+			'lists/' . $list_id . '/interest-categories/' . $category_id . '/interests',
+			array(
+				'count' => $count,
+			)
+		);
+
+		if ( is_wp_error( $response ) || empty( $response->interests ) || ! is_array( $response->interests ) ) {
+			return array();
+		}
+
+		$interests = wp_list_pluck( $response->interests, 'name', 'id' );
+
+		return $interests;
+	}
+
+	/**
 	 * Get detail of member
 	 *
 	 * @since 1.0 Mailchimp Addon
 	 *
 	 * @param        $list_id
-	 * @param string $subscriber_hash The MD5 hash of the lowercase version of the list member’s email address.
+	 * @param string  $subscriber_hash The MD5 hash of the lowercase version of the list member’s email address.
 	 * @param        $args
 	 *
 	 * @return array|mixed|object
@@ -545,8 +673,8 @@ class Forminator_Addon_Mailchimp_Wp_Api {
 	public function add_member_to_list( $list_id, $args ) {
 		$default_args = array(
 			'status'       => 'pending',
-			'merge_fields' => array(),
-			'interests'    => array(),
+			'merge_fields' => new stdClass(),
+			'interests'    => new stdClass(),
 		);
 
 		$args = array_merge( $default_args, $args );
@@ -616,7 +744,7 @@ class Forminator_Addon_Mailchimp_Wp_Api {
 	 * @since 1.0 Mailchimp Addon
 	 *
 	 * @param        $list_id
-	 * @param string $subscriber_hash The MD5 hash of the lowercase version of the list member’s email address.
+	 * @param string  $subscriber_hash The MD5 hash of the lowercase version of the list member’s email address.
 	 *
 	 * @return array|mixed|object
 	 * @throws Forminator_Addon_Mailchimp_Wp_Api_Exception

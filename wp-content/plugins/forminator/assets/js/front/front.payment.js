@@ -81,14 +81,16 @@
 	// Avoid Plugin.prototype conflicts
 	$.extend(ForminatorFrontPayment.prototype, {
 		init: function () {
-			if (!this.settings.paymentEl) {
+			if (!this.settings.paymentEl || typeof this.settings.paymentEl.data() === 'undefined') {
 				return;
 			}
 
 			var self         = this;
 			this._stripeData = this.settings.paymentEl.data();
 
-			this.mountCardField();
+			if ( false === this.mountCardField() ) {
+				return;
+			}
 
 			$(this.element).on('payment.before.submit.forminator', function (e, formData, callback) {
 				self._form = self.getForm(e);
@@ -96,8 +98,8 @@
 				self.validateStripe(e, formData);
 			});
 
-			this.$el.on("forminator:form:submit:stripe:3dsecurity", function(e, secret) {
-				self.validate3d(e, secret);
+			this.$el.on("forminator:form:submit:stripe:3dsecurity", function(e, secret, subscription) {
+				self.validate3d(e, secret, subscription);
 			});
 
 			// Listen for fields change to update ZIP mapping
@@ -110,22 +112,38 @@
 			});
 		},
 
-		validate3d: function( e, secret ) {
+		validate3d: function( e, secret, subscription ) {
 			var self = this;
 
-			this._stripe.retrievePaymentIntent(
-				secret
-			).then(function(result) {
-				if ( result.paymentIntent.status === 'requires_action' ||  result.paymentIntent.status === 'requires_source_action' ) {
-					self._stripe.handleCardAction(
-						secret
-					).then(function(result) {
-						if (self._beforeSubmitCallback) {
-							self._beforeSubmitCallback.call();
-						}
-					});
-				}
-			});
+			if ( subscription ) {
+				this._stripe.confirmCardPayment(secret, {
+					payment_method: {
+						card: self._cardElement,
+						...self.getBillingData(),
+					},
+				})
+				.then(function(result) {
+					self.$el.find('#forminator-stripe-subscriptionid').val( subscription );
+
+					if (self._beforeSubmitCallback) {
+						self._beforeSubmitCallback.call();
+					}
+				});
+			} else {
+				this._stripe.retrievePaymentIntent(
+					secret
+				).then(function(result) {
+					if ( result.paymentIntent.status === 'requires_action' ||  result.paymentIntent.status === 'requires_source_action' ) {
+						self._stripe.handleCardAction(
+							secret
+						).then(function(result) {
+							if (self._beforeSubmitCallback) {
+								self._beforeSubmitCallback.call();
+							}
+						});
+					}
+				});
+			}
 		},
 
 		validateStripe: function(e, formData) {
@@ -134,6 +152,7 @@
 			this._stripe.createToken(this._cardElement).then(function (result) {
 				if (result.error) {
 					self.showCardError(result.error.message, true);
+					self.$el.find( 'button' ).removeAttr( 'disabled' );
 				} else {
 					self.hideCardError();
 
@@ -221,6 +240,7 @@
 						// Store payment id
 						if (typeof data.data !== 'undefined' && typeof data.data.paymentid !== 'undefined') {
 							self.$el.find('#forminator-stripe-paymentid').val(data.data.paymentid);
+							self.$el.find('#forminator-stripe-paymentmethod').val(self._stripeData['paymentMethod']);
 							self._stripeData['paymentid'] = data.data.paymentid;
 							self._stripeData['secret'] = data.data.paymentsecret;
 
@@ -306,15 +326,7 @@
 			}
 		},
 
-		focus_to_element: function ($element, fadeout) {
-			fadeout = fadeout || false;
-
-			if( fadeout ) {
-				fadeout = this.settings.fadeout;
-			}
-
-			var fadeout_time = this.settings.fadeout_time;
-
+		focus_to_element: function ($element) {
 			// force show in case its hidden of fadeOut
 			$element.show();
 			$('html,body').animate({scrollTop: ($element.offset().top - ($(window).height() - $element.outerHeight(true)) / 2)}, 500, function () {
@@ -323,10 +335,6 @@
 				}
 
 				$element.focus();
-
-				if (fadeout) {
-					$element.show().delay( fadeout_time ).fadeOut('slow');
-				}
 			});
 		},
 
@@ -476,8 +484,13 @@
 		},
 
 		handleCardPayment: function (data, e, formData) {
-			var self = this;
-			var secret = data.data.paymentsecret || false;
+			var self = this,
+				secret = data.data.paymentsecret || false,
+				input = $( '.forminator-number--field, .forminator-currency, .forminator-calculation' );
+
+			if ( input.inputmask ) {
+				input.inputmask('remove');
+			}
 
 			if (self._beforeSubmitCallback) {
 				self._beforeSubmitCallback.call();
@@ -490,6 +503,10 @@
 			var verifyZip = this.getStripeData('veifyZip');
 			var zipField = this.getStripeData('zipField');
 			var fieldId = this.getStripeData('fieldId');
+
+			if ( null === key ) {
+				return false;
+			}
 
 			// Init Stripe
 			this._stripe = Stripe( key, {
@@ -515,7 +532,7 @@
 			if (fontFamily && customFonts) {
 				stripeObject.fonts = [
 					{
-						cssSrc: 'https://fonts.googleapis.om/css?family=' + fontFamily,
+						cssSrc: 'https://fonts.bunny.net/css?family=' + fontFamily,
 					}
 				];
 			}
@@ -622,7 +639,7 @@
 		},
 
 		getStripeData: function (key) {
-			if (typeof this._stripeData[key] !== 'undefined') {
+			if ( (typeof this._stripeData !== 'undefined') && (typeof this._stripeData[key] !== 'undefined') ) {
 				return this._stripeData[key];
 			}
 
@@ -651,9 +668,13 @@
 						//find element by its on name[] (for checkbox on multivalue)
 						$element = this.$el.find('input[name="' + element_id + '[]"]');
 						if ($element.length === 0) {
-							//find element by direct id (for name field mostly)
-							//will work for all field with element_id-[somestring]
-							$element = this.$el.find('#' + element_id);
+							//find element by select name
+							$element = this.$el.find('select[name="' + element_id + '"]');
+							if ($element.length === 0) {
+								//find element by direct id (for name field mostly)
+								//will work for all field with element_id-[somestring]
+								$element = this.$el.find('#' + element_id);
+							}
 						}
 					}
 				}
@@ -681,6 +702,8 @@
 
 			} else if (this.field_is_select($element)) {
 				value = $element.val();
+			} else if ( this.field_has_inputMask( $element ) ) {
+				value = parseFloat( $element.inputmask( 'unmaskedvalue' ) );
 			} else {
 				value = $element.val()
 			}
@@ -725,6 +748,20 @@
 			}
 
 			return isNaN(value) ? 0 : value;
+		},
+
+		field_has_inputMask: function ( $element ) {
+			var hasMask = false;
+
+			$element.each(function () {
+				if ( undefined !== $( this ).attr( 'data-inputmask' ) ) {
+					hasMask = true;
+					//break
+					return false;
+				}
+			});
+
+			return hasMask;
 		},
 
 		field_is_radio: function ($element) {

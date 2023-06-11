@@ -6,7 +6,7 @@
  * @since 1.0.2
  */
 
-// if uninstall.php is not called by WordPress, die
+// if uninstall.php is not called by WordPress, die.
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
 	die;
 }
@@ -17,7 +17,7 @@ if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) {
  * @since 1.0.2
  * @since 1.14.10 Added $db_prefix parameter
  *
- * @param string $db_prefix - database prefix
+ * @param string $db_prefix - database prefix.
  */
 function forminator_drop_custom_tables( $db_prefix = 'wp_' ) {
 	global $wpdb;
@@ -33,7 +33,7 @@ function forminator_drop_custom_tables( $db_prefix = 'wp_' ) {
  * @since 1.0.2
  * @since 1.14.10 Added $db_prefix parameter
  *
- * @param string $db_prefix - database prefix
+ * @param string $db_prefix - database prefix.
  */
 function forminator_delete_custom_posts( $db_prefix = 'wp_' ) {
 	global $wpdb;
@@ -71,7 +71,7 @@ function forminator_delete_custom_posts( $db_prefix = 'wp_' ) {
  * @since 1.14.10 Deletes all forminator options including the addons' options
  * @since 1.14.10 Added $db_prefix parameter
  *
- * @param string $db_prefix - database prefix
+ * @param string $db_prefix - database prefix.
  */
 function forminator_delete_custom_options( $db_prefix = 'wp_' ) {
 	global $wpdb;
@@ -83,19 +83,18 @@ function forminator_delete_custom_options( $db_prefix = 'wp_' ) {
 	}
 }
 
-
 /**
  * Clear the module submissions cache data
  *
  * @since 1.14.10 Added $db_prefix parameter
  *
- * @param string $db_prefix - database prefix
+ * @param string $db_prefix - database prefix.
  */
 function forminator_clear_module_submissions( $db_prefix = 'wp_' ) {
 	global $wpdb;
 
 	$max_entry_id_query = "SELECT MAX(`entry_id`) FROM {$db_prefix}frmt_form_entry";
-	$max_entry_id       = $wpdb->get_var( $max_entry_id_query ); // phpcs:ignore
+	$max_entry_id       = $wpdb->get_var( $max_entry_id_query );
 
 	if ( $max_entry_id && is_numeric( $max_entry_id ) && $max_entry_id > 0 ) {
 		for ( $i = 1; $i <= $max_entry_id; $i ++ ) {
@@ -107,17 +106,6 @@ function forminator_clear_module_submissions( $db_prefix = 'wp_' ) {
 	wp_cache_delete( 'custom-forms' . '_form_type', 'forminator_total_entries' );
 	wp_cache_delete( 'poll' . '_form_type', 'forminator_total_entries' );
 	wp_cache_delete( 'quizzes' . '_form_type', 'forminator_total_entries' );
-}
-
-$uninstall_settings = array();
-
-$forminator_uninstall = get_option( "forminator_uninstall_clear_data", false );
-if ( $forminator_uninstall ) {
-	// delete all
-	$uninstall_settings = array(
-		'settings' => true,
-		'data'     => true,
-	);
 }
 
 /**
@@ -135,49 +123,38 @@ function forminator_remove_upload_files() {
 	$filesystem->rmdir( $folder, $recursive );
 }
 
-$delete_settings = isset( $uninstall_settings['settings'] ) ? $uninstall_settings['settings'] : false;
-$delete_data     = isset( $uninstall_settings['data'] ) ? $uninstall_settings['data'] : false;
+$clear_data = get_option( 'forminator_uninstall_clear_data', false );
 
 global $wpdb;
-if ( ! is_multisite() ) {
+if ( $clear_data && ! is_multisite() ) {
 	$db_prefix = $wpdb->prefix;
 
-	if ( $delete_settings ) {
-		forminator_delete_custom_options( $db_prefix );
-		forminator_delete_custom_posts( $db_prefix );
-	}
-	if ( $delete_data ) {
-		forminator_clear_module_submissions( $db_prefix );
-		forminator_remove_upload_files();
-	}
-	if ( $delete_settings && $delete_data ) {
-		forminator_drop_custom_tables( $db_prefix );
-	}
+	forminator_delete_custom_options( $db_prefix );
+	forminator_delete_custom_posts( $db_prefix );
+	forminator_clear_module_submissions( $db_prefix );
+	forminator_remove_upload_files();
+	forminator_drop_custom_tables( $db_prefix );
 
-} else {
+} elseif ( $clear_data ) {
 	$sites = get_sites();
 
 	foreach ( $sites as $site ) {
 		$blog_id = $site->blog_id;
 		$db_prefix = $wpdb->get_blog_prefix( $blog_id );
 
-		if ( $delete_settings ) {
-			forminator_delete_custom_posts( $db_prefix );
-			// Switch to blog before deleting options
-			switch_to_blog( $blog_id );
-			forminator_delete_custom_options( $db_prefix );
-			restore_current_blog();
-		}
-		if ( $delete_data ) {
-			forminator_clear_module_submissions( $db_prefix );
+		forminator_delete_custom_posts( $db_prefix );
 
-			switch_to_blog( $blog_id );
-			forminator_remove_upload_files();
-			restore_current_blog();
-		}
-		if ( $delete_settings && $delete_data ) {
-			forminator_drop_custom_tables( $db_prefix );
-		}
+		// Switch to blog before deleting options.
+		switch_to_blog( $blog_id );
+		forminator_delete_custom_options( $db_prefix );
+		restore_current_blog();
+
+		forminator_clear_module_submissions( $db_prefix );
+
+		switch_to_blog( $blog_id );
+		forminator_remove_upload_files();
+		restore_current_blog();
+
+		forminator_drop_custom_tables( $db_prefix );
 	}
-
 }

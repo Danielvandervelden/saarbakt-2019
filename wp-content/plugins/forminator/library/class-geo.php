@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 /**
  * Class Forminator_Geo
- * 
+ *
  * Handle geo-location data
  *
  * @since 1.0
@@ -16,7 +16,7 @@ class Forminator_Geo {
 	 * Validates that the IP that made the request is from cloudflare
 	 *
 	 * @since 1.0
-	 * @param String $ip - the ip to check
+	 * @param String $ip - the ip to check.
 	 *
 	 * @return bool
 	 */
@@ -51,8 +51,8 @@ class Forminator_Geo {
 	 * Check if the cloudflare IP is in range
 	 *
 	 * @since 1.0
-	 * @param String $ip - the current IP
-	 * @param String $range - the allowed range of cloudflare ips
+	 * @param String $ip - the current IP.
+	 * @param String $range - the allowed range of cloudflare ips.
 	 *
 	 * @return bool
 	 */
@@ -61,12 +61,12 @@ class Forminator_Geo {
 			$range .= '/32';
 		}
 
-		// $range is in IP/CIDR format eg 127.0.0.1/24
+		// $range is in IP/CIDR format eg 127.0.0.1/24.
 		list( $range, $netmask ) = explode( '/', $range, 2 );
-		$range_decimal    = ip2long( $range );
-		$ip_decimal       = ip2long( $ip );
-		$wildcard_decimal = pow( 2, ( 32 - $netmask ) ) - 1;
-		$netmask_decimal  = ~$wildcard_decimal;
+		$range_decimal           = ip2long( $range );
+		$ip_decimal              = ip2long( $ip );
+		$wildcard_decimal        = pow( 2, ( 32 - $netmask ) ) - 1;
+		$netmask_decimal         = ~$wildcard_decimal;
 
 		return ( ( $ip_decimal & $netmask_decimal ) === ( $range_decimal & $netmask_decimal ) );
 	}
@@ -103,14 +103,15 @@ class Forminator_Geo {
 	 * @return bool
 	 */
 	private static function is_cloudflare() {
+		$ip = '';
 		if ( isset( $_SERVER['HTTP_CLIENT_IP'] ) ) {
-			$ip = $_SERVER['HTTP_CLIENT_IP'];
+			$ip = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CLIENT_IP'] ) );
 		} elseif ( isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
-			$ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-		} else {
-			$ip = $_SERVER['REMOTE_ADDR'];
+			$ip = sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) );
+		} elseif ( isset( $_SERVER['REMOTE_ADDR'] ) ) {
+			$ip = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
 		}
-		if ( isset( $ip ) ) {
+		if ( ! empty( $ip ) ) {
 			$request_check = self::_cloudflare_requests_check();
 			if ( ! $request_check ) {
 				return false;
@@ -131,18 +132,18 @@ class Forminator_Geo {
 	 * @return mixed|string
 	 */
 	public static function get_user_ip() {
-		$client  = isset( $_SERVER['HTTP_CLIENT_IP'] ) ? $_SERVER['HTTP_CLIENT_IP'] : null;
-		$forward = isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ? $_SERVER['HTTP_X_FORWARDED_FOR'] : null;
-		$is_cf   = self::is_cloudflare(); //Check if request is from CloudFlare
+		$client  = isset( $_SERVER['HTTP_CLIENT_IP'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_CLIENT_IP'] ) ) : null;
+		$forward = isset( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) : null;
+		$is_cf   = self::is_cloudflare(); // Check if request is from CloudFlare.
 		if ( $is_cf ) {
-			$cf_ip = $_SERVER['HTTP_CF_CONNECTING_IP']; //We already make sure this is set in the checks
+			$cf_ip = isset( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_CF_CONNECTING_IP'] ) ) : null; // We already make sure this is set in the checks.
 			if ( filter_var( $cf_ip, FILTER_VALIDATE_IP ) ) {
 				return apply_filters( 'forminator_user_ip', $cf_ip );
 			}
 		} else {
-			$remote = isset( $_SERVER['REMOTE_ADDR'] ) ? $_SERVER['REMOTE_ADDR'] : null;
+			$remote = isset( $_SERVER['REMOTE_ADDR'] ) ? sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) ) : null;
 		}
-		$client_real = isset( $_SERVER['HTTP_X_REAL_IP'] ) ? $_SERVER['HTTP_X_REAL_IP'] : null;
+		$client_real = isset( $_SERVER['HTTP_X_REAL_IP'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_REAL_IP'] ) ) : null;
 		$user_ip     = $remote;
 		if ( filter_var( $client, FILTER_VALIDATE_IP ) ) {
 			$user_ip = $client;

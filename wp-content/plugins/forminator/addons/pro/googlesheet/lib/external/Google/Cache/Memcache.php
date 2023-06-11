@@ -113,7 +113,7 @@ class Forminator_Google_Cache_Memcache extends Forminator_Google_Cache_Abstract
   public function set($key, $value)
   {
     $this->connect();
-    // we store it with the cache_time default expiration so objects will at
+    // we store it with the cache_time default expiration so objects will at.
     // least get cleaned eventually.
     $data = array('time' => time(), 'data' => $value);
     $rc = false;

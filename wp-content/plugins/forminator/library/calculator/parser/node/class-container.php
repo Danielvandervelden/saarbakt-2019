@@ -34,7 +34,7 @@ class Forminator_Calculator_Parser_Node_Container extends Forminator_Calculator_
 	 * @throws Forminator_Calculator_Exception
 	 */
 	public function set_child_nodes( $child_nodes ) {
-		// Ensure integrity of $nodes array
+		// Ensure integrity of $nodes array.
 		foreach ( $child_nodes as $child_node ) {
 			if ( ! $child_node instanceof Forminator_Calculator_Parser_Node_Abstract ) {
 				throw new Forminator_Calculator_Exception(

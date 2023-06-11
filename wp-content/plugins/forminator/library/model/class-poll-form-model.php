@@ -35,14 +35,14 @@ class Forminator_Poll_Model extends Forminator_Base_Form_Model {
 	 * @return object
 	 */
 	public static function prepare_data_for_preview( $form_model, $data ) {
-		//build the field
+		// build the field.
 		$fields = array();
 		if ( isset( $data['answers'] ) ) {
 			$fields = $data['answers'];
 			unset( $data['answers'] );
 		}
 
-		// Set fields
+		// Set fields.
 		foreach ( $fields as $f ) {
 			$field          = new Forminator_Form_Field_Model();
 			$field->form_id = isset( $f['wrapper_id'] ) ? $f['wrapper_id'] : $f['title'];
@@ -58,9 +58,10 @@ class Forminator_Poll_Model extends Forminator_Base_Form_Model {
 	 * Check if the vote clause is set up and if a user can vote again
 	 *
 	 * @since 1.0
+	 * @param bool $freeze Optional. Should it prevent parallel requests. False by default.
 	 * @return bool
 	 */
-	public function current_user_can_vote() {
+	public function current_user_can_vote( $freeze = false ) {
 		/**
 		 * Added condition for poll access.
 		 *
@@ -70,7 +71,31 @@ class Forminator_Poll_Model extends Forminator_Base_Form_Model {
 			if ( $this->is_method_browser_cookie() ) {
 				return $this->poll_votes_method_browser_cookie();
 			} else {
-				return $this->poll_votes_method_user_ip();
+				$user_ip      = Forminator_Geo::get_user_ip();
+				$key_requests = 'forminator_request_from_ip_' . $user_ip;
+				// Check if the IP has made a request within the allowed interval.
+				if ( get_transient( $key_requests ) ) {
+					// IP has made a request too soon.
+					$can_vote = false;
+				} else {
+					if ( $freeze ) {
+						/**
+						 * Filter the time interval (in seconds) between consecutive requests allowed per IP
+						 *
+						 * @param int    $seconds Second amount. 10 by default.
+						 * @param string $user_ip Current IP.
+						 */
+						$expiration    = apply_filters( 'forminator_poll_request_interval_seconds', 10, $user_ip );
+						$set_transient = set_transient( $key_requests, 1, $expiration );
+						if ( ! $set_transient ) {
+							// It doesn't set transient for parallel requests.
+							return false;
+						}
+					}
+					$can_vote = $this->poll_votes_method_user_ip();
+				}
+
+				return $can_vote;
 			}
 		}
 
@@ -115,7 +140,7 @@ class Forminator_Poll_Model extends Forminator_Base_Form_Model {
 						$interval = 'year';
 						break;
 				}
-				$cookie_value  = date_i18n( 'Y-m-d H:i:s', strtotime( $_COOKIE[ $poll_cookie ] ) );
+				$cookie_value  = date_i18n( 'Y-m-d H:i:s', strtotime( Forminator_Core::sanitize_text_field( $_COOKIE[ $poll_cookie ] ) ) );
 				$cookie_expire = $cookie_value . ' +' . $duration . ' ' . $interval;
 				if ( time() < strtotime( $cookie_expire ) ) {
 					return false;
@@ -203,11 +228,11 @@ class Forminator_Poll_Model extends Forminator_Base_Form_Model {
 	public function load( $id, $callback = false ) {
 		$model = parent::load( $id, $callback );
 
-		// callback means load latest post and replace data,
-		// so we dont need to add element_id since its must be try to loading preview
+		// callback means load latest post and replace data,.
+		// so we dont need to add element_id since its must be try to loading preview.
 		if ( ! $callback ) {
 			if ( $model instanceof Forminator_Poll_Model ) {
-				// patch for backward compat
+				// patch for backward compat.
 				return $this->maybe_add_element_id_on_answers( $model );
 			}
 		}
@@ -237,7 +262,7 @@ class Forminator_Poll_Model extends Forminator_Base_Form_Model {
 
 		if ( $is_need_to_add_element_id ) {
 
-			// get max element id here
+			// get max element id here.
 			$max_element_id = 0;
 			foreach ( $answers as $answer ) {
 				if ( isset( $answer['element_id'] ) && $answer['element_id'] ) {
@@ -250,8 +275,8 @@ class Forminator_Poll_Model extends Forminator_Base_Form_Model {
 			foreach ( $answers as $key => $answer ) {
 				if ( ! isset( $answer['element_id'] ) || ! $answer['element_id'] ) {
 					$max_element_id ++;
-					$answers[ $key ]['element_id'] = 'answer-' . $max_element_id; // start from 1
-					$answers[ $key ]['id']         = 'answer-' . $max_element_id; // start from 1
+					$answers[ $key ]['element_id'] = 'answer-' . $max_element_id; // start from 1.
+					$answers[ $key ]['id']         = 'answer-' . $max_element_id; // start from 1.
 				}
 			}
 
@@ -292,9 +317,9 @@ class Forminator_Poll_Model extends Forminator_Base_Form_Model {
 	 *
 	 * @since 1.0.5
 	 *
-	 * @param  string $pluck_key
+	 * @param  string      $pluck_key
 	 * @param  string|null $key
-	 * @param null $default
+	 * @param null        $default
 	 *
 	 * @return array
 	 */
@@ -381,19 +406,19 @@ class Forminator_Poll_Model extends Forminator_Base_Form_Model {
 	/**
 	 * Check vote opening status
 	 *
-	 *
 	 * @return array
 	 */
 	public function opening_status() {
-		static $info;
-		if ( isset( $info ) ) {
-			return $info;
+		static $info = array();
+
+		if ( isset( $info[ $this->id ] ) ) {
+			return $info[ $this->id ];
 		}
 
-		$settings = $this->settings;
-		$info = array(
+		$settings          = $this->settings;
+		$info[ $this->id ] = array(
 			'status' => 'open',
-			'msg'	 => ''
+			'msg'    => '',
 		);
 
 		$close_msg = ( isset( $settings['opening_close_msg'] ) ) ? trim( $settings['opening_close_msg'] ) : '';
@@ -411,31 +436,30 @@ class Forminator_Poll_Model extends Forminator_Base_Form_Model {
 			$before_open_from_msg = __( 'Voting has not been started yet, check again later', 'forminator' );
 		}
 
-
-		$status = ( isset( $settings['opening_status'] )  ) ? $settings['opening_status'] : 'open';
-		if ( ! in_array( $status, array('open', 'pause', 'close' ) ) ) {
+		$status = ( isset( $settings['opening_status'] ) ) ? $settings['opening_status'] : 'open';
+		if ( ! in_array( $status, array( 'open', 'pause', 'close' ) ) ) {
 			$status = 'open';
 		}
 
-		$info['status'] = $status;
+		$info[ $this->id ]['status'] = $status;
 
 		switch ( $status ) {
 			case 'close': {
-				$info['msg'] = $close_msg;
-				return $info;
+				$info[ $this->id ]['msg'] = $close_msg;
+				return $info[ $this->id ];
 				break;
 			}
 
 			case 'pause': {
-				$info['msg'] = $pause_msg;
-				return $info;
+				$info[ $this->id ]['msg'] = $pause_msg;
+				return $info[ $this->id ];
 				break;
 			}
 
 			case 'open': {
 				$current_time = current_time( 'timestamp' );
 
-				//check open from and open until time
+				// check open from and open until time.
 				$open_from = ( isset( $settings['opening_open_from'] ) ) ? trim( $settings['opening_open_from'] ) : 'now';
 				if ( '' === $open_from ) {
 					$open_from = 'now';
@@ -451,9 +475,9 @@ class Forminator_Poll_Model extends Forminator_Base_Form_Model {
 					if ( '' !== $open_from_time ) {
 						$open_from_timestamp = strtotime( $open_from_time );
 						if ( $current_time < $open_from_timestamp ) {
-							$info['status'] = 'before_open_from';
-							$info['msg']    = $before_open_from_msg;
-							return $info;
+							$info[ $this->id ]['status'] = 'before_open_from';
+							$info[ $this->id ]['msg']    = $before_open_from_msg;
+							return $info[ $this->id ];
 						}
 					}
 				}
@@ -463,14 +487,14 @@ class Forminator_Poll_Model extends Forminator_Base_Form_Model {
 					if ( '' !== $open_until_time ) {
 						$open_until_timestamp = strtotime( $open_until_time );
 						if ( $current_time > $open_until_timestamp ) {
-							$info['status'] = 'close';
-							$info['msg']    = $close_msg;
-							return $info;
+							$info[ $this->id ]['status'] = 'close';
+							$info[ $this->id ]['msg']    = $close_msg;
+							return $info[ $this->id ];
 						}
 					}
 				}
 
-				return $info;
+				return $info[ $this->id ];
 				break;
 			}
 
@@ -479,6 +503,6 @@ class Forminator_Poll_Model extends Forminator_Base_Form_Model {
 
 		}
 
-		return $info;
+		return $info[ $this->id ];
 	}
 }

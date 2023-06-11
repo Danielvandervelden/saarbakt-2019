@@ -82,19 +82,32 @@
 				fileList = [];
 			});
 			this.form.find( '.forminator-field-' + self.element + '-' + self.form_id ).on("change", function(e) {
-				var $this = $(this),
-					param = this.files,
-					uploadParam = [];
-				$this.closest('.forminator-field').removeClass('forminator-has_error');
-				for ( var i = 0; i < param.length; i++ ) {
-					uploadParam.push( param[ i ] );
-					fileList.push( param[ i ] );
-				}
+				if( ! self.uploadingFile ){
+					self.uploadingFile = 1;
 
-				ajax_request = self.handleChangeCallback( uploadParam, $this, ajax_request );
-				var file_list = Array.prototype.slice.call( fileList );
-				if ( file_list.length > 0 ) {
-					this.files = self.FileObjectItem(file_list);
+					var $this = $(this),
+						param = this.files,
+						uploadParam = [];
+
+					$.when().then(function(){
+						$this.closest('.forminator-field').removeClass('forminator-has_error');
+						for ( var i = 0; i < param.length; i++ ) {
+							uploadParam.push( param[ i ] );
+							fileList.push( param[ i ] );
+						}
+
+						ajax_request = self.handleChangeCallback( uploadParam, $this, ajax_request );
+						var file_list = Array.prototype.slice.call( fileList );
+
+						if ( file_list.length > 0 ) {
+							param = self.FileObjectItem(file_list);
+							if ( 'submission' === $this.data( 'method' ) ) {
+								$this.prop( 'files', param );
+							}
+						}
+					}).done(function(){
+						self.uploadingFile = null;
+					});
 				}
 			});
 
@@ -113,11 +126,15 @@
 				ajax_inc = 0,
 				uploadData = new FormData,
 				nonce = this.form.find('input[name="forminator_nonce"]').val(),
-				method = $this.data('method');
+				method = $this.data('method'),
+				elementId = self.element;
+
+			elementId = elementId.split('_')[0];
 			uploadData.append( "action", "forminator_multiple_file_upload" );
 			uploadData.append( "form_id", this.form_id );
-			uploadData.append( "element_id", self.element );
+			uploadData.append( "element_id", elementId );
 			uploadData.append( "nonce", nonce );
+
 			$.each( param, function ( i, item ) {
 				var unique_id = self.progress_bar( item, method ),
 					totalFile = self.form.find('.upload-container-' + self.element + ' li').length,
@@ -138,7 +155,7 @@
 					uploadData.delete( self.element );
 					uploadData.delete( 'totalFiles' );
 					uploadData.append( "totalFiles", totalFile );
-					uploadData.append( self.element, item );
+					uploadData.append( elementId, item );
 					ajax_request.push( $.ajax({
 						xhr: function () {
 							var xhr = new window.XMLHttpRequest();
@@ -224,6 +241,7 @@
 		 * @param message
 		 */
 		upload_fail_response: function( unique_id, message ) {
+			this.form.trigger( 'validation:error' );
 			this.form.find('#' + unique_id).addClass('forminator-has_error');
 			this.form.find('#' + unique_id).find('.forminator-uploaded-file--size [class*="forminator-icon-"]')
 				.addClass('forminator-icon-warning')
@@ -482,11 +500,11 @@
 
 					var index = self.form.find('#' + file_id ).index(),
 						fileContainer = $( deleteButton ).closest( 'li#' + file_id ),
-						uploaded_arr = self.get_uplaoded_files();
+						uploaded_arr = self.get_uplaoded_files(),
+						uploaded_value = self.form.find( '.forminator-multifile-hidden' );
 
 					if ( uploaded_arr && 'ajax' === method ) {
 
-						var uploaded_value = self.form.find( '.forminator-multifile-hidden' );
 						if( 'undefined' !== typeof ajax_request[ index ] ) {
 							ajax_request[ index ].abort();
 							ajax_request.splice( index, 1 );
@@ -506,9 +524,10 @@
 
 					$( fileContainer ).remove();
 				}
-				var fileInput = self.form.find( '.forminator-field-'+ self.element + '-' + self.form_id );
+
+				var fileInput = self.form.find( '.forminator-field-'+ element_id + '-' + self.form_id );
+				var liList = self.form.find('.upload-container-' + element_id + ' li' );
 				if( 'undefined' !== typeof fileInput.data('limit') ) {
-					var liList = self.form.find('.upload-container-' + element_id + ' li' );
 					$.each( liList,function( index ) {
 						if( fileInput.data('limit') > index && $(this).hasClass('forminator-upload-limit_error') ) {
 							var fileID = $(this).attr('id'),
@@ -521,6 +540,17 @@
 						}
 					});
 					uploaded_value.val( JSON.stringify( uploaded_arr ) );
+				}
+
+				// empty file input value if no files left
+				if ( liList.length === 0 ) {
+					fileInput.val('');
+				}
+
+				// Re-enable submit button if there are no errors on the upload fields.
+				if ( 0 === self.form.find( '.forminator-uploaded-file.forminator-has_error' ).length ) {
+					self.form.trigger( 'forminator:uploads:valid' );
+					self.form.find('.forminator-button-submit').attr( 'disabled', false );
 				}
 			})
 		},

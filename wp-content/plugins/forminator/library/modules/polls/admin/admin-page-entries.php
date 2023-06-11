@@ -25,8 +25,9 @@ class Forminator_Poll_View_Page extends Forminator_Admin_View_Page {
 	public function before_render() {
 		$this->maybe_redirect();
 
-		if ( isset( $_REQUEST['form_id'] ) ) { // WPCS: CSRF OK
-			$this->form_id = intval( $_REQUEST['form_id'] );
+		$form_id = filter_input( INPUT_GET, 'form_id', FILTER_VALIDATE_INT );
+		if ( $form_id ) {
+			$this->form_id = $form_id;
 			parent::before_render();
 			if ( Forminator_Form_Entry_Model::count_entries( $this->form_id ) ) {
 				add_action( 'admin_footer', array( $this, 'render_pie_chart' ), 100 );
@@ -55,7 +56,7 @@ class Forminator_Poll_View_Page extends Forminator_Admin_View_Page {
 	 */
 	public function get_model_name() {
 		if ( $this->model ) {
-			return isset ( $this->model->settings['poll-title'] ) ? $this->model->settings['poll-title'] : $this->model->name;
+			return isset( $this->model->settings['poll-title'] ) ? $this->model->settings['poll-title'] : $this->model->name;
 		}
 
 		return '';
@@ -158,7 +159,7 @@ class Forminator_Poll_View_Page extends Forminator_Admin_View_Page {
 
 				'use strict';
 
-				$( 'document' ).ready( function() {
+				$(function() {
 
 					var randomScalingFactor = function() {
 						return Math.round( Math.random() * 100 );
@@ -170,15 +171,15 @@ class Forminator_Poll_View_Page extends Forminator_Admin_View_Page {
 
 					var chartExtras = [
 						'<?php echo esc_html__( 'vote(s)' ); ?>',
-						true, // Always show votes
+						true, // Always show votes.
 						[
-							'#E5E5E5', // [0] Grid lines color
-							'#777771', // [1] Axis labels color
-							'#333333'  // [2] On-chart label (bars)
+							'#E5E5E5', // [0] Grid lines color.
+							'#777771', // [1] Axis labels color.
+							'#333333'  // [2] On-chart label (bars).
 						],
 						[
-							'#333333', // [0] Background color
-							'#FFFFFF' // [1] Text color
+							'#333333', // [0] Background color.
+							'#FFFFFF' // [1] Text color.
 						]
 					];
 
@@ -242,6 +243,6 @@ class Forminator_Poll_View_Page extends Forminator_Admin_View_Page {
 		 * @param string $style
 		 */
 		$style = apply_filters( 'forminator_admin_poll_chart_style_override', $style );
-		echo $style; // WPCS: XSS ok.
+		echo $style; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 	}
 }

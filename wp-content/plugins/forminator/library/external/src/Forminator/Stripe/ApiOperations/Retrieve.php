@@ -11,7 +11,7 @@ namespace Forminator\Stripe\ApiOperations;
 trait Retrieve
 {
     /**
-     * @param array|string $id the ID of the API resource to retrieve,
+     * @param array|string $id the ID of the API resource to retrieve,.
      *     or an options array containing an `id` key
      * @param null|array|string $opts
      *

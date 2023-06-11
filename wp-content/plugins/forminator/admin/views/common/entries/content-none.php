@@ -1,3 +1,15 @@
+<?php
+	$none_title = esc_html__( 'Submissions', 'forminator' );
+	$none_text  = esc_html__( 'You haven’t received any form, poll or quiz submissions yet. When you do, you’ll be able to view all the data here.', 'forminator' );
+	$form_id    = filter_input( INPUT_GET, 'form_id', FILTER_VALIDATE_INT );
+if ( $form_id ) {
+	$none_title = esc_html( forminator_get_form_name( $form_id ) );
+	$none_text  = sprintf(
+		esc_html__( 'You haven’t received any submissions for this %s yet. When you do, you’ll be able to view all the data here.', 'forminator' ),
+		esc_html( forminator_get_form_type_helper( true ) )
+	);
+}
+?>
 <div class="sui-box sui-message">
 
 	<?php if ( forminator_is_show_branding() ) : ?>
@@ -10,25 +22,9 @@
 
 	<div class="sui-message-content">
 
-		<h2>
-		<?php
-		if ( empty( $none_title ) ) {
-			echo forminator_get_form_name( $this->form_id ); // phpcs:ignore
-		} else {
-			echo esc_html( $none_title );
-		}
-		?>
-		</h2>
+		<h2><?php echo esc_html( $none_title ); ?></h2>
 
-		<p>
-		<?php
-		if ( empty( $none_text ) ) {
-			printf( esc_html__( 'You haven’t received any submissions for this %s yet. When you do, you’ll be able to view all the data here.', 'forminator' ), esc_html( static::$module_slug ) );
-		} else {
-			echo esc_html( $none_text );
-		}
-		?>
-		</p>
+		<p><?php echo esc_html( $none_text ); ?></p>
 
 	</div>
 

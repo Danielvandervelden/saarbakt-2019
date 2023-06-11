@@ -35,7 +35,7 @@ class Forminator_Integrations_Page extends Forminator_Admin_Page {
 	 * @since 1.2 add extra section for addon
 	 */
 	public function before_render() {
-		// cleanup addons on integrations page
+		// cleanup addons on integrations page.
 		Forminator_Addon_Loader::get_instance()->cleanup_activated_addons();
 
 		$this->addons_list                      = forminator_get_registered_addons_list();
@@ -64,7 +64,7 @@ class Forminator_Integrations_Page extends Forminator_Admin_Page {
 	 */
 	protected function render_page_content() {
 		if ( ! empty( $this->addon_page ) ) {
-			// html output here are expected
+			// html output here are expected.
 			echo $this->addon_page['output'];// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		} else {
 			parent::render_page_content();
@@ -114,13 +114,12 @@ class Forminator_Integrations_Page extends Forminator_Admin_Page {
 	 * @return bool
 	 */
 	public function validate_addon_page() {
-		if ( isset( $_GET['nonce'] ) ) {
-			if ( ! wp_verify_nonce( $_GET['nonce'], self::$addon_nonce_page_action ) ) {
-				return false;
-			}
+		$nonce = Forminator_Core::sanitize_text_field( 'nonce' );
+		if ( $nonce && ! wp_verify_nonce( $nonce, self::$addon_nonce_page_action ) ) {
+			return false;
 		}
 		$query_args = $_GET;
-		// main component
+		// main component.
 		/**
 		 * - slug : addon slug (eg. trello)
 		 * - nonce: nonce validation
@@ -144,7 +143,7 @@ class Forminator_Integrations_Page extends Forminator_Admin_Page {
 		}
 		$section = $query_args['section'];
 		unset( $query_args['section'] );
-		$callback = $addon->get_integration_section_callback( $section );// returned callback must be an array
+		$callback = $addon->get_integration_section_callback( $section );// returned callback must be an array.
 
 		if ( ! is_array( $callback ) ) {
 			return false;

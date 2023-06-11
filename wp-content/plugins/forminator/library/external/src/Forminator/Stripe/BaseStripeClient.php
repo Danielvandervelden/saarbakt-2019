@@ -44,7 +44,7 @@ class BaseStripeClient implements StripeClientInterface
      * - files_base (string): the base URL for file creation requests. Defaults to
      *   {@link DEFAULT_FILES_BASE}.
      *
-     * @param array<string, mixed>|string $config the API key as a string, or an array containing
+     * @param array<string, mixed>|string $config the API key as a string, or an array containing.
      *   the client configuration settings
      */
     public function __construct($config = [])
@@ -119,10 +119,10 @@ class BaseStripeClient implements StripeClientInterface
     /**
      * Sends a request to Stripe's API.
      *
-     * @param string $method the HTTP method
-     * @param string $path the path of the request
-     * @param array $params the parameters of the request
-     * @param array|\Forminator\Stripe\Util\RequestOptions $opts the special modifiers of the request
+     * @param string $method the HTTP method.
+     * @param string $path the path of the request.
+     * @param array $params the parameters of the request.
+     * @param array|\Forminator\Stripe\Util\RequestOptions $opts the special modifiers of the request.
      *
      * @return \Forminator\Stripe\StripeObject the object returned by Stripe's API
      */
@@ -142,10 +142,10 @@ class BaseStripeClient implements StripeClientInterface
     /**
      * Sends a request to Stripe's API.
      *
-     * @param string $method the HTTP method
-     * @param string $path the path of the request
-     * @param array $params the parameters of the request
-     * @param array|\Forminator\Stripe\Util\RequestOptions $opts the special modifiers of the request
+     * @param string $method the HTTP method.
+     * @param string $path the path of the request.
+     * @param array $params the parameters of the request.
+     * @param array|\Forminator\Stripe\Util\RequestOptions $opts the special modifiers of the request.
      *
      * @return \Forminator\Stripe\Collection of ApiResources
      */
@@ -210,7 +210,7 @@ class BaseStripeClient implements StripeClientInterface
      */
     private function validateConfig($config)
     {
-        // api_key
+        // api_key.
         if (null !== $config['api_key'] && !\is_string($config['api_key'])) {
             throw new \Forminator\Stripe\Exception\InvalidArgumentException('api_key must be null or a string');
         }
@@ -227,40 +227,40 @@ class BaseStripeClient implements StripeClientInterface
             throw new \Forminator\Stripe\Exception\InvalidArgumentException($msg);
         }
 
-        // client_id
+        // client_id.
         if (null !== $config['client_id'] && !\is_string($config['client_id'])) {
             throw new \Forminator\Stripe\Exception\InvalidArgumentException('client_id must be null or a string');
         }
 
-        // stripe_account
+        // stripe_account.
         if (null !== $config['stripe_account'] && !\is_string($config['stripe_account'])) {
             throw new \Forminator\Stripe\Exception\InvalidArgumentException('stripe_account must be null or a string');
         }
 
-        // stripe_version
+        // stripe_version.
         if (null !== $config['stripe_version'] && !\is_string($config['stripe_version'])) {
             throw new \Forminator\Stripe\Exception\InvalidArgumentException('stripe_version must be null or a string');
         }
 
-        // api_base
+        // api_base.
         if (!\is_string($config['api_base'])) {
             throw new \Forminator\Stripe\Exception\InvalidArgumentException('api_base must be a string');
         }
 
-        // connect_base
+        // connect_base.
         if (!\is_string($config['connect_base'])) {
             throw new \Forminator\Stripe\Exception\InvalidArgumentException('connect_base must be a string');
         }
 
-        // files_base
+        // files_base.
         if (!\is_string($config['files_base'])) {
             throw new \Forminator\Stripe\Exception\InvalidArgumentException('files_base must be a string');
         }
 
-        // check absence of extra keys
+        // check absence of extra keys.
         $extraConfigKeys = \array_diff(\array_keys($config), \array_keys($this->getDefaultConfig()));
         if (!empty($extraConfigKeys)) {
-            // Wrap in single quote to more easily catch trailing spaces errors
+            // Wrap in single quote to more easily catch trailing spaces errors.
             $invalidKeys = "'" . \implode("', '", $extraConfigKeys) . "'";
 
             throw new \Forminator\Stripe\Exception\InvalidArgumentException('Found unknown key(s) in configuration array: ' . $invalidKeys);

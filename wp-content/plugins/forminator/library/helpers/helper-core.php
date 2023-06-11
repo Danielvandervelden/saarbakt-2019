@@ -37,7 +37,7 @@ function forminator_is_user_allowed() {
  * @since 1.0
  *
  * @param array  $array
- * @param string $key - the string key
+ * @param string $key - the string key.
  *
  * @return bool
  */
@@ -104,13 +104,15 @@ function forminator_ajax_url() {
 
 /**
  * Checks if the AJAX call is valid
+ * For logged-in usage only.
  *
  * @since 1.0
+ * @since 1.17 Added $query_arg
  *
  * @param $action
  */
-function forminator_validate_ajax( $action ) {
-	if ( ! check_ajax_referer( $action, false, false ) || ! forminator_is_user_allowed() ) {
+function forminator_validate_ajax( $action, $query_arg = false ) {
+	if ( ! check_ajax_referer( $action, $query_arg, false ) || ! forminator_is_user_allowed() ) {
 		wp_send_json_error( __( 'Invalid request, you are not allowed to do that action.', 'forminator' ) );
 	}
 }
@@ -124,22 +126,22 @@ function forminator_admin_enqueue_fonts() {
 	$version = '1.0';
 	wp_enqueue_style(
 		'forminator-roboto',
-		'https://fonts.googleapis.com/css?family=Roboto+Condensed:300,300i,400,400i,700,700i|Roboto:300,300i,400,400i,500,500i,700,700i',
+		'https://fonts.bunny.net/css?family=Roboto+Condensed:300,300i,400,400i,700,700i|Roboto:300,300i,400,400i,500,500i,700,700i',
 		array(),
 		$version
-	); // cache as long as you can
+	); // cache as long as you can.
 	wp_enqueue_style(
 		'forminator-opensans',
-		'https://fonts.googleapis.com/css?family=Open+Sans:400,400i,700,700i',
+		'https://fonts.bunny.net/css?family=Open+Sans:400,400i,700,700i',
 		array(),
 		$version
-	); // cache as long as you can
+	); // cache as long as you can.
 	wp_enqueue_style(
 		'forminator-source',
-		'https://fonts.googleapis.com/css?family=Source+Code+Pro',
+		'https://fonts.bunny.net/css?family=Source+Code+Pro',
 		array(),
 		$version
-	); // cache as long as you can
+	); // cache as long as you can.
 }
 
 /**
@@ -149,7 +151,7 @@ function forminator_admin_enqueue_fonts() {
  * @since 1.1 Remove forminator-admin css after migrate to shared-ui
  */
 function forminator_admin_enqueue_styles() {
-	wp_enqueue_style( 'shared-ui', forminator_plugin_url() . 'assets/css/shared-ui.min.css', array(), FORMINATOR_VERSION, false );
+	wp_enqueue_style( 'shared-ui', forminator_plugin_url() . 'build/css/shared-ui.min.css', array(), FORMINATOR_VERSION, false );
 }
 
 /**
@@ -159,7 +161,7 @@ function forminator_admin_enqueue_styles() {
  * @since 1.0
  */
 function forminator_admin_jquery_ui() {
-	wp_enqueue_script( 'jquery-ui-forminator', forminator_plugin_url() . 'assets/js/library/jquery-ui.min.js', array( 'jquery' ), '1.12.1', false );
+	wp_enqueue_script( 'jquery-ui-core' );
 }
 
 /**
@@ -192,7 +194,13 @@ function forminator_sui_scripts() {
 	$sanitize_version = str_replace( '.', '-', FORMINATOR_SUI_VERSION );
 	$sui_body_class   = "sui-$sanitize_version";
 
-	wp_enqueue_script( 'shared-ui', forminator_plugin_url() . 'assets/js/shared-ui.min.js', array( 'jquery' ), $sui_body_class, true );
+	wp_enqueue_script(
+		'shared-ui',
+		forminator_plugin_url() . 'build/js/shared-ui.min.js',
+		array( 'jquery', 'clipboard' ),
+		$sui_body_class,
+		true
+	);
 
 }
 
@@ -204,7 +212,7 @@ function forminator_sui_scripts() {
  */
 function forminator_common_admin_enqueue_scripts( $is_new_page = false ) {
 	// Load jquery ui.
-	forminator_admin_jquery_ui();
+	forminator_admin_jquery_ui_init();
 
 	// Load shared-ui scripts.
 	forminator_sui_scripts();
@@ -233,8 +241,7 @@ function forminator_common_admin_enqueue_scripts( $is_new_page = false ) {
 		wp_enqueue_media();
 	}
 
-	wp_enqueue_script( 'forminator-admin-layout', forminator_plugin_url() . 'build/admin/layout.js', array( 'jquery' ), FORMINATOR_VERSION, false );
-
+	wp_enqueue_script( 'forminator-admin-layout', forminator_plugin_url() . 'requirejs/admin/layout.js', array( 'jquery' ), FORMINATOR_VERSION, false );
 
 	$forminator_data = new Forminator_Admin_Data();
 	$forminator_l10n = new Forminator_Admin_L10n();
@@ -261,14 +268,18 @@ function forminator_common_admin_enqueue_scripts( $is_new_page = false ) {
 function forminator_enqueue_color_picker_alpha() {
 	wp_enqueue_script( 'wp-color-picker-alpha', forminator_plugin_url() . 'assets/js/library/wp-color-picker-alpha.min.js', array( 'wp-color-picker' ), FORMINATOR_VERSION, true );
 
-	wp_localize_script( 'wp-color-picker-alpha', 'wpColorPickerL10n', array(
-		'clear'            => __( 'Clear', 'forminator' ),
-		'clearAriaLabel'   => __( 'Clear color', 'forminator' ),
-		'defaultString'    => __( 'Default', 'forminator' ),
-		'defaultAriaLabel' => __( 'Select default color', 'forminator' ),
-		'pick'             => __( 'Select Color', 'forminator' ),
-		'defaultLabel'     => __( 'Color value', 'forminator' ),
-	) );
+	wp_localize_script(
+		'wp-color-picker-alpha',
+		'wpColorPickerL10n',
+		array(
+			'clear'            => __( 'Clear', 'forminator' ),
+			'clearAriaLabel'   => __( 'Clear color', 'forminator' ),
+			'defaultString'    => __( 'Default', 'forminator' ),
+			'defaultAriaLabel' => __( 'Select default color', 'forminator' ),
+			'pick'             => __( 'Select Color', 'forminator' ),
+			'defaultLabel'     => __( 'Color value', 'forminator' ),
+		)
+	);
 }
 
 /**
@@ -299,7 +310,7 @@ function forminator_print_front_scripts() {
 
 	global $wp_locale;
 
-	// LOAD: ChartJS
+	// LOAD: ChartJS.
 	wp_enqueue_script(
 		'forminator-chartjs',
 		forminator_plugin_url() . 'assets/js/front/Chart.min.js',
@@ -307,14 +318,14 @@ function forminator_print_front_scripts() {
 		'2.8.0',
 		false
 	);
-	$save_global_color = "if (typeof window !== 'undefined' && typeof window.Color !== 'undefined') {window.notChartColor = window.Color;}";
+	$save_global_color    = "if (typeof window !== 'undefined' && typeof window.Color !== 'undefined') {window.notChartColor = window.Color;}";
 	$restore_global_color = "if (typeof window !== 'undefined' && typeof window.notChartColor !== 'undefined') {window.Color = window.notChartColor;}";
 	wp_add_inline_script( 'forminator-chartjs', $save_global_color, 'before' );
 	wp_add_inline_script( 'forminator-chart', $save_global_color, 'before' );
 	wp_add_inline_script( 'forminator-chartjs', $restore_global_color );
 	wp_add_inline_script( 'forminator-chart', $restore_global_color );
 
-	// LOAD: Datalabels plugin for ChartJS
+	// LOAD: Datalabels plugin for ChartJS.
 	wp_enqueue_script(
 		'chartjs-plugin-datalabels',
 		forminator_plugin_url() . 'assets/js/front/chartjs-plugin-datalabels.min.js',
@@ -341,9 +352,8 @@ function forminator_print_front_scripts() {
 		false
 	);
 
-	// TODO : check if its always needed
+	// TODO : check if its always needed.
 	wp_enqueue_script( 'forminator-jquery-validate', forminator_plugin_url() . 'assets/js/library/jquery.validate.min.js', array( 'jquery' ), FORMINATOR_VERSION, false );
-
 
 	wp_enqueue_script(
 		'forminator-front-scripts',
@@ -355,7 +365,7 @@ function forminator_print_front_scripts() {
 
 	wp_localize_script( 'forminator-front-scripts', 'ForminatorFront', forminator_localize_data() );
 
-	//localize Datepicker js
+	// localize Datepicker js.
 	$datepicker_date_format = str_replace(
 		array(
 			'd',
@@ -573,6 +583,23 @@ function forminator_has_v3_captcha_settings() {
 }
 
 /**
+ * Return if hCaptcha keys are filled
+ *
+ * @since 1.15.5
+ * @return bool
+ */
+function forminator_has_hcaptcha_settings() {
+	$key    = get_option( 'forminator_hcaptcha_key', false );
+	$secret = get_option( 'forminator_hcaptcha_secret', false );
+
+	if ( empty( $key ) || empty( $secret ) ) {
+		return false;
+	}
+
+	return true;
+}
+
+/**
  * Return if Stripe is is_connected
  *
  * @since 1.7
@@ -606,7 +633,8 @@ function forminator_get_form_id_helper() {
 		return 0;
 	}
 
-	return isset( $_GET['form_id'] ) ? intval( $_GET['form_id'] ) : 0;
+	$form_id = (int) filter_input( INPUT_GET, 'form_id', FILTER_VALIDATE_INT );
+	return $form_id;
 }
 
 /**
@@ -619,7 +647,7 @@ function forminator_get_page_ids_helper() {
 	// Sanitize is requied when user uses space inside the translation.
 	$name = sanitize_title( __( 'forminator', 'forminator' ) );
 	if ( FORMINATOR_PRO ) {
-        $title = sanitize_title( __( 'Forminator Pro', 'forminator' ) );
+		$title = sanitize_title( __( 'Forminator Pro', 'forminator' ) );
 		return array(
 			$title . '_page_forminator-quiz-view',
 			$title . '_page_forminator-cform-view',
@@ -627,8 +655,8 @@ function forminator_get_page_ids_helper() {
 			$title . '_page_forminator-entries',
 		);
 	} else {
-		// Free version
-        $title = sanitize_title( __( 'Forminator', 'forminator' ) );
+		// Free version.
+		$title = sanitize_title( __( 'Forminator', 'forminator' ) );
 		return array(
 			$title . '_page_forminator-quiz-view',
 			$title . '_page_forminator-cform-view',
@@ -644,15 +672,15 @@ function forminator_get_page_ids_helper() {
  * @since 1.0
  * @return int|null|string
  */
-function forminator_get_form_type_helper() {
+function forminator_get_form_type_helper( $common_name = false ) {
 	$screen = get_current_screen();
 	$ids    = forminator_get_page_ids_helper();
 	if ( ! in_array( $screen->id, $ids, true ) ) {
 		return 0;
 	}
 
-	$form_type = "";
-	$page      = isset( $_GET['page'] ) ? sanitize_text_field( $_GET['page'] ) : null;
+	$form_type = '';
+	$page      = Forminator_Core::sanitize_text_field( 'page', null );
 
 	if ( is_null( $page ) ) {
 		return null;
@@ -669,20 +697,24 @@ function forminator_get_form_type_helper() {
 			$form_type = 'cform';
 			break;
 		case 'forminator-entries':
-			if ( isset( $_GET['form_type'] ) && $_GET['form_type'] ) { // phpcs:ignore
-				switch ( $_GET['form_type'] ) { // phpcs:ignore
-					case 'forminator_forms':
+			$form_type = Forminator_Core::sanitize_text_field( 'form_type' );
+			switch ( $form_type ) {
+				case 'forminator_forms':
+					if ( ! $common_name ) {
 						$form_type = 'cform';
-						break;
-					case 'forminator_polls':
-						$form_type = 'poll';
-						break;
-					case 'forminator_quizzes':
-						$form_type = 'quiz';
-						break;
-					default:
-						break;
-				}
+					} else {
+						$form_type = 'form';
+					}
+
+					break;
+				case 'forminator_polls':
+					$form_type = 'poll';
+					break;
+				case 'forminator_quizzes':
+					$form_type = 'quiz';
+					break;
+				default:
+					break;
 			}
 			break;
 		default:
@@ -764,7 +796,7 @@ function forminator_get_export_logs( $form_id ) {
 	$row  = isset( $data[ $form_id ] ) ? $data[ $form_id ] : array();
 
 	foreach ( $row as &$item ) {
-		$item['time'] = date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $item['time'] );// phpcs:ignore
+		$item['time'] = date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $item['time'] );
 	}
 
 	return $row;
@@ -778,9 +810,10 @@ function forminator_get_export_logs( $form_id ) {
  * @return mixed
  */
 function forminator_get_current_url() {
-	global $wp;
+	$url     = wp_get_referer();
+	$post_id = url_to_postid( $url );
 
-	return add_query_arg( esc_attr( $_SERVER['QUERY_STRING'] ), '', trailingslashit( home_url( $wp->request ) ) );
+	return esc_url( get_permalink( $post_id ) );
 }
 
 /**
@@ -799,25 +832,28 @@ function forminator_is_page_builder_preview() {
 	$decision = false;
 	global $wp;
 
-	//Check Pro theme by Themeco https://theme.co/
+	// Check Pro theme by Themeco https://theme.co/.
 	if ( defined( 'X_TEMPLATE_PATH' ) && $wp->request === 'cornerstone-endpoint' ) {
 		$decision = true;
 		return $decision;
 	}
 
-	// Check DIVI theme page builder
+	// Check DIVI theme page builder.
 	// Note : following lines of codes are perfect to detect DIVI builder.
 	// But DIVI builder is not showing Forminator forms in preview mood.
 	// So commenting out these code for now.
 	/*
-	if( defined( 'ET_CORE_VERSION' ) && isset( $_REQUEST['et_pb_preview'] ) && $_REQUEST['et_pb_preview'] ) {
+	$et_pb_preview = Forminator_Core::sanitize_text_field( 'et_pb_preview' );
+	if( defined( 'ET_CORE_VERSION' ) && $et_pb_preview ) {
 		$decision = true;
 		return $decision;
 	}
 	*/
 
-	//Check Elementor plugin
-	if ( defined( 'ELEMENTOR_VERSION' ) && isset( $_REQUEST['action'] ) && 'elementor_ajax' === $_REQUEST['action']  && isset( $_REQUEST['editor_post_id'] ) && intval( $_REQUEST['editor_post_id'] ) ) {
+	// Check Elementor plugin.
+	$action         = Forminator_Core::sanitize_text_field( 'action' );
+	$editor_post_id = (int) Forminator_Core::sanitize_text_field( 'editor_post_id' );
+	if ( defined( 'ELEMENTOR_VERSION' ) && 'elementor_ajax' === $action && $editor_post_id ) {
 		$decision = true;
 		return $decision;
 	}
@@ -871,7 +907,7 @@ function forminator_maybe_log() {
 	 *
 	 * @since 1.1
 	 *
-	 * @param bool $enabled current enable status
+	 * @param bool $enabled current enable status.
 	 */
 	$enabled = apply_filters( 'forminator_enable_log', $enabled );
 
@@ -906,21 +942,21 @@ function forminator_var_type_cast( $var, $type ) {
 				if ( is_array( $var ) ) {
 					$var = implode( ', ', $var );
 				} else {
-					// juggling
+					// juggling.
 					$var = (string) $var;
 				}
 			}
 			break;
 		case 'num':
 			if ( ! is_numeric( $var ) ) {
-				// juggling
+				// juggling.
 				$var = (int) $var;
 			}
 			$var = $var + 0;
 			break;
 		case 'array':
 			if ( ! is_array( $var ) ) {
-				// juggling
+				// juggling.
 				$var = (array) $var;
 			}
 			break;
@@ -940,26 +976,41 @@ function forminator_var_type_cast( $var, $type ) {
  *
  * @return array
  */
-function forminator_get_poll_chart_colors( $poll_id = null ) {
+function forminator_get_poll_chart_colors( $poll_id = null, $accessibility_enabled = false ) {
 
-	$chart_colors = array(
-		'rgba(54, 162, 235, 0.2)', // Blue
-		'rgba(255, 99, 132, 0.2)', // Red
-		'rgba(255, 206, 86, 0.2)', // Yellow
-		'rgba(75, 192, 192, 0.2)', // Green
-		'rgba(255, 159, 64, 0.2)', // Orange
-		'rgba(153, 102, 255, 0.2)', // Purple
-		'rgba(102, 137, 161, 0.2)', // Blue Alt
-		'rgba(234, 86, 118, 0.2)', // Red Alt
-		'rgba(216, 220, 106, 0.2)', // Yellow Alt
-		'rgba(107, 193, 146, 0.2)', // Green Alt
-		'rgba(235, 130, 88, 0.2)', // Orange Alt
-		'rgba(153, 93, 129, 0.2)', // Purple Alt
-		'rgba(0, 0, 0, 0.2)', // Black
-		'rgba(136, 136, 136, 0.2)', // Black Alt
-	);
-
-	$chart_colors = apply_filters_deprecated( 'forminator_poll_chart_color', array( $chart_colors ), '1.5.3', 'forminator_poll_chart_colors' );
+	$chart_colors = $accessibility_enabled ?
+		array(
+			'rgba(137, 137, 137, 0.2)', // Monochrome Blue
+			'rgba(149, 149, 149, 0.2)', // Monochrome Red
+			'rgba(207 ,207 , 207, 0.2)', // Monochrome Yellow.
+			'rgba(156, 156, 156, 0.2)', // Monochrome Green.
+			'rgba(177 ,177 , 177, 0.2)', // Monochrome Orange.
+			'rgba(134 ,134 , 134, 0.2)', // Monochrome Purple.
+			'rgba(129 ,129 , 129, 0.2)', // Monochrome Blue Alt.
+			'rgba(133 ,133 , 133, 0.2)', // Monochrome Red Alt.
+			'rgba(206 ,206 , 206, 0.2)', // Monochrome Yellow Alt.
+			'rgba(162 ,162 , 162, 0.2)', // Monochrome Green Alt.
+			'rgba(156 ,156 , 156, 0.2)', // Monochrome Orange Alt.
+			'rgba(114 ,114 , 114, 0.2)', // Monochrome Purple Alt.
+			'rgba(0, 0, 0, 0.2)', // Monochrome Black.
+			'rgba(136, 136, 136, 0.2)', // Monochrome Black Alt.
+		) :
+		array(
+			'rgba(54, 162, 235, 0.2)', // Blue.
+			'rgba(255, 99, 132, 0.2)', // Red.
+			'rgba(255, 206, 86, 0.2)', // Yellow.
+			'rgba(75, 192, 192, 0.2)', // Green.
+			'rgba(255, 159, 64, 0.2)', // Orange.
+			'rgba(153, 102, 255, 0.2)', // Purple.
+			'rgba(102, 137, 161, 0.2)', // Blue Alt.
+			'rgba(234, 86, 118, 0.2)', // Red Alt.
+			'rgba(216, 220, 106, 0.2)', // Yellow Alt.
+			'rgba(107, 193, 146, 0.2)', // Green Alt.
+			'rgba(235, 130, 88, 0.2)', // Orange Alt.
+			'rgba(153, 93, 129, 0.2)', // Purple Alt.
+			'rgba(0, 0, 0, 0.2)', // Black.
+			'rgba(136, 136, 136, 0.2)', // Black Alt.
+		);
 
 	/**
 	 * Filter chart colors to be used for polls
@@ -975,7 +1026,7 @@ function forminator_get_poll_chart_colors( $poll_id = null ) {
 }
 
 /**
- * Return reCAPTCHA languages
+ * Return CAPTCHA languages
  *
  * @since 1.5.4
  * @return array
@@ -1157,6 +1208,10 @@ function forminator_reset_settings() {
 	delete_option( "forminator_v3_captcha_secret" );
 	delete_option( "forminator_captcha_language" );
 	delete_option( "forminator_captcha_theme" );
+	delete_option( "forminator_captcha_tab_saved" );
+	delete_option( "forminator_hcaptcha_key" );
+	delete_option( "forminator_hcaptcha_secret" );
+	// delete_option( "forminator_hcaptcha_noconflict" );
 	delete_option( "forminator_welcome_dismissed" );
 	delete_option( "forminator_version" );
 	delete_option( "forminator_retain_votes_interval_number" );
@@ -1185,6 +1240,8 @@ function forminator_reset_settings() {
 	delete_option( "forminator_currency" );
 	delete_option( "forminator_exporter_log" );
 	delete_option( "forminator_uninstall_clear_data" );
+	delete_option( "forminator_custom_upload" );
+	delete_option( "forminator_custom_upload_root" );
 	delete_option( "forminator_stripe_configuration" );
 	delete_option( "forminator_paypal_configuration" );
 
@@ -1201,10 +1258,11 @@ function forminator_reset_settings() {
 	/**
 	 * @see forminator_delete_custom_posts()
 	 */
-	//Now we delete the custom posts
+	// Now we delete the custom posts.
 	$entry_table      = Forminator_Database_Tables::get_table_name( Forminator_Database_Tables::FORM_ENTRY );
 	$entry_meta_table = Forminator_Database_Tables::get_table_name( Forminator_Database_Tables::FORM_ENTRY_META );
 	$views_table      = Forminator_Database_Tables::get_table_name( Forminator_Database_Tables::FORM_VIEWS );
+	$reports_table    = Forminator_Database_Tables::get_table_name( Forminator_Database_Tables::FORM_REPORTS );
 	$forms_sql        = "SELECT `ID` FROM {$wpdb->posts} WHERE `post_type` = %s";
 	$form_types       = forminator_form_types();
 	foreach ( $form_types as $type ) {
@@ -1220,6 +1278,7 @@ function forminator_reset_settings() {
 	$wpdb->query( "TRUNCATE TABLE {$entry_table}" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery
 	$wpdb->query( "TRUNCATE TABLE {$entry_meta_table}" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery
 	$wpdb->query( "TRUNCATE TABLE {$views_table}" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery
+	$wpdb->query( "TRUNCATE TABLE {$reports_table}" ); // phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared, WordPress.DB.DirectDatabaseQuery.DirectQuery
 
 	/**
 	 * Fires after Settings reset
@@ -1245,11 +1304,13 @@ function forminator_form_types() {
 }
 
 /**
+ * DON'T USE IT!!! It's only for backward compatibility
  * Get prefix based on module slug.
  *
  * @param string $module_slug Module slug.
  * @param string $form_prefix Optional. Prefix before Custom Form type or `post_type` value.
  * @param bool   $ucfirst Optional. With capital the first letter.
+ * @param bool   $plural Optional. Plural or singular.
  * @return string
  */
 function forminator_get_prefix( $module_slug, $form_prefix = '', $ucfirst = false, $plural = false ) {
@@ -1317,7 +1378,7 @@ function forminator_reset_plugin() {
 	 * @see forminator_clear_module_submissions()
 	 */
 	$max_entry_id_query = "SELECT MAX(`entry_id`) FROM {$wpdb->prefix}frmt_form_entry";
-	$max_entry_id       = $wpdb->get_var( $max_entry_id_query ); // phpcs:ignore
+	$max_entry_id       = $wpdb->get_var( $max_entry_id_query );
 
 	if ( $max_entry_id && is_numeric( $max_entry_id ) && $max_entry_id > 0 ) {
 		for ( $i = 1; $i <= $max_entry_id; $i ++ ) {
@@ -1353,6 +1414,7 @@ function forminator_reset_plugin() {
  */
 
 function forminator_addcslashes( $value, $char = '"\\/' ) {
+	$value = esc_html( $value );
 
 	return addcslashes( $value, $char );
 }
@@ -1371,7 +1433,7 @@ function forminator_addcslashes( $value, $char = '"\\/' ) {
 function forminator_get_link( $link_for, $campaign = '', $adv_path = '' ) {
 	$domain   = 'https://wpmudev.com';
 	$wp_org   = 'https://wordpress.org';
-	$utm_tags = "?utm_source=forminator&utm_medium=plugin&utm_campaign={$campaign}";
+	$utm_tags = "?coupon=FORMINATOR-SUBSCRIPTIONS&checkout=0&utm_source=forminator&utm_medium=plugin&utm_campaign={$campaign}";
 
 	switch ( $link_for ) {
 		case 'docs':
@@ -1403,47 +1465,35 @@ function forminator_get_link( $link_for, $campaign = '', $adv_path = '' ) {
 /**
  * Check if the plugin is active network wide.
  *
- * @since 1.13
+ * @since 1.13 forminator_membership_status
+ * @since 1.18.2 Change how membership is detected
  *
  * @return bool
  */
-function forminator_membership_status() {
-	static $status = null;
-
-	// Get the status.
-	if ( is_null( $status ) ) {
-		// Dashboard is active.
-		if ( class_exists( 'WPMUDEV_Dashboard' ) && ! empty( WPMUDEV_Dashboard::$api )
-				&& method_exists( WPMUDEV_Dashboard::$api, 'get_membership_type' )
-				&& method_exists( WPMUDEV_Dashboard::$api, 'get_membership_projects' )
-				&& method_exists( WPMUDEV_Dashboard::$api, 'has_key' )
-				) {
-			// Get membership type.
-			$status = WPMUDEV_Dashboard::$api->get_membership_type();
-			// Get available projects.
-			$projects = WPMUDEV_Dashboard::$api->get_membership_projects();
-
-			// Plan includes Forminator.
-			if ( ( 'unit' === $status && ! in_array( 2097296, $projects, true ) ) || ( 'single' === $status && 2097296 !== $projects ) ) {
-				$status = 'upgrade';
-			} elseif ( 'free' === $status && WPMUDEV_Dashboard::$api->has_key() ) {
-				// Check if API key is available but status is free, then it's expired.
-				$status = 'expired';
-			}
-		} else {
-			$status = 'free';
-		}
+function forminator_can_install_pro() {
+	// Dashboard is active.
+	if ( class_exists( 'WPMUDEV_Dashboard' ) && method_exists( WPMUDEV_Dashboard::$upgrader, 'user_can_install' ) ) {
+		$has_access = WPMUDEV_Dashboard::$upgrader->user_can_install( 2097296, true );
+	} else {
+		$has_access = false;
 	}
 
 	/**
 	 * Filter to modify WPMUDEV membership status.
 	 *
 	 * @since 1.13
+	 * @since 1.18.2 Deprecated forminator_wpmudev_membership_status filter
 	 *
 	 * @param string $status Status.
-	 *
 	 */
-	return apply_filters( 'forminator_wpmudev_membership_status', $status );
+	$has_access = apply_filters_deprecated(
+		'forminator_wpmudev_membership_status',
+		array( $has_access ),
+		'1.18.2',
+		'forminator_wpmudev_can_install_pro'
+	);
+
+	return apply_filters( 'forminator_wpmudev_can_install_pro', $has_access );
 }
 
 /**
@@ -1466,4 +1516,73 @@ function forminator_is_networkwide() {
 	}
 
 	return $active;
+}
+/**
+ * Check if user is a WPMU DEV admin.
+ *
+ * @since 3.1.4
+ *
+ * @return bool
+ */
+function is_wpmu_dev_admin() {
+	if ( class_exists( 'WPMUDEV_Dashboard' ) ) {
+		if ( method_exists( 'WPMUDEV_Dashboard_Site', 'allowed_user' ) ) {
+			$user_id = get_current_user_id();
+			return WPMUDEV_Dashboard::$site->allowed_user( $user_id );
+		}
+	}
+
+	return false;
+}
+
+/**
+ * Check membership status
+ *
+ * Possible return values:
+ * 'free'    - Free hub membership.
+ * 'single'  - Single membership (i.e. only 1 project is licensed)
+ * 'unit'    - One or more projects licensed
+ * 'full'    - Full membership, no restrictions.
+ * 'paused'  - Membership access is paused.
+ * 'expired' - Expired membership.
+ * ''        - (empty string) If user is not logged in or with an unknown type.
+ *
+ * @since 1.24.1
+ *
+ * @return mixed
+ */
+function forminator_get_wpmudev_membership() {
+	if ( class_exists( 'WPMUDEV_Dashboard' ) ) {
+		if ( method_exists( 'WPMUDEV_Dashboard_Api', 'get_membership_status' ) ) {
+			return WPMUDEV_Dashboard::$api->get_membership_status();
+		}
+	}
+
+	return '';
+}
+
+/**
+ * Check if site is connected
+ *
+ * @since 1.24.1
+ *
+ * @return bool
+ */
+function forminator_is_site_connected_to_hub() {
+	switch ( forminator_get_wpmudev_membership() ) {
+		case 'free':
+		case 'single':
+		case 'unit':
+		case 'full':
+		case 'paused':
+		case 'expired':
+			$status = true;
+			break;
+
+		default:
+			$status = false;
+			break;
+	}
+
+	return $status;
 }

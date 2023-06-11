@@ -29,7 +29,7 @@ class Forminator_Autofill_Loader {
 
 
 	/**
-	 * In case we want disable addons that have bad pattern or behaviour or still in pipeline
+	 * In case we want disable addons that have bad pattern or behavior or still in pipeline
 	 *
 	 * @since   1.0.5
 	 * @example {['BANNED_PROVIDER_SLUG','BANNED_PROVIDER_SLUG_2']}
@@ -104,8 +104,8 @@ class Forminator_Autofill_Loader {
 		}
 
 		if ( in_array( $autofill_instance->get_slug(), $this->_banned_providers, true ) ) {
-			// debug purpose only
-//			error_log( 'Autofill Provider for ' . $autofill_instance->get_slug() . ' is banned' );
+			// debug purpose only.
+			// error_log( 'Autofill Provider for ' . $autofill_instance->get_slug() . ' is banned' );.
 			return false;
 		}
 
@@ -124,7 +124,6 @@ class Forminator_Autofill_Loader {
 	 * 'simple'.'simple_text' => 'Simple Text',
 	 * 'PROVIDER_SLUG'.'ATTRIBUTE_SLUG' => 'ATTRIBUTE NICE NAME',
 	 * }
-	 *
 	 */
 	private function try_build_autofill_providers_names() {
 		$this->autofill_providers_names = array();
@@ -137,7 +136,7 @@ class Forminator_Autofill_Loader {
 			foreach ( $attributes_map as $attribute => $mapper ) {
 				$name = $autofill_instance->get_slug() . '.' . $attribute;
 
-				//Dedupe
+				// Dedupe.
 				if ( isset( $this->autofill_providers_names[ $name ] ) ) {
 					continue;
 				}
@@ -184,7 +183,6 @@ class Forminator_Autofill_Loader {
 		$this->get_autofill_providers_names();
 
 		$grouped_autofill_providers = array();
-
 
 		foreach ( $slug_attributes as $slug_attribute ) {
 			$slug_attribute_parts = explode( '.', $slug_attribute );
@@ -261,8 +259,8 @@ class Forminator_Autofill_Loader {
 			return null;
 		}
 		if ( in_array( $provider->get_slug(), $this->_banned_providers, true ) ) {
-			// debug purpose only
-//			error_log( 'Autofill Provider for ' . $autofill_instance->get_slug() . ' is banned' );
+			// debug purpose only.
+			// error_log( 'Autofill Provider for ' . $autofill_instance->get_slug() . ' is banned' );.
 
 			return null;
 		}

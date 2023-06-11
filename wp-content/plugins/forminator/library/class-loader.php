@@ -12,7 +12,6 @@ class Forminator_Loader {
 
 	/**
 	 * Forminator_Loader constructor.
-	 *
 	 */
 	public function __construct() {}
 
@@ -32,22 +31,22 @@ class Forminator_Loader {
 		foreach ( $files as $file ) {
 			$path = forminator_plugin_dir() . $dir . '/' . $file;
 
-			if( $this->is_php( $file ) && is_file( $path ) ) {
+			if ( $this->is_php( $file ) && is_file( $path ) ) {
 
-				// check requirement
-				if ( ! empty ( $requirements ) ) {
+				// check requirement.
+				if ( ! empty( $requirements ) ) {
 					if ( in_array( $file, array_keys( $requirements ), true ) ) {
 						if ( ! $this->is_requirement_fulfilled( $requirements[ $file ] ) ) {
 							continue;
 						}
 					}
 				}
-				// Get class name
+				// Get class name.
 				$class_name = str_replace( '.php', '', $file );
-				// Include file
+				// Include file.
 				include_once $path;
 
-				// Init class
+				// Init class.
 				$object = $this->init( $class_name );
 
 				$this->files[] = $object;
@@ -117,7 +116,7 @@ class Forminator_Loader {
 	 * @return bool
 	 */
 	private function is_requirement_fulfilled( $requirement ) {
-		// check php version
+		// check php version.
 		if ( isset( $requirement['php'] ) ) {
 			$version = $requirement['php'];
 			if ( version_compare( PHP_VERSION, $version, 'lt' ) ) {

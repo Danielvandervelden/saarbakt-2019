@@ -37,6 +37,7 @@
 		this._defaults             = defaults;
 		this._name                 = pluginName;
 		this.paypalData            = null;
+		this.paypalButton          = null;
 		this.init();
 	}
 
@@ -50,6 +51,7 @@
 			this.paypalData = this.settings.paymentEl;
 
 			this.render_paypal_button( this.element );
+			this.replaceScriptCurrency();
 		},
 
 		is_data_valid: function() {
@@ -97,7 +99,7 @@
 				style_data.tagline =  paypalData.tagline;
 			}
 
-			paypal.Buttons({
+			this.paypalButton = paypal.Buttons({
 				onInit: function(data, actions) {
 					actions.disable();
 
@@ -106,7 +108,7 @@
 					}
 
 					// Listen for form field changes
-					$form.find('input, select, textarea').change( function() {
+					$form.find('input, select, textarea, .forminator-field-signature').on( 'change', function() {
 						if ( self.is_data_valid() && self.is_form_valid() ) {
 							actions.enable();
 						} else {
@@ -117,6 +119,13 @@
                     // Check if form has error to disable actions
                     $form.on( 'validation:error', function() {
                         actions.disable();
+                    });
+
+                    // Check if uploads has no error to enable actions
+                    $form.on( 'forminator:uploads:valid', function() {
+						if ( self.is_data_valid() && self.is_form_valid() ) {
+                        	actions.enable();
+						}
                     });
 
 					// Check if the form is valid on init
@@ -140,7 +149,13 @@
 						$target_message.removeClass('forminator-accessible').addClass('forminator-error').html('').removeAttr( 'aria-hidden' );
 						$target_message.html('<label class="forminator-label--error"><span>' + generalMessage.form_has_error + '</span></label>');
 						self.focus_to_element($target_message);
-                    }
+                    } else{
+						$form.trigger( 'forminator:preSubmit:paypal', [ $target_message ] );
+						if ( $target_message.html() ) {
+							self.focus_to_element($target_message);
+							return false;
+						}
+					}
 
 					if ( paypalData.amount_type === 'variable' && paypalData.variable !== '' ) {
 						paypalData.amount = self.get_field_calculation( paypalData.variable );
@@ -150,33 +165,26 @@
 					$form.addClass('forminator-partial-disabled');
 
 					var nonce = $form.find('input[name="forminator_nonce"]').val(),
-						form_id = self.getPayPalData('form_id')
+						form_id = self.getPayPalData('form_id'),
+						request_data = self.paypal_request_data()
 					;
-
 					return fetch( ForminatorFront.ajaxUrl + '?action=forminator_pp_create_order', {
-			        method: 'POST',
-					  mode: "same-origin",
-    	  			  credentials: "same-origin",
-					  headers: {
-						  'content-type': 'application/json'
-					  },
-					  body: JSON.stringify({
-						  nonce: nonce,
-						  form_id: form_id,
-						  mode: self.getPayPalData('mode'),
-						  form_data: {
-								purchase_units: [{
-									amount: {
-										currency_code: self.getPayPalData('currency'),
-										value: paypalData.amount
-									}
-								}]
-						  },
-						  form_fields: $form.serialize()
-					  })
-			      }).then(function(res) {
-			        return res.json();
-				  }).then(function(response) {
+						method: 'POST',
+						mode: "same-origin",
+						credentials: "same-origin",
+						headers: {
+							'content-type': 'application/json'
+						},
+						body: JSON.stringify({
+							nonce: nonce,
+							form_id: form_id,
+							mode: self.getPayPalData('mode'),
+							form_data: request_data,
+							form_fields: $form.serialize()
+						})
+					}).then(function(res) {
+						return res.json();
+					}).then(function(response) {
 						if ( response.success !== true ) {
 							error_msg = response.data;
 
@@ -186,8 +194,8 @@
 						var orderId = response.data.order_id;
 						$form.find('.forminator-paypal-input').val( orderId );
 
-			         return orderId;
-			      });
+						return orderId;
+					});
 				},
 				onApprove: function(data, actions) {
 					if( typeof self.settings.has_loader !== "undefined" && self.settings.has_loader ) {
@@ -204,7 +212,7 @@
 						self.focus_to_element($target_message);
 					}
 
-					$form.trigger('submit');
+					$form.trigger('submit.frontSubmit');
 				},
 
 				onCancel: function (data, actions) {
@@ -229,18 +237,19 @@
 					$target_message.html('<label class="forminator-label--error"><span>' + error_msg + '</span></label>');
 					self.focus_to_element($target_message);
 				},
-			}).render( $form.find( '.forminator-button-paypal' )[0] );
+			});
+			this.paypalButton.render( $form.find( '.forminator-button-paypal' )[0] );
 		},
 
 		configurePayPal: function () {
 			var self   = this,
 				paypalConfig = {
-				form_id: this.getPayPalData('form_id'),
-				sandbox_id: this.getPayPalData('sandbox_id'),
-				currency: this.getPayPalData('currency'),
-				live_id: this.getPayPalData('live_id'),
-				amount: 0
-			};
+					form_id: this.getPayPalData('form_id'),
+					sandbox_id: this.getPayPalData('sandbox_id'),
+					currency: this.getPayPalData('currency'),
+					live_id: this.getPayPalData('live_id'),
+					amount: 0
+				};
 
 			paypalConfig.color = this.getPayPalData('color') ? this.getPayPalData('color') : 'gold';
 			paypalConfig.shape = this.getPayPalData('shape') ? this.getPayPalData('shape') : 'rect';
@@ -254,6 +263,7 @@
 			paypalConfig.amount_type = this.getPayPalData('amount_type') ? this.getPayPalData('amount_type') : 'fixed';
 			paypalConfig.variable = this.getPayPalData('variable') ? this.getPayPalData('variable') : '';
 			paypalConfig.height = this.getPayPalData('height') ? this.getPayPalData('height') : 55;
+			paypalConfig.shipping_address = this.getPayPalData('shipping_address') ? this.getPayPalData('shipping_address') : 55;
 
 			var	amountType = this.getPayPalData('amount_type');
 			if (amountType === 'fixed') {
@@ -275,22 +285,29 @@
 		},
 
 		// taken from forminatorFrontCondition
-		get_form_field: function (element_id) {
+		get_form_field: function ( element_id ) {
 			//find element by suffix -field on id input (default behavior)
 			var $element = this.$el.find('#' + element_id + '-field');
-			if ($element.length === 0) {
+			if ( $element.length === 0 ) {
 				//find element by its on name (for radio on singlevalue)
 				$element = this.$el.find('input[name=' + element_id + ']');
-				if ($element.length === 0) {
+				if ( $element.length === 0 ) {
 					// for text area that have uniqid, so we check its name instead
 					$element = this.$el.find('textarea[name=' + element_id + ']');
-					if ($element.length === 0) {
+					if ( $element.length === 0 ) {
 						//find element by its on name[] (for checkbox on multivalue)
 						$element = this.$el.find('input[name="' + element_id + '[]"]');
-						if ($element.length === 0) {
-							//find element by direct id (for name field mostly)
-							//will work for all field with element_id-[somestring]
-							$element = this.$el.find('#' + element_id);
+						if ( $element.length === 0 ) {
+							//find element by select name
+							$element = this.$el.find('select[name="' + element_id + '"]');
+							if ($element.length === 0) {
+								//find element by direct id (for name field mostly)
+								//will work for all field with element_id-[somestring]
+								$element = this.$el.find('#' + element_id);
+								if ( $element.length === 0 ) {
+									$element = this.$el.find('select[name=' + element_id + ']');
+								}
+							}
 						}
 					}
 				}
@@ -332,16 +349,163 @@
 					}
 				}
 			} else {
-				value = Number($element.val());
+				if ( $element.inputmask ) {
+					var unmaskVal =	$element.inputmask('unmaskedvalue');
+					value = unmaskVal.replace(/,/g, '.');
+				} else {
+					value = Number( $element.val() );
+				}
 			}
 
 			return isNaN(value) ? 0 : value;
 		},
 
-		field_is_radio: function ($element) {
+		focus_to_element: function ($element) {
+			// force show in case its hidden of fadeOut
+			$element.show();
+			$('html,body').animate({scrollTop: ($element.offset().top - ($(window).height() - $element.outerHeight(true)) / 2)}, 500, function () {
+				if (!$element.attr("tabindex")) {
+					$element.attr("tabindex", -1);
+				}
+				$element.focus();
+			});
+		},
+
+		paypal_request_data: function () {
+			var paypalData = this.configurePayPal(),
+				shipping_address = this.getPayPalData('shipping_address'),
+				billing_details = this.getPayPalData('billing-details'),
+				billingArr = this.getBillingData(),
+				paypal_data = {};
+			paypal_data.purchase_units = [{
+				amount: {
+					currency_code: this.getPayPalData('currency'),
+					value: paypalData.amount
+				}
+			}];
+			if ( 'disable' === shipping_address ) {
+				paypal_data.application_context = {
+					shipping_preference: "NO_SHIPPING",
+				};
+			}
+			if ( billing_details ) {
+				paypal_data.payer = billingArr;
+			}
+
+			return paypal_data;
+		},
+
+		getBillingData: function () {
+			// Get billing fields
+			var billingName = this.getPayPalData( 'billing-name' ),
+				billingEmail = this.getPayPalData( 'billing-email' ),
+				billingAddress = this.getPayPalData( 'billing-address' );
+
+			// Create billing object
+			var billingObject = {}
+
+			if ( billingName ) {
+				billingObject.name = {};
+				var nameField = this.get_field_value( billingName );
+
+				// Check if Name field is multiple
+				if ( ! nameField ) {
+					var pfix  = this.get_field_value( billingName + '-prefix' ) || '',
+						fName = this.get_field_value( billingName + '-first-name' ) || '',
+						mname = this.get_field_value( billingName + '-middle-name' ) || '',
+						lName = this.get_field_value( billingName + '-last-name' ) || '';
+
+					nameField = pfix ? pfix + ' ' : '';
+					nameField += fName;
+					nameField += mname ? ' ' + mname : '';
+				}
+
+				// Check if Name field is empty in the end, if not assign to the object
+				if ( nameField ) {
+					billingObject.name.given_name = nameField;
+					billingObject.name.surname = lName;
+				}
+			}
+
+			// Map email field
+			if( billingEmail ) {
+				var billingEmailValue = this.get_field_value( billingEmail ) || '';
+				if ( billingEmailValue ) {
+					billingObject.email_address = billingEmailValue;
+				}
+			}
+			if ( billingAddress ) {
+				billingObject.address = {};
+				//  Map address line 1 field
+				var addressLine1 = this.get_field_value(billingAddress + '-street_address') || '';
+				if ( addressLine1 ) {
+					billingObject.address.address_line_1 = addressLine1;
+				}
+
+				//Map address line 2 field
+				var addressLine2 = this.get_field_value(billingAddress + '-address_line') || '';
+				if ( addressLine2 ) {
+					billingObject.address.address_line_2 = addressLine2;
+				}
+
+				// Map address city field
+				var addressCity = this.get_field_value(billingAddress + '-city') || '';
+				if ( addressCity ) {
+					billingObject.address.admin_area_2 = addressCity;
+				}
+
+				// Map address state field
+				var addressState = this.get_field_value(billingAddress + '-state') || '';
+				if ( addressState ) {
+					billingObject.address.admin_area_1 = addressState;
+				}
+
+				// Map address country field
+				var countryField = this.get_form_field(billingAddress + '-country') || '';
+				if ( countryField ) {
+					billingObject.address.country_code = countryField.find(':selected').data('country-code');
+				}
+
+				// Map address country field
+				var addressZip = this.get_field_value(billingAddress + '-zip') || '';
+				if ( addressZip ) {
+					billingObject.address.postal_code = addressZip;
+				}
+			}
+
+			return billingObject;
+		},
+
+		get_field_value: function ( element_id ) {
+			var $element = this.get_form_field( element_id );
+			var value    = '';
+			var checked  = null;
+
+			if ( this.field_is_radio( $element ) ) {
+				checked = $element.filter(":checked");
+				if ( checked.length ) {
+					value = checked.val();
+				}
+			} else if ( this.field_is_checkbox( $element ) ) {
+				$element.each(function () {
+					if ( $( this ).is(':checked') ) {
+						value = $( this ).val();
+					}
+				});
+
+			} else if ( this.field_is_select( $element ) ) {
+				value = $element.val();
+			} else {
+				value = $element.val()
+			}
+
+			return value;
+		},
+
+		field_is_radio: function ( $element ) {
 			var is_radio = false;
 			$element.each(function () {
-				if ($(this).attr('type') === 'radio') {
+				if ( $(this).attr('type') === 'radio' ) {
 					is_radio = true;
 					//break
 					return false;
@@ -351,10 +515,10 @@
 			return is_radio;
 		},
 
-		field_is_checkbox: function ($element) {
+		field_is_checkbox: function ( $element ) {
 			var is_checkbox = false;
 			$element.each(function () {
-				if ($(this).attr('type') === 'checkbox') {
+				if ( $( this ).attr('type') === 'checkbox' ) {
 					is_checkbox = true;
 					//break
 					return false;
@@ -364,33 +528,31 @@
 			return is_checkbox;
 		},
 
-		field_is_select: function ($element) {
+		field_is_select: function ( $element ) {
 			return $element.is('select');
 		},
 
-		focus_to_element: function ($element, fadeout) {
-			fadeout = fadeout || false;
+		/*
+		 * Replaces the currency in the paypal script url params
+		 * so it will match the currency of another form with paypal checkout
+		 */
+		replaceScriptCurrency: function () {
+			var self = this,
+				formCurrency = this.paypalData.currency;
 
-			if( fadeout ) {
-				fadeout = this.settings.fadeout;
-			}
+			self.$el.on( 'click', function( e ) {
+				var paypalScript = $( "script[src^='https://www.paypal.com/sdk/js']" ),
+					paypalScriptSrc = paypalScript.attr( 'src' ),
+					scriptCurrency = /currency=([^&]+)/.exec( paypalScriptSrc )[1];
 
-			var fadeout_time = this.settings.fadeout_time;
-
-			// force show in case its hidden of fadeOut
-			$element.show();
-			$('html,body').animate({scrollTop: ($element.offset().top - ($(window).height() - $element.outerHeight(true)) / 2)}, 500, function () {
-				if (!$element.attr("tabindex")) {
-					$element.attr("tabindex", -1);
-				}
-				$element.focus();
-				if (fadeout) {
-					$element.show().delay( fadeout_time ).fadeOut('slow');
+				if ( formCurrency === scriptCurrency ) {
+					return;
 				}
 
+				paypalScript.attr( 'src', paypalScriptSrc.replace( 'currency='+ scriptCurrency, 'currency='+ formCurrency ) );
+				self.paypalButton.updateProps();
 			});
 		},
-
 
 	});
 
@@ -405,3 +567,4 @@
 	};
 
 })(jQuery, window, document);
+

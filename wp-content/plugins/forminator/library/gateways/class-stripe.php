@@ -285,7 +285,7 @@ class Forminator_Gateway_Stripe {
 	 *
 	 * @return WP_Error
 	 */
-	private function get_error( $e ) {
+	public function get_error( $e ) {
 		$code = $e->getCode();
 
 		if ( is_int( $code ) ) {

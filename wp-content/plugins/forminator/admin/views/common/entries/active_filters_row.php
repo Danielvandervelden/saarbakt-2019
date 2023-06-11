@@ -46,6 +46,22 @@
 			</div>
 		<?php endif; ?>
 
+		<?php if ( ! empty( $this->filters['user_status'] ) ) : ?>
+			<div class="sui-active-filter">
+				<?php
+				printf(/* translators: ... */
+					esc_html__( 'User status: %s', 'forminator' ),
+					( 'pending' === $this->filters['user_status'] )
+						? esc_html__( 'Pending Approval', 'forminator' )
+						: esc_html__( 'Approved', 'forminator' )
+				);
+				?>
+				<button class="sui-active-filter-remove" type="submit" name="user_status" value="">
+					<span class="sui-screen-reader-text"><?php esc_html_e( 'Remove this keyword', 'forminator' ); ?></span>
+				</button>
+			</div>
+		<?php endif; ?>
+
 		<?php if ( isset( $this->filters['date_created'][0] ) || isset( $this->filters['date_created'][1] ) ) : ?>
 			<div class="sui-active-filter">
 				<?php
@@ -57,6 +73,35 @@
 				?>
 				<button class="sui-active-filter-remove" type="submit" name="date_range" value="">
 					<span class="sui-screen-reader-text"><?php esc_html_e( 'Remove this keyword', 'forminator' ); ?></span>
+				</button>
+			</div>
+		<?php endif; ?>
+
+		<?php if ( isset( $this->filters['entry_status'] ) ) : ?>
+			<div class="sui-active-filter">
+				<?php
+
+				switch ( $this->filters['entry_status'] ) {
+					case 'completed':
+						$entry_status = 'Completed';
+						break;
+
+					case 'draft':
+						$entry_status = 'Draft';
+						break;
+
+					default:
+						$entry_status = 'All';
+						break;
+				}
+
+				printf(/* translators: ... */
+					esc_html__( 'Entry status: %s', 'forminator' ),
+					$entry_status
+				);
+				?>
+				<button class="sui-active-filter-remove" type="submit" name="entry_status" value="">
+					<span class="sui-screen-reader-text"><?php esc_html_e( 'Remove this filter', 'forminator' ); ?></span>
 				</button>
 			</div>
 		<?php endif; ?>

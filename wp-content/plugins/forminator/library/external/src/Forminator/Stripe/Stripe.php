@@ -90,7 +90,7 @@ class Stripe
     }
 
     /**
-     * @param Util\LoggerInterface $logger the logger to which the library
+     * @param Util\LoggerInterface $logger the logger to which the library.
      *   will produce messages
      */
     public static function setLogger($logger)
@@ -128,7 +128,7 @@ class Stripe
     }
 
     /**
-     * @param string $apiVersion the API version to use for requests
+     * @param string $apiVersion the API version to use for requests.
      */
     public static function setApiVersion($apiVersion)
     {
@@ -185,7 +185,7 @@ class Stripe
     }
 
     /**
-     * @param string $accountId the Stripe account ID to set for connected
+     * @param string $accountId the Stripe account ID to set for connected.
      *   account requests
      */
     public static function setAccountId($accountId)
@@ -202,10 +202,10 @@ class Stripe
     }
 
     /**
-     * @param string $appName The application's name
-     * @param null|string $appVersion The application's version
-     * @param null|string $appUrl The application's URL
-     * @param null|string $appPartnerId The application's partner ID
+     * @param string $appName The application's name.
+     * @param null|string $appVersion The application's version.
+     * @param null|string $appUrl The application's URL.
+     * @param null|string $appPartnerId The application's partner ID.
      */
     public static function setAppInfo($appName, $appVersion = null, $appUrl = null, $appPartnerId = null)
     {
@@ -225,7 +225,7 @@ class Stripe
     }
 
     /**
-     * @param int $maxNetworkRetries Maximum number of request retries
+     * @param int $maxNetworkRetries Maximum number of request retries.
      */
     public static function setMaxNetworkRetries($maxNetworkRetries)
     {

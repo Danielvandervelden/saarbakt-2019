@@ -51,7 +51,7 @@ abstract class Forminator_Admin_Module {
 
 		add_action( 'wp_loaded', array( $this, 'create_module' ) );
 
-		// admin-menu-editor compat
+		// admin-menu-editor compat.
 		add_action( 'admin_menu_editor-menu_replaced', array( $this, 'hide_menu_pages' ) );
 
 		add_filter( 'forminator_data', array( $this, 'add_js_defaults' ) );
@@ -65,7 +65,7 @@ abstract class Forminator_Admin_Module {
 	 * @since 1.0
 	 */
 	public function init() {
-		// Call init instead of __construct in modules
+		// Call init instead of __construct in modules.
 	}
 
 	/**
@@ -128,7 +128,7 @@ abstract class Forminator_Admin_Module {
 	 * @return mixed
 	 */
 	public static function is_edit() {
-		return (bool) filter_input( INPUT_GET, 'id', FILTER_VALIDATE_INT );
+		return filter_input( INPUT_GET, 'id', FILTER_VALIDATE_INT ) || filter_input( INPUT_POST, 'id', FILTER_VALIDATE_INT );
 	}
 
 	/**
@@ -152,9 +152,10 @@ abstract class Forminator_Admin_Module {
 	public function is_admin_wizard() {
 		global $plugin_page;
 
-		// $plugin_page may not be set if we call the function too early, retrieve the page slug from $_GET
-		if ( ( ! isset( $plugin_page ) || empty( $plugin_page ) ) && isset( $_GET[ 'page' ] ) ) {
-			$plugin_page = sanitize_text_field( $_GET[ 'page' ] );
+		// $plugin_page may not be set if we call the function too early, retrieve the page slug from GET.
+		$page = Forminator_Core::sanitize_text_field( 'page' );
+		if ( empty( $plugin_page ) && $page ) {
+			$plugin_page = sanitize_text_field( $page );
 		}
 
 		return $this->page_edit === $plugin_page;
@@ -183,7 +184,7 @@ abstract class Forminator_Admin_Module {
 	 */
 	protected static function validate_settings( $original_settings ) {
 		// Sanitize settings.
-		$settings = forminator_sanitize_field( $original_settings );
+		$settings = forminator_sanitize_array_field( $original_settings );
 
 		// Sanitize custom css.
 		if ( isset( $original_settings['custom_css'] ) ) {
@@ -192,12 +193,12 @@ abstract class Forminator_Admin_Module {
 
 		// Sanitize admin email message.
 		if ( isset( $original_settings['admin-email-editor'] ) ) {
-			$settings['admin-email-editor'] = $original_settings['admin-email-editor'];
+			$settings['admin-email-editor'] = wp_kses_post( $original_settings['admin-email-editor'] );
 		}
 
 		// Sanitize quiz description.
 		if ( isset( $original_settings['quiz_description'] ) ) {
-			$settings['quiz_description'] = $original_settings['quiz_description'];
+			$settings['quiz_description'] = wp_kses_post( $original_settings['quiz_description'] );
 		}
 
 		if ( isset( $original_settings['social-share-message'] ) ) {
@@ -206,7 +207,7 @@ abstract class Forminator_Admin_Module {
 
 		if ( isset( $original_settings['msg_count'] ) ) {
 			// Backup, we allow html here.
-			$settings['msg_count'] = $original_settings['msg_count'];
+			$settings['msg_count'] = wp_kses_post( $original_settings['msg_count'] );
 		}
 
 		$settings = apply_filters( 'forminator_builder_data_settings_before_saving', $settings, $original_settings );

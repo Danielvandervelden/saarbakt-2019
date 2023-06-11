@@ -1,9 +1,9 @@
 <?php
 $is_addons = false;
-$nonce = wp_create_nonce( 'forminator_save_import_custom_form_cf7' );
-$forms = forminator_list_thirdparty_contact_forms('cf7');
+$nonce     = wp_create_nonce( 'forminator_save_import_form_cf7' );
+$forms     = forminator_list_thirdparty_contact_forms( 'cf7' );
 
-// Empty message
+// Empty message.
 $image_empty   = forminator_plugin_url() . 'assets/images/forminator-summary.png';
 $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.png';
 ?>
@@ -12,12 +12,19 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 
 	<form class="forminator-cf7-import-form" method="post">
 
-		<input type="hidden" name="action" value="forminator_save_import_custom_form_cf7_popup" />
+		<input type="hidden" name="action" value="forminator_save_import_form_cf7_popup" />
 		<input type="hidden" name="_ajax_nonce" value="<?php echo esc_attr( $nonce ); ?>" />
 
 		<div class="sui-box-body wpmudev-popup-form">
 
-			<div class="sui-notice sui-notice-error wpmudev-ajax-error-placeholder sui-hidden"><p></p></div>
+			<div
+				role="alert"
+				id="wpmudev-ajax-error-placeholder"
+				class="sui-notice sui-notice-error"
+				aria-live="assertive"
+			>
+				<!-- Nothing should be placed here -->
+			</div>
 
 			<?php // ROW: Forms. ?>
 			<div class="sui-box-settings-row">
@@ -33,11 +40,11 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 						<p class="sui-description" style="margin-bottom: 10px; color: #333; font-weight: bold;"><?php esc_html_e( 'Unsupported form fields and settings', 'forminator' ); ?></p>
 
 						<ol class="fui-dismiss-list">
-							<li><?php printf( esc_html__( "%1\$s1. Quiz field:%2\$s Forminator doesn't have a built-in quiz field, however, you can enable Google's reCAPTCHA v3 and Honeypot protection on your imported forms.", 'forminator' ), '<strong>', '</strong>' ); ?></li>
-							<li><?php printf( esc_html__( "%1\$s2. ConstantContact:%2\$s Forminator doesn't integrate directly with ConstantContact. However, you can use %3\$sZapier integration%4\$s to send your leads to ConstantContact.", 'forminator' ), '<strong>', '</strong>', '<a href="https://wpmudev.com/blog/zapier-wordpress-form-integrations/" target="_blank">', '</a>' ); ?></li>
+							<li><?php printf( esc_html__( "%1\$s1. Quiz field:%2\$s Forminator doesn't have a built-in quiz field, however, you can enable CAPTCHA and Honeypot protection on your imported forms.", 'forminator' ), '<strong>', '</strong>' ); ?></li>
+							<li><?php printf( esc_html__( "%1\$s2. ConstantContact:%2\$s Forminator doesn't integrate directly with ConstantContact. However, you can use %3\$sWebhook integration%4\$s to send your leads to ConstantContact.", 'forminator' ), '<strong>', '</strong>', '<a href="https://wpmudev.com/docs/wpmu-dev-plugins/forminator/#webhook" target="_blank">', '</a>' ); ?></li>
 							<li><?php printf( esc_html__( "%1\$s3. reCAPTCHA v3 integration:%2\$s At this stage, Forminator can't import your existing reCAPTCHA integration. You can set this up manually on your imported forms once they are transferred.", 'forminator' ), '<strong>', '</strong>' ); ?></li>
 							<li><?php printf( esc_html__( "%1\$s4. Additional settings:%2\$s Forminator doesn't support CF7’s additional form settings.", 'forminator' ), '<strong>', '</strong>' ); ?></li>
-							<li><?php printf( esc_html__( "%1\$s5. Custom field IDs:%2\$s Forminator creates a unique ID for each field, and the conditional logic relies on them. However, you can provide a custom CSS class for each field.", 'forminator' ), '<strong>', '</strong>' ); ?></li>
+							<li><?php printf( esc_html__( '%1$s5. Custom field IDs:%2$s Forminator creates a unique ID for each field, and the conditional logic relies on them. However, you can provide a custom CSS class for each field.', 'forminator' ), '<strong>', '</strong>' ); ?></li>
 						</ol>
 
 						<button role="button" class="fui-dismiss-button forminator-dismiss-unsupported">
@@ -57,7 +64,7 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 									name="cf7_forms"
 									value="all"
 									id="cf7_forms_all"
-                                    class="forminator-import-forms"
+									class="forminator-import-forms"
 									checked="checked"
 								/>
 								<?php esc_html_e( 'All', 'forminator' ); ?>
@@ -69,7 +76,7 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 									name="cf7_forms"
 									value="specific"
 									id="cf7_forms_specific"
-                                    class="forminator-import-forms"
+									class="forminator-import-forms"
 									data-tab-menu="cf7_forms"
 								/>
 								<?php esc_html_e( 'Specific Forms', 'forminator' ); ?>
@@ -86,23 +93,19 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 									<label class="sui-label"><?php esc_html_e( 'Choose Forms', 'forminator' ); ?></label>
 
 									<select id="forminator-choose-import-form" class="sui-select" multiple="multiple" name="cf7-form-id[]">
-
 										<?php
 										if ( ! empty( $forms ) ) :
 
 											foreach ( $forms as $key => $value ) {
-
 												echo sprintf(
 													'<option value="%f">%s</option>',
 													absint( $value->ID ),
 													esc_html( $value->post_title )
 												);
-
 											}
 
 										endif;
 										?>
-
 									</select>
 
 								</div>
@@ -126,7 +129,10 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 
 					<p class="sui-description" style="margin-bottom: 20px;"><?php printf( esc_html__( "Choose the Contact Form 7 add-ons you wish to import form data and settings from. %1\$sNote:%2\$s The importer only supports the most widely used add-ons. For less common add-ons, you'll need to manually configure the equivalent functionality in those imported forms.", 'forminator' ), '<strong>', '</strong>' ); ?></p>
 
-					<?php if ( is_plugin_active( 'flamingo/flamingo.php' ) ) : $is_addons = true; ?>
+					<?php
+					if ( is_plugin_active( 'flamingo/flamingo.php' ) ) :
+						$is_addons = true;
+						?>
 
 						<div class="fui-addons-option">
 
@@ -148,10 +154,12 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 
 						</div>
 
-					<?php
+						<?php
 					endif;
 
-					if ( is_plugin_active( 'contact-form-7-honeypot/honeypot.php' ) ) : $is_addons = true; ?>
+					if ( is_plugin_active( 'contact-form-7-honeypot/honeypot.php' ) ) :
+						$is_addons = true;
+						?>
 
 						<div class="fui-addons-option">
 
@@ -173,9 +181,12 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 
 						</div>
 
-					<?php endif;
+						<?php
+					endif;
 
-					if ( is_plugin_active( 'contact-form-cfdb7/contact-form-cfdb-7.php' ) ) : $is_addons = true; ?>
+					if ( is_plugin_active( 'contact-form-cfdb7/contact-form-cfdb-7.php' ) ) :
+						$is_addons = true;
+						?>
 
 						<div class="fui-addons-option">
 
@@ -197,9 +208,12 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 
 						</div>
 
-					<?php endif;
+						<?php
+					endif;
 
-					if ( is_plugin_active( 'wpcf7-redirect/wpcf7-redirect.php' ) ) : $is_addons = true; ?>
+					if ( is_plugin_active( 'wpcf7-redirect/wpcf7-redirect.php' ) ) :
+						$is_addons = true;
+						?>
 
 						<div class="fui-addons-option">
 
@@ -221,9 +235,12 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 
 						</div>
 
-					<?php endif;
+						<?php
+					endif;
 
-					if ( is_plugin_active( 'cf7-conditional-fields/contact-form-7-conditional-fields.php' ) ) : $is_addons = true; ?>
+					if ( is_plugin_active( 'cf7-conditional-fields/contact-form-7-conditional-fields.php' ) ) :
+						$is_addons = true;
+						?>
 
 						<div class="fui-addons-option">
 
@@ -245,9 +262,12 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 
 						</div>
 
-					<?php endif;
+						<?php
+					endif;
 
-					if ( is_plugin_active( 'contact-form-submissions/contact-form-submissions.php' ) ) : $is_addons = true; ?>
+					if ( is_plugin_active( 'contact-form-submissions/contact-form-submissions.php' ) ) :
+						$is_addons = true;
+						?>
 
 						<div class="fui-addons-option">
 
@@ -269,9 +289,12 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 
 						</div>
 
-					<?php endif;
+						<?php
+					endif;
 
-					if ( is_plugin_active( 'wpcf7-recaptcha/wpcf7-recaptcha.php' ) ) : $is_addons = true; ?>
+					if ( is_plugin_active( 'wpcf7-recaptcha/wpcf7-recaptcha.php' ) ) :
+						$is_addons = true;
+						?>
 
 						<div class="fui-addons-option">
 
@@ -293,9 +316,12 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 
 						</div>
 
-					<?php endif;
+						<?php
+					endif;
 
-					if ( is_plugin_active( 'advanced-cf7-db/advanced-cf7-db.php' ) ) : $is_addons = true; ?>
+					if ( is_plugin_active( 'advanced-cf7-db/advanced-cf7-db.php' ) ) :
+						$is_addons = true;
+						?>
 
 						<div class="fui-addons-option">
 
@@ -319,10 +345,15 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 
 					<?php endif; ?>
 
-					<?php  if ( ! $is_addons ) { ?>
+					<?php if ( ! $is_addons ) { ?>
 
-						<div class="sui-notice">
-							<p><?php esc_html_e( "We couldn't find any supported add-ons.", 'forminator' ); ?></p>
+						<div class="sui-notice sui-notice-warning sui-notice-active" style="display: block;">
+							<div class="sui-notice-content">
+								<div class="sui-notice-message">
+									<span class="sui-notice-icon sui-icon-info sui-md" aria-hidden="true"></span>
+									<p><?php esc_html_e( "We couldn't find any supported add-ons.", 'forminator' ); ?></p>
+								</div>
+							</div>
 						</div>
 
 					<?php } ?>
@@ -387,7 +418,7 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 
 	</div>
 
-	<?php if ( forminator_is_show_branding() ): ?>
+	<?php if ( forminator_is_show_branding() ) : ?>
 		<img
 			src="<?php echo esc_url( $image_empty ); ?>"
 			srcset="<?php echo esc_url( $image_empty2x ); ?> 1x, <?php echo esc_url( $image_empty2x ); ?> 2x"
@@ -443,7 +474,7 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 
 	</div>
 
-	<?php if ( forminator_is_show_branding() ): ?>
+	<?php if ( forminator_is_show_branding() ) : ?>
 		<img
 			src="<?php echo esc_url( $image_empty ); ?>"
 			srcset="<?php echo esc_url( $image_empty2x ); ?> 1x, <?php echo esc_url( $image_empty2x ); ?> 2x"
@@ -457,8 +488,8 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 <div class="forminator-cf7-imported-fail sui-hidden">
 
 	<div class="sui-box-body wpmudev-popup-form">
-        <?php $support_url = FORMINATOR_PRO ? 'https://wpmudev.com/hub2/support/' :'https://wordpress.org/support/plugin/forminator'; ?>
-		<p><?php printf( esc_html__( 'We have encountered an error while importing your forms from Contact Form 7 and selected add-ons. Unable to solve this? Contact our %1$ssupport%2$s team for further help.', 'forminator' ), '<a href="' . $support_url . '" target="_blank">', '</a>' ); ?></p>
+		<?php $support_url = FORMINATOR_PRO ? 'https://wpmudev.com/hub2/support/' : 'https://wordpress.org/support/plugin/forminator'; ?>
+		<p><?php printf( esc_html__( 'We have encountered an error while importing your forms from Contact Form 7 and selected add-ons. Unable to solve this? Contact our %1$ssupport%2$s team for further help.', 'forminator' ), '<a href="' . esc_url( $support_url ) . '" target="_blank">', '</a>' ); ?></p>
 
 		<div class="sui-notice sui-notice-error">
 			<p><?php esc_html_e( "We couldn't find any compatible data to import.", 'forminator' ); ?></p>
@@ -484,7 +515,7 @@ $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-summary@2x.
 
 	</div>
 
-	<?php if ( forminator_is_show_branding() ): ?>
+	<?php if ( forminator_is_show_branding() ) : ?>
 		<img
 			src="<?php echo esc_url( $image_empty ); ?>"
 			srcset="<?php echo esc_url( $image_empty2x ); ?> 1x, <?php echo esc_url( $image_empty2x ); ?> 2x"

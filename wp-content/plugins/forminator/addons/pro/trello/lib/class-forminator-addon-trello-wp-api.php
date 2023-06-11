@@ -94,7 +94,7 @@ class Forminator_Addon_Trello_Wp_Api {
 		 *
 		 * @since 1.1
 		 *
-		 * @param string $user_agent current user agent
+		 * @param string $user_agent current user agent.
 		 */
 		$user_agent = apply_filters( 'forminator_addon_trello_api_user_agent', $user_agent );
 
@@ -115,7 +115,7 @@ class Forminator_Addon_Trello_Wp_Api {
 	 * @throws Forminator_Addon_Trello_Wp_Api_Not_Found_Exception
 	 */
 	private function request( $verb, $path, $args = array() ) {
-		// Adding extra user agent for wp remote request
+		// Adding extra user agent for wp remote request.
 		add_filter( 'http_headers_useragent', array( $this, 'filter_user_agent' ) );
 
 		$url  = trailingslashit( $this->_endpoint ) . $path;
@@ -126,10 +126,10 @@ class Forminator_Addon_Trello_Wp_Api {
 		 *
 		 * @since 1.1
 		 *
-		 * @param string $url  full url with scheme
-		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`
-		 * @param string $path requested path resource
-		 * @param array  $args argument sent to this function
+		 * @param string $url  full url with scheme.
+		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`.
+		 * @param string $path requested path resource.
+		 * @param array  $args argument sent to this function.
 		 */
 		$url = apply_filters( 'forminator_addon_trello_api_url', $url, $verb, $path, $args );
 
@@ -143,9 +143,9 @@ class Forminator_Addon_Trello_Wp_Api {
 		 * @since 1.1
 		 *
 		 * @param array  $headers
-		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`
-		 * @param string $path requested path resource
-		 * @param array  $args argument sent to this function
+		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`.
+		 * @param string $path requested path resource.
+		 * @param array  $args argument sent to this function.
 		 */
 		$headers = apply_filters( 'forminator_addon_trello_api_request_headers', $headers, $verb, $path, $args );
 
@@ -160,9 +160,9 @@ class Forminator_Addon_Trello_Wp_Api {
 		 *
 		 * @since 1.1
 		 *
-		 * @param array  $request_data it will be `http_build_query`-ed when `GET` or `wp_json_encode`-ed otherwise
-		 * @param string $verb         `GET` `POST` `PUT` `DELETE` `PATCH`
-		 * @param string $path         requested path resource
+		 * @param array  $request_data it will be `http_build_query`-ed when `GET` or `wp_json_encode`-ed otherwise.
+		 * @param string $verb         `GET` `POST` `PUT` `DELETE` `PATCH`.
+		 * @param string $path         requested path resource.
 		 */
 		$args = apply_filters( 'forminator_addon_trello_api_request_data', $request_data, $verb, $path );
 
@@ -196,16 +196,16 @@ class Forminator_Addon_Trello_Wp_Api {
 
 				if ( 404 === $status_code ) {
 					/* translators: ... */
-					throw new Forminator_Addon_Trello_Wp_Api_Not_Found_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), $msg ) );
+					throw new Forminator_Addon_Trello_Wp_Api_Not_Found_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), esc_html( $msg ) ) );
 				}
 				/* translators: ... */
-				throw new Forminator_Addon_Trello_Wp_Api_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), $msg ) );
+				throw new Forminator_Addon_Trello_Wp_Api_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), esc_html( $msg ) ) );
 			}
 		}
 
 		$body = wp_remote_retrieve_body( $res );
 
-		// probably silent mode
+		// probably silent mode.
 		if ( ! empty( $body ) ) {
 			$res = json_decode( $body );
 			forminator_addon_maybe_log( __METHOD__, $res );
@@ -217,9 +217,9 @@ class Forminator_Addon_Trello_Wp_Api {
 		 *
 		 * @since 1.1
 		 *
-		 * @param mixed          $response    original wp remote request response or decoded body if available
-		 * @param string         $body        original content of http response's body
-		 * @param array|WP_Error $wp_response original wp remote request response
+		 * @param mixed          $response    original wp remote request response or decoded body if available.
+		 * @param string         $body        original content of http response's body.
+		 * @param array|WP_Error $wp_response original wp remote request response.
 		 */
 		$res = apply_filters( 'forminator_addon_trello_api_response', $response, $body, $wp_response );
 
@@ -421,6 +421,26 @@ class Forminator_Addon_Trello_Wp_Api {
 	}
 
 	/**
+	 * Add Attachment
+	 *
+	 * @since 1.15.? Trello Addon
+	 *
+	 * @param       $card_id
+	 * @param array $args
+	 *
+	 * @return array|mixed|object
+	 * @throws Forminator_Addon_Trello_Wp_Api_Exception
+	 * @throws Forminator_Addon_Trello_Wp_Api_Not_Found_Exception
+	 */
+	public function add_attachment( $card_id, $upload ) {
+		$arg			 = [];
+		$arg['name'] 	 = basename( parse_url( $upload, PHP_URL_PATH ) );
+		$arg['url']	 	 = $upload;
+
+		return $this->post_( 'cards/' . trim( $card_id ) . '/attachments', $arg );
+	}
+
+	/**
 	 * Delete Card (not reversible)
 	 *
 	 * @since 1.0 Trello Addon
@@ -529,5 +549,16 @@ class Forminator_Addon_Trello_Wp_Api {
 	 */
 	public function get_last_url_request() {
 		return $this->_last_url_request;
+	}
+
+	/**
+	 * Get card ID
+	 *
+	 * @since 1.0 Trello Addon
+	 *
+	 * @return array
+	 */
+	public function get_card_id() {
+		return $this->get_last_data_received()->id;
 	}
 }

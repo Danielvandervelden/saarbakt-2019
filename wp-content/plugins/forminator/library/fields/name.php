@@ -81,6 +81,7 @@ class Forminator_Name extends Forminator_Field {
 			'fname_required_message'  => __( 'First Name is required.', 'forminator' ),
 			'mname_required_message'  => __( 'Middle Name is required.', 'forminator' ),
 			'lname_required_message'  => __( 'Last Name is required.', 'forminator' ),
+			'layout_columns'          => '2'
 		);
 	}
 
@@ -95,10 +96,10 @@ class Forminator_Name extends Forminator_Field {
 	 */
 	public function autofill_settings( $settings = array() ) {
 
-		//single name
+		// single name.
 		$name_providers = apply_filters( 'forminator_field_' . $this->slug . '_autofill', array(), $this->slug );
 
-		//multi name
+		// multi name.
 		$prefix_providers = apply_filters( 'forminator_field_' . $this->slug . '_prefix_autofill', array(), $this->slug . '_prefix' );
 		$fname_providers  = apply_filters( 'forminator_field_' . $this->slug . '_first_name_autofill', array(), $this->slug . '_first_name' );
 		$mname_providers  = apply_filters( 'forminator_field_' . $this->slug . '_middle_name_autofill', array(), $this->slug . '_middle_name' );
@@ -134,11 +135,11 @@ class Forminator_Name extends Forminator_Field {
 	 *
 	 * @return string
 	 */
-	public function get_simple( $field, $design ) {
+	public function get_simple( $field, $design, $draft_value = null ) {
 		$html        = '';
 		$id          = self::get_property( 'element_id', $field );
 		$name        = $id;
-		$id          = 'forminator-field-' . $id;
+		$id          = 'forminator-field-' . $id . '_' . Forminator_CForm_Front::$uid;
 		$required    = self::get_property( 'required', $field, false );
 		$ariareq     = 'false';
 		$label       = esc_html( self::get_property( 'field_label', $field, '' ) );
@@ -151,10 +152,15 @@ class Forminator_Name extends Forminator_Field {
 
 		$value = '';
 
-		// Check if Pre-fill parameter used
-		if ( $this->has_prefill( $field ) ) {
-			// We have pre-fill parameter, use its value or $value
+		if ( isset( $draft_value['value'] ) ) {
+
+			$value = esc_attr( $draft_value['value'] );
+
+		} elseif ( $this->has_prefill( $field ) ) {
+
+			// We have pre-fill parameter, use its value or $value.
 			$value = $this->get_prefill( $field, $value );
+
 		}
 
 		$name_attr = array(
@@ -167,7 +173,7 @@ class Forminator_Name extends Forminator_Field {
 			'aria-required' => $ariareq,
 		);
 
-		$autofill_markup = $this->get_element_autofill_markup_attr( $name, $this->form_settings );
+		$autofill_markup = $this->get_element_autofill_markup_attr( $name );
 
 		$name_attr = array_merge( $name_attr, $autofill_markup );
 
@@ -190,15 +196,23 @@ class Forminator_Name extends Forminator_Field {
 	 *
 	 * @return string
 	 */
-	public function get_multi_first_row( $field, $design ) {
-		$html     = '';
-		$cols     = 12;
-		$id       = self::get_property( 'element_id', $field );
-		$name     = $id;
-		$required = self::get_property( 'required', $field, false );
-		$prefix   = self::get_property( 'prefix', $field, false );
-		$fname    = self::get_property( 'fname', $field, false );
+	public function get_multi_first_row( $field, $design, $draft_value = null ) {
+		$html     	 = '';
+		$cols     	 = 12;
+		$id       	 = self::get_property( 'element_id', $field );
+		$name     	 = $id;
+		$required 	 = self::get_property( 'required', $field, false );
+		$prefix   	 = self::get_property( 'prefix', $field, false );
+		$fname    	 = self::get_property( 'fname', $field, false );
+		$mname    	 = self::get_property( 'mname', $field, false );
+		$lname    	 = self::get_property( 'lname', $field, false );
+		$columns     = self::get_property( 'layout_columns', $field, false );
+		$draft_value = isset( $draft_value['value'] ) ? $draft_value['value'] : '';
 
+		// Return If prefix and first name, middle name and last name is not enabled.
+		if ( empty( $prefix ) && empty( $fname ) && empty( $mname ) && empty( $lname ) ) {
+			return '';
+		}
 		/**
 		 * Backward compat, we dont have separate required configuration per fields
 		 * Fallback value from global `required`
@@ -208,52 +222,83 @@ class Forminator_Name extends Forminator_Field {
 		$prefix_required = self::get_property( 'prefix_required', $field, false, 'bool' );
 		$fname_required  = self::get_property( 'fname_required', $field, false, 'bool' );
 		$fname_ariareq   = 'false';
+		$mname_required = self::get_property( 'mname_required', $field, false, 'bool' );
+		$mname_ariareq  = 'false';
+		$lname_required = self::get_property( 'lname_required', $field, false, 'bool' );
+		$lname_ariareq  = 'false';
 
 		if ( (bool) self::get_property( 'fname_required', $field, false ) ) {
 			$fname_ariareq = 'true';
 		}
 
-		// If both prefix & first name are enabled, change cols
-		if ( $prefix && $fname ) {
+		if ( (bool) self::get_property( 'mname_required', $field, false ) ) {
+			$mname_ariareq = 'true';
+		}
+
+		if ( (bool) self::get_property( 'lname_required', $field, false ) ) {
+			$lname_ariareq = 'true';
+		}
+
+		// Columns in name field.
+		switch ($columns) {
+			case 1:
+				$cols = 12;
+				break;
+			case 3:
+				$cols = 4;
+				break;
+			case 4:
+				$cols = 3;
+				break;
+			default:
+				$cols = 6;
+		}
+
+		if ( 'default' === self::get_property( 'default_layout', $field, false ) ) {
 			$cols = 6;
 		}
 
-		// START: Row
-		$html .= '<div class="forminator-row" data-multiple="true">';
+		// START: Row.
+		$html .= '<div class="forminator-row forminator-no-margin" data-multiple="true">';
 
-			// FIELD: Prefix
+			// FIELD: Prefix.
 		if ( $prefix ) {
 
 			$prefix_data = array(
-				'name'       => $id . '-prefix',
-				'id'         => 'forminator-field-prefix-' . $id,
+				'name'       => self::get_subfield_id( $id, '-prefix' ),
+				'id'         => 'forminator-form-' . $this->form_settings['form_id'] . '__field--' . $id . '_' . Forminator_CForm_Front::$uid,
 				'class'      => 'forminator-select2',
 				'data-multi' => true,
 			);
 
 			$options        = array();
-			$prefill        = false;
+			$value        = false;
 			$prefix_options = forminator_get_name_prefixes();
 
-			if ( $this->has_prefill( $field, 'prefix' ) ) {
-				// We have pre-fill parameter, use its value or $value
-				$prefill = $this->get_prefill( $field, false, 'prefix' );
+			if ( isset( $draft_value['prefix'] ) ) {
+
+				$value = esc_attr( $draft_value['prefix'] );
+
+			} elseif ( $this->has_prefill( $field, 'prefix' ) ) {
+
+				// We have pre-fill parameter, use its value or $value.
+				$value = $this->get_prefill( $field, false, 'prefix' );
 			}
 
 			foreach ( $prefix_options as $key => $pfx ) {
 				$selected = false;
 
-				if ( strtolower( $key ) === strtolower( $prefill ) ) {
+				if ( strtolower( $key ) === strtolower( $value ) ) {
 					$selected = true;
 				}
 				$options[] = array(
-					'value' => esc_html( $key ),
-					'label' => esc_html( $pfx ),
-                    'selected' => $selected
+					'value'    => esc_html( $key ),
+					'label'    => esc_html( $pfx ),
+					'selected' => $selected,
 				);
 			}
 
-			$html .= sprintf( '<div class="forminator-col forminator-col-%s">', $cols );
+			$html .= sprintf( '<div class="forminator-col forminator-col-md-%s">', $cols );
 
 				$html .= '<div class="forminator-field">';
 
@@ -271,26 +316,34 @@ class Forminator_Name extends Forminator_Field {
 			$html .= '</div>';
 		}
 
-			// FIELD: First Name
+			// FIELD: First Name.
 		if ( $fname ) {
 
 			$first_name = array(
 				'type'          => 'text',
-				'name'          => $id . '-first-name',
+				'name'          => self::get_subfield_id( $id, '-first-name' ),
 				'placeholder'   => $this->sanitize_value( self::get_property( 'fname_placeholder', $field ) ),
-				'id'            => 'forminator-field-first-' . $id,
+				'id'            => 'forminator-field-first-' . $id . '_' . Forminator_CForm_Front::$uid,
 				'class'         => 'forminator-input',
 				'aria-required' => $fname_ariareq,
 				'data-multi'    => true,
 			);
 
-			$autofill_markup = $this->get_element_autofill_markup_attr( $id . '-first-name', $this->form_settings );
+			$autofill_markup = $this->get_element_autofill_markup_attr( self::get_subfield_id( $id, '-first-name' ) );
 
 			$first_name = array_merge( $first_name, $autofill_markup );
 
-			$first_name = $this->replace_from_prefill( $field, $first_name, 'fname' );
+			if ( isset( $draft_value['first-name'] ) ) {
 
-			$html .= sprintf( '<div class="forminator-col forminator-col-%s">', $cols );
+				$first_name['value'] = $draft_value['first-name'];
+
+			} elseif ( $this->has_prefill( $field, 'fname' ) ) {
+
+				$first_name = $this->replace_from_prefill( $field, $first_name, 'fname' );
+
+			}
+
+			$html .= sprintf( '<div class="forminator-col forminator-col-md-%s">', $cols );
 
 				$html .= '<div class="forminator-field">';
 
@@ -307,73 +360,30 @@ class Forminator_Name extends Forminator_Field {
 			$html .= '</div>';
 		}
 
-		// END: Row
-		$html .= '</div>';
-
-		return $html;
-	}
-
-	/**
-	 * Return multi field second row markup
-	 *
-	 * @since 1.0
-	 *
-	 * @param $field
-	 * @param $design @since 1.0.5
-	 *
-	 * @return string
-	 */
-	public function get_multi_second_row( $field, $design ) {
-		$html     = '';
-		$cols     = 12;
-		$id       = self::get_property( 'element_id', $field );
-		$name     = $id;
-		$required = self::get_property( 'required', $field, false );
-		$mname    = self::get_property( 'mname', $field, false );
-		$lname    = self::get_property( 'lname', $field, false );
-
-		/**
-		 * Backward compat, we dont have separate required configuration per fields
-		 * Fallback value from global `required`
-		 *
-		 * @since 1.6
-		 */
-		$mname_required = self::get_property( 'mname_required', $field, false, 'bool' );
-		$mname_ariareq  = 'false';
-		$lname_required = self::get_property( 'lname_required', $field, false, 'bool' );
-		$lname_ariareq  = 'false';
-
-		if ( (bool) self::get_property( 'mname_required', $field, false ) ) {
-			$mname_ariareq = 'true';
-		}
-
-		if ( (bool) self::get_property( 'lname_required', $field, false ) ) {
-			$lname_ariareq = 'true';
-		}
-
-		if ( $mname && $lname ) {
-			$cols = 6;
-		}
-
-		// START: Row
-		$html .= '<div class="forminator-row" data-multiple="true">';
-
-			// FIELD: Middle Name
+			// FIELD: Middle Name.
 		if ( $mname ) {
 
 			$middle_name = array(
 				'type'          => 'text',
-				'name'          => $id . '-middle-name',
+				'name'          => self::get_subfield_id( $id, '-middle-name' ),
 				'placeholder'   => $this->sanitize_value( self::get_property( 'mname_placeholder', $field ) ),
-				'id'            => 'forminator-field-middle-' . $id,
+				'id'            => 'forminator-field-middle-' . $id . '_' . Forminator_CForm_Front::$uid,
 				'class'         => 'forminator-input',
 				'aria-required' => $mname_ariareq,
 				'data-multi'    => true,
 			);
 
-			$middle_name = $this->replace_from_prefill( $field, $middle_name, 'mname' );
+			if ( isset( $draft_value['middle-name'] ) ) {
 
-			$html .= sprintf( '<div class="forminator-col forminator-col-%s">', $cols );
+				$middle_name['value'] = $draft_value['middle-name'];
+
+			} elseif ( $this->has_prefill( $field, 'mname' ) ) {
+
+				$middle_name = $this->replace_from_prefill( $field, $middle_name, 'mname' );
+
+			}
+
+			$html .= sprintf( '<div class="forminator-col forminator-col-md-%s">', $cols );
 
 				$html .= '<div class="forminator-field">';
 
@@ -390,26 +400,34 @@ class Forminator_Name extends Forminator_Field {
 			$html .= '</div>';
 		}
 
-			// FIELD: Last Name
+			// FIELD: Last Name.
 		if ( $lname ) {
 
 			$last_name = array(
 				'type'          => 'text',
-				'name'          => $id . '-last-name',
+				'name'          => self::get_subfield_id( $id, '-last-name' ),
 				'placeholder'   => $this->sanitize_value( self::get_property( 'lname_placeholder', $field ) ),
-				'id'            => 'forminator-field-last-' . $id,
+				'id'            => 'forminator-field-last-' . $id . '_' . Forminator_CForm_Front::$uid,
 				'class'         => 'forminator-input',
 				'aria-required' => $lname_ariareq,
 				'data-multi'    => true,
 			);
 
-			$autofill_markup = $this->get_element_autofill_markup_attr( $id . '-last-name', $this->form_settings );
+			$autofill_markup = $this->get_element_autofill_markup_attr( self::get_subfield_id( $id, '-last-name' ) );
 
 			$last_name = array_merge( $last_name, $autofill_markup );
 
-			$last_name = $this->replace_from_prefill( $field, $last_name, 'lname' );
+			if ( isset( $draft_value['last-name'] ) ) {
 
-			$html .= sprintf( '<div class="forminator-col forminator-col-%s">', $cols );
+				$last_name['value'] = $draft_value['last-name'];
+
+			} elseif ( $this->has_prefill( $field, 'lname' ) ) {
+
+				$last_name = $this->replace_from_prefill( $field, $last_name, 'lname' );
+
+			}
+
+			$html .= sprintf( '<div class="forminator-col forminator-col-md-%s">', $cols );
 
 			$html .= '<div class="forminator-field">';
 
@@ -426,7 +444,7 @@ class Forminator_Name extends Forminator_Field {
 			$html .= '</div>';
 		}
 
-		// END: Row
+		// END: Row.
 		$html .= '</div>';
 
 		return $html;
@@ -438,27 +456,25 @@ class Forminator_Name extends Forminator_Field {
 	 * @since 1.0
 	 *
 	 * @param $field
-	 * @param $settings
+	 * @param Forminator_Render_Form $views_obj Forminator_Render_Form object.
 	 *
 	 * @return mixed
 	 */
-	public function markup( $field, $settings = array() ) {
+	public function markup( $field, $views_obj, $draft_value = null ) {
+		$settings            = $views_obj->model->settings;
 		$this->field         = $field;
 		$this->form_settings = $settings;
-
-		$this->init_autofill( $settings );
 
 		$multiple = self::get_property( 'multiple_name', $field, false, 'bool' );
 		$design   = $this->get_form_style( $settings );
 
-		// Check we use multi fields
+		// Check we use multi fields.
 		if ( ! $multiple ) {
-			// Only one field
-			$html = $this->get_simple( $field, $design );
+			// Only one field.
+			$html = $this->get_simple( $field, $design, $draft_value );
 		} else {
-			// Multiple fields
-			$html  = $this->get_multi_first_row( $field, $design );
-			$html .= $this->get_multi_second_row( $field, $design );
+			// Multiple fields.
+			$html  = $this->get_multi_first_row( $field, $design, $draft_value );
 		}
 
 		return apply_filters( 'forminator_field_name_markup', $html, $field );
@@ -594,9 +610,9 @@ class Forminator_Name extends Forminator_Field {
 			}
 		} else {
 			if ( $required ) {
-				// backward compat
+				// backward compat.
 				$required_message = self::get_property( 'required_message', $field, self::FIELD_PROPERTY_VALUE_NOT_EXIST, 'string' );
-				if ( self::FIELD_PROPERTY_VALUE_NOT_EXIST === $required_message ) {
+				if ( self::FIELD_PROPERTY_VALUE_NOT_EXIST === $required_message || empty( $required_message ) ) {
 					$required_message = __( 'This field is required. Please input your name.', 'forminator' );
 				}
 
@@ -616,9 +632,8 @@ class Forminator_Name extends Forminator_Field {
 	 *
 	 * @param array        $field
 	 * @param array|string $data
-	 * @param array        $post_data
 	 */
-	public function validate( $field, $data, $post_data = array() ) {
+	public function validate( $field, $data ) {
 		$id          = self::get_property( 'element_id', $field );
 		$is_multiple = self::get_property( 'multiple_name', $field, false, 'bool' );
 		$required    = $this->is_required( $field );
@@ -683,7 +698,7 @@ class Forminator_Name extends Forminator_Field {
 		} else {
 			if ( $required ) {
 				if ( empty( $data ) ) {
-					// backward compat
+					// backward compat.
 					$required_message = self::get_property( 'required_message', $field, self::FIELD_PROPERTY_VALUE_NOT_EXIST, 'string' );
 					if ( self::FIELD_PROPERTY_VALUE_NOT_EXIST === $required_message ) {
 						$required_message = __( 'This field is required. Please input your name.', 'forminator' );
@@ -702,14 +717,17 @@ class Forminator_Name extends Forminator_Field {
 	 * @since 1.0.2
 	 *
 	 * @param array        $field
-	 * @param array|string $data - the data to be sanitized
+	 * @param array|string $data - the data to be sanitized.
 	 *
 	 * @return array|string $data - the data after sanitization
 	 */
 	public function sanitize( $field, $data ) {
 		$original_data = $data;
-		// Sanitize
-		$data = forminator_sanitize_field( $data );
+		if ( is_array( $data ) ) {
+			$data = forminator_sanitize_array_field( $data );
+		} else {
+			$data = forminator_sanitize_field( $data );
+		}
 
 		return apply_filters( 'forminator_field_name_sanitize', $data, $field, $original_data );
 	}

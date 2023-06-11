@@ -225,7 +225,7 @@ class Forminator_Quiz_Model extends Forminator_Base_Form_Model {
 			$form_model->quiz_type = $data['type'];
 		}
 
-		//build the field
+		// build the field.
 		$questions = array();
 		if ( isset( $data['questions'] ) ) {
 			$questions = $data['questions'];
@@ -280,22 +280,22 @@ class Forminator_Quiz_Model extends Forminator_Base_Form_Model {
 		 * }
 		 */
 
-		// picking top results
-		// sort by value since, count is on value,
-		// do reverse sort, to get bigger value on top
+		// picking top results.
+		// sort by value since, count is on value,.
+		// do reverse sort, to get bigger value on top.
 		arsort( $answer_results );
 
 		$top_results = array();
 		$top_count   = 0;
 
 		foreach ( $answer_results as $result_id => $count ) {
-			// FIRST item always have BIGGEST count, means its prioritized
+			// FIRST item always have BIGGEST count, means its prioritized.
 			if ( empty( $top_results ) ) {
 				$top_results[] = $result_id;
 				$top_count     = $count;
 			} else {
 
-				// already in the pool
+				// already in the pool.
 				if ( in_array( $result_id, $top_results, true ) ) {
 					continue;
 				}
@@ -304,34 +304,34 @@ class Forminator_Quiz_Model extends Forminator_Base_Form_Model {
 					$top_results[] = $result_id;
 				} else {
 
-					// if count not same as $top_count, this item onwards can safely ignored
-					// since it will always be less than BIGGEST count
+					// if count not same as $top_count, this item onwards can safely ignored.
+					// since it will always be less than BIGGEST count.
 					break;
 				}
 			}
 		}
 
-		// somehow top results is empty,
-		// we might got bad $answer_results
+		// somehow top results is empty,.
+		// we might got bad $answer_results.
 		if ( empty( $top_results ) ) {
 			return array();
 		}
 
-		// default top_result is first on the pool
+		// default top_result is first on the pool.
 		$top_result_id = $top_results[0];
 		$top_result    = $this->getResult( $top_result_id );
 
-		// somehow the result could not be found, odin forbid
+		// somehow the result could not be found, odin forbid.
 		if ( is_null( $top_result ) ) {
 			return array();
 		}
 
-		// God knows why `order` could not be found,
-		// but we might as well set it as 0 so it will get top priority
-		// remember smaller `order` value means it gets more prioritized
+		// God knows why `order` could not be found,.
+		// but we might as well set it as 0 so it will get top priority.
+		// remember smaller `order` value means it gets more prioritized.
 		$top_priority = isset( $top_result['order'] ) ? (int) $top_result['order'] : 0;
 
-		// > (more than) 1 result happening
+		// > (more than) 1 result happening.
 		if ( count( $top_results ) > 1 ) {
 			foreach ( $top_results as $top_result_id ) {
 				$top_result_to_compare = $this->getResult( $top_result_id );
@@ -346,7 +346,7 @@ class Forminator_Quiz_Model extends Forminator_Base_Form_Model {
 
 				$top_priority_to_compare = (int) $top_result_to_compare['order'];
 
-				// remember smaller `order` value means it gets more prioritized
+				// remember smaller `order` value means it gets more prioritized.
 				if ( $top_priority_to_compare < $top_priority ) {
 					$top_result   = $top_result_to_compare;
 					$top_priority = $top_priority_to_compare;
@@ -363,8 +363,8 @@ class Forminator_Quiz_Model extends Forminator_Base_Form_Model {
 	 *
 	 * @since 1.6.2
 	 *
-	 * @param string $slug         question slug
-	 * @param  int   $answer_index answer index
+	 * @param string $slug         question slug.
+	 * @param  int    $answer_index answer index.
 	 *
 	 * @return bool
 	 */
@@ -392,7 +392,7 @@ class Forminator_Quiz_Model extends Forminator_Base_Form_Model {
 	 *
 	 * @since 1.6.2
 	 *
-	 * @param string $slug question slug
+	 * @param string $slug question slug.
 	 *
 	 * @return array
 	 */
@@ -404,7 +404,7 @@ class Forminator_Quiz_Model extends Forminator_Base_Form_Model {
 					$answers = $question['answers'];
 					foreach ( $answers as $k => $answer ) {
 						if ( isset( $answer['toggle'] ) && filter_var( $answer['toggle'], FILTER_VALIDATE_BOOLEAN ) === true ) {
-                            $answer['id']      = $k;
+							$answer['id']      = $k;
 							$correct_answers[] = $answer;
 						}
 					}
@@ -455,16 +455,16 @@ class Forminator_Quiz_Model extends Forminator_Base_Form_Model {
 	 * @return int
 	 */
 	public function count_answered_questions( $questions, $user_answers ) {
-        $answered_questions = 0;
+		$answered_questions = 0;
 
 		foreach ( $questions as $key => $val ) {
-            foreach ( $user_answers as $a_key => $a_val ) {
-                if ( false !== strpos( $a_key, $val['slug'] ) ) {
-                    $answered_questions ++;
-                    break;
-                }
-            }
-        }
+			foreach ( $user_answers as $a_key => $a_val ) {
+				if ( false !== strpos( $a_key, $val['slug'] ) ) {
+					$answered_questions ++;
+					break;
+				}
+			}
+		}
 
 		return $answered_questions;
 	}

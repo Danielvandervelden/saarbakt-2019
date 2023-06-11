@@ -11,7 +11,7 @@
 
 define( 'FORMINATOR_ADDON_GUTENBERG_VERSION', '1.0' );
 
-// Load Gutenberg module after Forminator loaded
+// Load Gutenberg module after Forminator loaded.
 add_action( 'init', array( 'Forminator_Gutenberg', 'init' ), 5 );
 
 class Forminator_Gutenberg {
@@ -40,10 +40,10 @@ class Forminator_Gutenberg {
 	 * @since 1.0 Gutenberg Addon
 	 */
 	public static function init() {
-		// Load abstracts
+		// Load abstracts.
 		require_once dirname( __FILE__ ) . '/library/class-forminator-gfblock-abstract.php';
 
-		// Load blocks
+		// Load blocks.
 		self::load_blocks();
 	}
 
@@ -53,7 +53,7 @@ class Forminator_Gutenberg {
 	 * @since 1.0 Gutenberg Addon
 	 */
 	public static function load_blocks() {
-		// Load blocks automatically
+		// Load blocks automatically.
 		foreach ( glob( plugin_dir_path( __FILE__ ) . 'library/blocks/class-forminator-gfblock-*.php' ) as $file ) {
 			require_once $file;
 		}

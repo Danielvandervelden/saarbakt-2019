@@ -11,9 +11,9 @@ class Forminator_Addon_Aweber_Oauth {
 	 *
 	 * @since 1.0
 	 *
-	 * @param mixed $method String name of HTTP method, such as "GET"
-	 * @param mixed $url    URL where this request will go
-	 * @param mixed $data   Array of params for this request. This should
+	 * @param mixed $method String name of HTTP method, such as "GET".
+	 * @param mixed $url    URL where this request will go.
+	 * @param mixed $data   Array of params for this request. This should.
 	 *                      include ALL oauth properties except for the signature.
 	 *
 	 * @return string
@@ -84,8 +84,8 @@ class Forminator_Addon_Aweber_Oauth {
 	 *
 	 * @since  1.0
 	 *
-	 * @param mixed $base Base string of data to sign
-	 * @param mixed $key  Key to sign the data with
+	 * @param mixed $base Base string of data to sign.
+	 * @param mixed $key  Key to sign the data with.
 	 *
 	 * @access public
 	 * @return string   The signature
@@ -160,7 +160,7 @@ class Forminator_Addon_Aweber_Oauth {
 		 * @since 1.3
 		 *
 		 * @param string $oauth_nonce
-		 * @param int    $timestamp current timestamp for future reference
+		 * @param int    $timestamp current timestamp for future reference.
 		 */
 		$oauth_nonce = apply_filters( 'forminator_addon_aweber_oauth_nonce', $oauth_nonce, $timestamp );
 

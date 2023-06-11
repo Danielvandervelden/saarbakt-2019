@@ -35,21 +35,21 @@ $hero_sample = forminator_plugin_dir() . 'assets/icons/forminator-icons/hero-sam
 
 						<div class="wpmudev-sitem--header">
 
-							<div class="wpmudev-sitem--icon" aria-hidden="true"><?php echo $module->get_icon(); // phpcs:ignore ?></div>
+							<div class="wpmudev-sitem--icon" aria-hidden="true"><?php echo esc_html( $module->get_icon() ); ?></div>
 
-							<h3 class="wpmudev-sitem--title"><?php echo $module->get_name(); // phpcs:ignore ?></h3>
+							<h3 class="wpmudev-sitem--title"><?php echo esc_html( $module->get_name() ); ?></h3>
 
 						</div>
 
 						<div class="wpmudev-sitem--section">
 
-							<p><?php echo $module->get_description(); // phpcs:ignore ?></p>
+							<p><?php echo wp_kses_post( $module->get_description() ); ?></p>
 
 						</div>
 
 						<div class="wpmudev-sitem--footer">
 
-							<button href="/" class="wpmudev-button wpmudev-button-sm wpmudev-button-ghost wpmudev-open-modal" data-modal="<?php echo esc_attr( $module->get_id() ); ?>"><?php echo $module->get_label(); // phpcs:ignore ?></button>
+							<button href="/" class="wpmudev-button wpmudev-button-sm wpmudev-button-ghost wpmudev-open-modal" data-modal="<?php echo esc_attr( $module->get_id() ); ?>"><?php echo wp_kses_post( $module->get_label() ); ?></button>
 
 						</div>
 
@@ -59,8 +59,8 @@ $hero_sample = forminator_plugin_dir() . 'assets/icons/forminator-icons/hero-sam
 
 			</div>
 
-		</div><?php // .wpmudev-box ?>
+		</div><?php // .wpmudev-box. ?>
 
-	</div><?php // .wpmudev-col ?>
+	</div><?php // .wpmudev-col. ?>
 
-</div><?php // .wpmudev-row ?>
+</div><?php // .wpmudev-row. ?>

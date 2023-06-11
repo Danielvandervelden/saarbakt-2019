@@ -1,5 +1,5 @@
 <?php
-// defaults
+// defaults.
 $vars = array(
 	'error_message' => '',
 	'name'          => '',
@@ -20,14 +20,38 @@ foreach ( $template_vars as $key => $val ) {
 	$vars[ $key ] = $val;
 }
 ?>
-<div class="integration-header">
 
-	<h3 id="dialogTitle2" class="sui-box-title"><?php echo esc_html( __( 'Create Ticket', 'forminator' ) ); ?></h3>
+<div class="forminator-integration-popup__header">
 
-	<p class="sui-description" style="max-width: 400px; margin: 20px auto 0; line-height: 22px;"><?php esc_html_e( 'In addition to adding a new contact to your HubSpot account, you can also create a HubSpot ticket for each quiz lead submission.', 'forminator' ); ?></p>
+	<h3 id="forminator-integration-popup__title" class="sui-box-title sui-lg" style="overflow: initial; white-space: normal; text-overflow: initial;">
+		<?php echo esc_html( __( 'Create Ticket', 'forminator' ) ); ?>
+	</h3>
+
+	<p id="forminator-integration-popup__description" class="sui-description">
+		<?php esc_html_e( 'In addition to adding a new contact to your HubSpot account, you can also create a HubSpot ticket for each quiz lead submission.', 'forminator' ); ?>
+	</p>
 
 	<?php if ( ! empty( $vars['error_message'] ) ) : ?>
-		<span class="sui-notice sui-notice-error"><p><?php echo esc_html( $vars['error_message'] ); ?></p></span>
+		<div
+			role="alert"
+			class="sui-notice sui-notice-red sui-active"
+			style="display: block; text-align: left;"
+			aria-live="assertive"
+		>
+
+			<div class="sui-notice-content">
+
+				<div class="sui-notice-message">
+
+					<span class="sui-notice-icon sui-icon-info" aria-hidden="true"></span>
+
+					<p><?php echo esc_html( $vars['error_message'] ); ?></p>
+
+				</div>
+
+			</div>
+
+		</div>
 	<?php endif; ?>
 
 </div>
@@ -46,9 +70,8 @@ foreach ( $template_vars as $key => $val ) {
 				<?php checked( $vars['create_ticket'], 1 ); ?>
 			/>
 			<span class="sui-toggle-slider"></span>
+			<span id="create-ticket-label" class="sui-toggle-label"><?php esc_html_e( 'Create a HubSpot ticket for each submission', 'forminator' ); ?></span>
 		</label>
-
-		<label for="create-ticket" id="create-ticket-label" class="sui-toggle-label"><?php esc_html_e( 'Create a HubSpot ticket for each submission', 'forminator' ); ?></label>
 
 	</div>
 
@@ -60,11 +83,30 @@ foreach ( $template_vars as $key => $val ) {
 		<?php echo '1' === $vars['create_ticket'] ? '' : 'hidden'; ?>
 	>
 		<?php if ( empty( $vars['re-authorize'] ) && ! empty( $vars['token'] ) ) { ?>
-            <div class="sui-notice sui-notice-info">
-                <p style="margin-bottom: 5px;"><strong><?php esc_html_e( 'Authorize Forminator to access HubSpot tickets', 'forminator' ); ?></strong></p>
-				<p style="margin-top: 5px; margin-bottom: 10px;"><?php esc_html_e( 'Forminator requires additional permissions to create HubSpot tickets. Note that you will be taken to HubSpot website to grant Forminator access to HubSpot tickets and redirected back here.', 'forminator' ); ?></p>
-                <p style="margin-top: 10px;"><a href="<?php echo esc_attr( $vars['auth_url'] ); ?>" target="_blank" class="sui-button sui-button-primary forminator-addon-connect"><?php esc_html_e( 'Authorize', 'forminator' ); ?></a></p>
-            </div>
+			<div
+				role="alert"
+				class="sui-notice sui-notice-blue sui-active"
+				style="display: block;"
+				aria-live="assertive"
+			>
+
+				<div class="sui-notice-content">
+
+					<div class="sui-notice-message">
+
+						<span class="sui-notice-icon sui-icon-info" aria-hidden="true"></span>
+
+						<p style="margin-bottom: 5px;"><strong><?php esc_html_e( 'Authorize Forminator to access HubSpot tickets', 'forminator' ); ?></strong></p>
+
+						<p style="margin-top: 5px; margin-bottom: 10px;"><?php esc_html_e( 'Forminator requires additional permissions to create HubSpot tickets. Note that you will be taken to HubSpot website to grant Forminator access to HubSpot tickets and redirected back here.', 'forminator' ); ?></p>
+
+						<p style="margin-top: 10px;"><a href="<?php echo esc_attr( $vars['auth_url'] ); ?>" target="_blank" class="sui-button sui-button-primary forminator-addon-connect"><?php esc_html_e( 'Authorize', 'forminator' ); ?></a></p>
+
+					</div>
+
+				</div>
+
+			</div>
 		<?php } else { ?>
 
 		<!-- FIELD: Pipeline -->
@@ -72,10 +114,11 @@ foreach ( $template_vars as $key => $val ) {
 
 			<label for="hubspot-support-request" id="hubspot-support-request-label" class="sui-label"><?php esc_html_e( 'Pipeline', 'forminator' ); ?></label>
 
+			<?php // DEV NOTE: Select without JS. ?>
 			<select
 				name="pipeline_id"
 				id="hubspot-support-request"
-				class="sui-select"
+				style="max-width: none;"
 				aria-labelledby="hubspot-support-request-label"
 				aria-describedby="hubspot-support-request-error"
 			>
@@ -109,10 +152,11 @@ foreach ( $template_vars as $key => $val ) {
 
 			<label for="hubspot-ticket-status" id="hubspot-ticket-status-label" class="sui-label"><?php esc_html_e( 'Ticket Status', 'forminator' ); ?></label>
 
+			<?php // DEV NOTE: Select without JS. ?>
 			<select
 				name="status_id"
 				id="hubspot-ticket-status"
-				class="sui-select"
+				style="max-width: none;"
 				aria-labelledby="hubspot-ticket-status-label"
 				aria-describedby="hubspot-ticket-status-error"
 			>
@@ -168,7 +212,7 @@ foreach ( $template_vars as $key => $val ) {
 					aria-describedby="ticket-name-input-error"
 				/>
 
-                    <select id="select-ticket-name" class="select-field">
+                    <select id="select-ticket-name" class="sui-variables select-field">
                         <option value="{quiz_name}" data-content="{quiz_name}"><?php esc_html_e( 'Quiz Name', 'forminator' ); ?></option>
 						<?php
 						if ( ! empty( $vars['form_fields'] ) ) :
@@ -176,7 +220,7 @@ foreach ( $template_vars as $key => $val ) {
 						foreach ( $vars['form_fields'] as $key => $field_title ) :
 						?>
 
-							<option value="{<?php echo esc_attr( $field_title['element_id'] ); ?>}" data-content="{<?php echo esc_attr( $field_title['element_id'] ); ?>}"><?php echo esc_html( $field_title['field_label'] . ' | ' . $field_title['element_id'] ); ?></option>
+							<option value="{<?php echo esc_attr( $field_title['element_id'] ); ?>}" data-content="{<?php echo esc_attr( $field_title['element_id'] ); ?>}"><?php echo esc_html( strip_tags( $field_title['field_label'] ) . ' | ' . $field_title['element_id'] ); ?></option>
 
 						<?php
 						endforeach;
@@ -218,7 +262,7 @@ foreach ( $template_vars as $key => $val ) {
 					<?php echo esc_attr( $vars['ticket_description'] ); ?>
 				</textarea>
 
-                    <select id="select-ticket-description" class="select-field">
+                    <select id="select-ticket-description" class="sui-variables select-field">
                         <option value="{quiz_name}" data-content="{quiz_name}"><?php esc_html_e( 'Quiz Name', 'forminator' ); ?></option>
 						<?php
 						if ( ! empty( $vars['form_fields'] ) ) :
@@ -226,7 +270,7 @@ foreach ( $template_vars as $key => $val ) {
 						foreach ( $vars['form_fields'] as $key => $field_title ) :
 						?>
 
-							<option value="{<?php echo esc_attr( $field_title['element_id'] ); ?>}" data-content="{<?php echo esc_attr( $field_title['element_id'] ); ?>}"><?php echo esc_html( $field_title['field_label'] . ' | ' . $field_title['element_id'] ); ?></option>
+							<option value="{<?php echo esc_attr( $field_title['element_id'] ); ?>}" data-content="{<?php echo esc_attr( $field_title['element_id'] ); ?>}"><?php echo esc_html( strip_tags( $field_title['field_label'] ) . ' | ' . $field_title['element_id'] ); ?></option>
 
 						<?php
 						endforeach;
@@ -245,10 +289,11 @@ foreach ( $template_vars as $key => $val ) {
 
 			<label for="hubspot-support-file" id="hubspot-support-file-label" class="sui-label"><?php esc_html_e( 'Supported File (optional)', 'forminator' ); ?></label>
 
+			<?php // DEV NOTE: Select without JS. ?>
 			<select
 				name="supported_file"
 				id="hubspot-support-file"
-				class="sui-select sui-form-control"
+				style="max-width: none;"
 				aria-labelledby="hubspot-support-file-label"
 			>
 
@@ -262,7 +307,7 @@ foreach ( $template_vars as $key => $val ) {
 					foreach ( $vars['file_fields'] as $file => $file_field ) :
 					?>
 
-						<option value="<?php echo esc_attr( $file_field['element_id'] ); ?>" <?php selected( $file_selected, $file_field['element_id'] ); ?>><?php echo esc_html( $file_field['field_label'] . ' | ' . $file_field['element_id'] ); ?></option>
+						<option value="<?php echo esc_attr( $file_field['element_id'] ); ?>" <?php selected( $file_selected, $file_field['element_id'] ); ?>><?php echo esc_html( strip_tags( $file_field['field_label'] ) . ' | ' . $file_field['element_id'] ); ?></option>
 
 					<?php
 					endforeach;
@@ -292,7 +337,7 @@ foreach ( $template_vars as $key => $val ) {
 
 <script>
 	(function ($) {
-		$(document).ready(function (e) {
+		$( function (e) {
 			$('#create-ticket').on('change', function () {
                 let ticketField = $('.ticket-fields'),
                     ticketActivate = $('div#ticket-activate');
@@ -313,10 +358,11 @@ foreach ( $template_vars as $key => $val ) {
 			$('#hubspot-support-request').on('change', function () {
 				let value = $(this).val();
 				$.ajax({
-					url: '<?php echo forminator_ajax_url();// phpcs:ignore ?>',
+					url: '<?php echo esc_url( forminator_ajax_url() ); ?>',
 					type: "POST",
 					data: {
 						action: "forminator_hubspot_support_request",
+                        _ajax_nonce: '<?php echo wp_create_nonce( 'forminator_hubspot_request' ); ?>',
 						value: value
 					},
 					success: function (response) {

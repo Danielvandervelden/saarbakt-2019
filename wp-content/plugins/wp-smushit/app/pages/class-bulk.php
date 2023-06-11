@@ -32,13 +32,17 @@ class Bulk extends Abstract_Summary_Page implements Interface_Page {
 		if ( ! WP_Smush::is_pro() ) {
 			// Reset transient.
 			Core::check_bulk_limit( true );
+			add_action( 'smush_setting_column_tag', array( $this, 'add_lossy_new_tag' ) );
+			add_action( 'smush_setting_column_tag', array( $this, 'add_pro_tag' ) );
 		}
 
 		add_action( 'smush_setting_column_right_inside', array( $this, 'settings_desc' ), 10, 2 );
 		add_action( 'smush_setting_column_right_inside', array( $this, 'auto_smush' ), 15, 2 );
-		add_action( 'smush_setting_column_right_inside', array( $this, 'image_sizes' ), 15, 2 );
-		add_action( 'smush_setting_column_right_additional', array( $this, 'resize_settings' ), 20, 2 );
+		add_action( 'smush_setting_column_right_outside', array( $this, 'image_sizes' ), 15, 2 );
+		add_action( 'smush_setting_column_right_additional', array( $this, 'resize_settings' ), 20 );
 		add_action( 'smush_setting_column_right_outside', array( $this, 'full_size_options' ), 20, 2 );
+		add_action( 'smush_setting_column_right_outside', array( $this, 'scale_options' ), 20, 2 );
+		add_action( 'wp_smush_render_setting_row', array( $this, 'set_background_email_setting_visibility' ) );
 	}
 
 	/**
@@ -48,8 +52,6 @@ class Bulk extends Abstract_Summary_Page implements Interface_Page {
 		parent::register_meta_boxes();
 
 		if ( ! is_network_admin() ) {
-			// Show bulk smush box if a subsite admin.
-			$class = WP_Smush::is_pro() ? 'wp-smush-pro-install' : '';
 			$this->add_meta_box(
 				'bulk',
 				__( 'Bulk Smush', 'wp-smushit' ),
@@ -58,22 +60,7 @@ class Bulk extends Abstract_Summary_Page implements Interface_Page {
 				null,
 				'main',
 				array(
-					'box_class' => "sui-box bulk-smush-wrapper {$class}",
-				)
-			);
-		}
-
-		// Only for the Free version and when there aren't images to smush.
-		if ( ! WP_Smush::is_pro() ) {
-			$this->add_meta_box(
-				'bulk/upgrade',
-				'',
-				null,
-				null,
-				null,
-				'main',
-				array(
-					'box_class' => 'sui-box sui-hidden',
+					'box_class' => 'sui-box bulk-smush-wrapper',
 				)
 			);
 		}
@@ -91,26 +78,15 @@ class Bulk extends Abstract_Summary_Page implements Interface_Page {
 			)
 		);
 
-		// Do not show if pro user.
-		if ( ! WP_Smush::is_pro() ) {
-			$this->add_meta_box(
-				'pro-features',
-				__( 'Upgrade to Smush Pro', 'wp-smushit' ),
-				array( $this, 'pro_features_meta_box' ),
-				null,
-				null,
-				'main'
-			);
-		}
+		$this->modals['restore-images'] = array();
 	}
 
 	/**
 	 * Prints Dimensions required for Resizing
 	 *
 	 * @param string $name Setting name.
-	 * @param string $class_prefix Custom class prefix.
 	 */
-	public function resize_settings( $name = '', $class_prefix = '' ) {
+	public function resize_settings( $name = '' ) {
 		// Add only to full size settings.
 		if ( 'resize' !== $name ) {
 			return;
@@ -118,15 +94,12 @@ class Bulk extends Abstract_Summary_Page implements Interface_Page {
 
 		// Dimensions.
 		$resize_sizes = $this->settings->get_setting(
-			WP_SMUSH_PREFIX . 'resize_sizes',
+			'wp-smush-resize_sizes',
 			array(
 				'width'  => '',
 				'height' => '',
 			)
 		);
-
-		// Set default prefix is custom prefix is empty.
-		$prefix = empty( $class_prefix ) ? WP_SMUSH_PREFIX : $class_prefix;
 
 		// Get max dimensions.
 		$max_sizes = WP_Smush::get_instance()->core()->get_max_image_dimensions();
@@ -138,30 +111,30 @@ class Bulk extends Abstract_Summary_Page implements Interface_Page {
 				<div class="sui-row">
 					<div class="sui-col-md-6">
 						<div class="sui-form-field">
-							<label aria-labelledby="<?php echo esc_attr( $prefix ); ?>label-max-width" for="<?php echo esc_attr( $prefix ) . esc_attr( $name ) . '_width'; ?>" class="sui-label">
+							<label aria-labelledby="wp-smush-label-max-width" for="<?php echo 'wp-smush-' . esc_attr( $name ) . '_width'; ?>" class="sui-label">
 								<?php esc_html_e( 'Max width', 'wp-smushit' ); ?>
 							</label>
 							<input aria-required="true" type="number" class="sui-form-control wp-smush-resize-input"
-								aria-describedby="<?php echo esc_attr( $prefix ); ?>resize-note"
-								id="<?php echo esc_attr( $prefix ) . esc_attr( $name ) . '_width'; ?>"
-								name="<?php echo esc_attr( WP_SMUSH_PREFIX ) . esc_attr( $name ) . '_width'; ?>"
+								aria-describedby="wp-smush-resize-note"
+								id="<?php echo 'wp-smush-' . esc_attr( $name ) . '_width'; ?>"
+								name="<?php echo 'wp-smush-' . esc_attr( $name ) . '_width'; ?>"
 								value="<?php echo isset( $resize_sizes['width'] ) && ! empty( $resize_sizes['width'] ) ? absint( $resize_sizes['width'] ) : 2560; ?>">
 						</div>
 					</div>
 					<div class="sui-col-md-6">
 						<div class="sui-form-field">
-							<label aria-labelledby="<?php echo esc_attr( $prefix ); ?>label-max-height" for="<?php echo esc_attr( $prefix . $name ) . '_height'; ?>" class="sui-label">
+							<label aria-labelledby="wp-smush-label-max-height" for="<?php echo 'wp-smush-' . esc_attr( $name ) . '_height'; ?>" class="sui-label">
 								<?php esc_html_e( 'Max height', 'wp-smushit' ); ?>
 							</label>
 							<input aria-required="true" type="number" class="sui-form-control wp-smush-resize-input"
-								aria-describedby="<?php echo esc_attr( $prefix ); ?>resize-note"
-								id="<?php echo esc_attr( $prefix . $name ) . '_height'; ?>"
-								name="<?php echo esc_attr( WP_SMUSH_PREFIX . $name ) . '_height'; ?>"
+								aria-describedby="wp-smush-resize-note"
+								id="<?php echo 'wp-smush-' . esc_attr( $name ) . '_height'; ?>"
+								name="<?php echo 'wp-smush-' . esc_attr( $name ) . '_height'; ?>"
 								value="<?php echo isset( $resize_sizes['height'] ) && ! empty( $resize_sizes['height'] ) ? absint( $resize_sizes['height'] ) : 2560; ?>">
 						</div>
 					</div>
 				</div>
-				<div class="sui-description" id="<?php echo esc_attr( $prefix ); ?>resize-note">
+				<div class="sui-description" id="wp-smush-resize-note">
 					<?php
 					printf( /* translators: %1$s: strong tag, %2$d: max width size, %3$s: tag, %4$d: max height size, %5$s: closing strong tag  */
 						esc_html__( 'Currently, your largest image size is set at %1$s%2$dpx wide %3$s %4$dpx high%5$s.', 'wp-smushit' ),
@@ -216,7 +189,7 @@ class Bulk extends Abstract_Summary_Page implements Interface_Page {
 	public function settings_desc( $setting_key = '' ) {
 		if ( empty( $setting_key ) || ! in_array(
 			$setting_key,
-			array( 'resize', 'original', 'strip_exif', 'png_to_jpg' ),
+			array( 'resize', 'original', 'strip_exif', 'png_to_jpg', 'background_email' ),
 			true
 		) ) {
 			return;
@@ -260,11 +233,7 @@ class Bulk extends Abstract_Summary_Page implements Interface_Page {
 					}
 					break;
 				case 'original':
-					if ( version_compare( $wp_version, '5.2.999', '>' ) ) {
-						esc_html_e( 'As of WordPress v5.3, every image that gets uploaded will have your normal thumbnail outputs, a new max sized image, and the original upload as backup. By default, Smush will only compress the thumbnail sizes your theme outputs, skipping the new max sized image. Enable this setting to include optimizing this image too.', 'wp-smushit' );
-					} else {
-						esc_html_e( 'By default, bulk smush will ignore your original uploads and only compress the thumbnail sizes your theme outputs. Enable this setting to also smush your original uploads. We recommend storing copies of your originals (below) in case you ever need to restore them.', 'wp-smushit' );
-					}
+					esc_html_e( 'By default, WordPress will only compress the generated attachments when you upload images, not the original ones. Enable this feature to compress the original images.', 'wp-smushit' );
 					break;
 				case 'strip_exif':
 					esc_html_e(
@@ -273,6 +242,27 @@ class Bulk extends Abstract_Summary_Page implements Interface_Page {
 						'wp-smushit'
 					);
 					break;
+				case 'background_email':
+					$bg_optimization = WP_Smush::get_instance()->core()->mod->bg_optimization;
+					if ( $bg_optimization->can_use_background() ) {
+						$bg_email_desc   = sprintf( __( 'You will receive an email at <strong>%s</strong> when the bulk smush has completed.', 'wp-smushit' ), $bg_optimization->get_mail_recipient() );
+					} else {
+						$bulk_upgrade_url = $this->get_utm_link(
+							array(
+								'coupon'       => 'SMUSH30OFF',
+								'checkout'     => 0,
+								'utm_campaign' => 'smush_bulk_smush_BO_email_toggle',
+							)
+						);
+						$bg_email_desc    = sprintf(
+							esc_html__( 'Get the email notification as part of the Background Optimization feature. You don’t have to keep the bulk smush page open when it is in progress. Be notified when Background Optimization completes. %1$sTry it with Smush Pro%2$s', 'wp-smushit' ),
+							'<a href="' . esc_url( $bulk_upgrade_url ) . '" class="smush-upsell-link" target="_blank">',
+							'</a>'
+						);
+					}
+					echo wp_kses_post( $bg_email_desc );
+					break;
+					
 				default:
 					break;
 			}
@@ -321,7 +311,7 @@ class Bulk extends Abstract_Summary_Page implements Interface_Page {
 		}
 
 		// Additional image sizes.
-		$image_sizes = $this->settings->get_setting( WP_SMUSH_PREFIX . 'image_sizes', false );
+		$image_sizes = $this->settings->get_setting( 'wp-smush-image_sizes' );
 		$sizes       = WP_Smush::get_instance()->core()->image_dimensions();
 
 		$all_selected = false === $image_sizes || count( $image_sizes ) === count( $sizes );
@@ -349,7 +339,7 @@ class Bulk extends Abstract_Summary_Page implements Interface_Page {
 								$checked = true;
 							} else {
 								// WPMDUDEV hosting support: cast $size_k to string to properly work with object cache.
-								$checked = is_array( $image_sizes ) ? in_array( (string) $size_k, $image_sizes, true ) : false;
+								$checked = is_array( $image_sizes ) && in_array( (string) $size_k, $image_sizes, true );
 							}
 							?>
 							<label class="sui-checkbox sui-checkbox-stacked sui-checkbox-sm">
@@ -408,7 +398,7 @@ class Bulk extends Abstract_Summary_Page implements Interface_Page {
 	 */
 	public function full_size_options( $name = '' ) {
 		// Continue only if original image option.
-		if ( 'original' !== $name || ! WP_Smush::is_pro() ) {
+		if ( 'original' !== $name ) {
 			return;
 		}
 
@@ -429,10 +419,72 @@ class Bulk extends Abstract_Summary_Page implements Interface_Page {
 				<span id="backup-label" class="sui-toggle-label">
 					<?php echo esc_html( Settings::get_setting_data( 'backup', 'label' ) ); ?>
 				</span>
+				<span class="sui-description sui-toggle-description" id="backup-desc">
+					<?php echo esc_html( Settings::get_setting_data( 'backup', 'desc' ) ); ?>
+				</span>
 			</label>
-			<span class="sui-description sui-toggle-description">
-				<?php echo esc_html( Settings::get_setting_data( 'backup', 'desc' ) ); ?>
-			</span>
+
+			<div class="sui-toggle-content <?php echo $this->settings->get( 'original' ) ? 'sui-hidden' : ''; ?>" id="backup-notice">
+				<div class="sui-notice" style="margin-top: 10px">
+					<div class="sui-notice-content">
+						<div class="sui-notice-message">
+							<i class="sui-notice-icon sui-icon-info sui-md" aria-hidden="true"></i>
+							<p>
+								<?php
+								printf( /* translators: %1$s - <strong>, %2$s - </strong> */
+									esc_html__( '%1$sCompress original images%2$s is disabled, which means that enabling %1$sBackup original images%2$s won’t yield additional benefits and will use more storage space. We recommend enabling %1$sBackup original images%2$s only if %1$sCompress original images%2$s is also enabled.', 'wp-smushit' ),
+									'<strong>',
+									'</strong>'
+								);
+								?>
+							</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<?php
+	}
+
+	/**
+	 * Add scale image settings.
+	 *
+	 * @since 3.9.1
+	 *
+	 * @param string $name  Name of the current setting being processed.
+	 */
+	public function scale_options( $name = '' ) {
+		if ( 'resize' !== $name ) {
+			return;
+		}
+
+		// Not available on WordPress before 5.3.
+		global $wp_version;
+		if ( version_compare( $wp_version, '5.3', '<' ) ) {
+			return;
+		}
+
+		$value = $this->settings->get( 'no_scale' );
+		?>
+		<div class="sui-form-field">
+			<label for="no_scale" class="sui-toggle">
+				<input
+					type="checkbox"
+					value="1"
+					id="no_scale"
+					name="no_scale"
+					aria-labelledby="no_scale-label"
+					aria-describedby="no_scale-desc"
+					<?php checked( $value, 1 ); ?>
+				/>
+				<span class="sui-toggle-slider" aria-hidden="true"></span>
+				<span id="no_scale-label" class="sui-toggle-label">
+					<?php echo esc_html( Settings::get_setting_data( 'no_scale', 'label' ) ); ?>
+				</span>
+				<span class="sui-description sui-toggle-description" id="no_scale-desc">
+					<?php echo esc_html( Settings::get_setting_data( 'no_scale', 'desc' ) ); ?>
+				</span>
+			</label>
 		</div>
 		<?php
 	}
@@ -459,43 +511,67 @@ class Bulk extends Abstract_Summary_Page implements Interface_Page {
 	public function bulk_smush_metabox() {
 		$core = WP_Smush::get_instance()->core();
 
-		$total_images_to_smush = $this->get_total_images_to_smush();
+		$total_images_to_smush = $core->remaining_count();
 
 		// This is the same calculation used for $core->remaining_count,
 		// except that we don't add the re-smushed count here.
 		$unsmushed_count = $core->total_count - $core->smushed_count - $core->skipped_count;
 
-		$upgrade_url = add_query_arg(
-			array(
-				'utm_source'   => 'smush',
-				'utm_medium'   => 'plugin',
-				'utm_campaign' => 'smush_bulksmush_completed_pagespeed_upgradetopro',
-			),
-			$this->upgrade_url
-		);
-
-		$bulk_upgrade_url = add_query_arg(
+		$bulk_upgrade_url       = $this->get_utm_link(
 			array(
 				'coupon'       => 'SMUSH30OFF',
 				'checkout'     => 0,
-				'utm_source'   => 'smush',
-				'utm_medium'   => 'plugin',
-				'utm_campaign' => Core::$max_free_bulk < $total_images_to_smush ? 'smush_bulksmush_morethan50images_tryproforfree' : 'smush_bulksmush_lessthan50images_tryproforfree',
-			),
-			$this->upgrade_url
+				'utm_campaign' => 'smush_bulk_smush_complete_global',
+			)
+		);
+		$in_progress_upsell_url = $this->get_utm_link(
+			array(
+				'coupon'       => 'SMUSH30OFF',
+				'checkout'     => 0,
+				'utm_campaign' => 'smush_bulk_smush_progress_BO',
+			)
+		);
+
+		$upsell_cdn_url 		=  $this->get_utm_link(
+			array(
+				'coupon'       => 'SMUSH30OFF',
+				'checkout'     => 0,
+				'utm_campaign' => 'smush_bulksmush_cdn',
+			)
+		);
+		
+		$bg_optimization               = WP_Smush::get_instance()->core()->mod->bg_optimization;
+		$background_processing_enabled = $bg_optimization->should_use_background();
+		$background_in_processing      = $background_processing_enabled && $bg_optimization->is_in_processing();
+
+		if ( $bg_optimization->can_use_background() ) {
+			$upsell_text = '';
+		} else {
+			$upsell_text = sprintf(
+				/* translators: %s: Upsell Link */
+				__( 'Want to exit the page? Background Optimization is available with Smush Pro, allowing you to leave while Smush continues to work its magic. %s', 'wp-smushit' ),
+				'<a class="smush-upsell-link" target="_blank" href="' . esc_url( $in_progress_upsell_url ) . '"><strong>' . esc_html__( 'Try Smush Pro today and get 30% off', 'wp-smushit' ) . '</strong></a>'
+			);
+		}
+		$in_processing_notice = sprintf(
+			__( 'Bulk Smush is currently running. Please keep this page open until the process is complete. %s', 'wp-smushit' ),
+			$upsell_text
 		);
 
 		$this->view(
 			'bulk/meta-box',
 			array(
-				'core'                  => $core,
-				'hide_pagespeed'        => get_site_option( WP_SMUSH_PREFIX . 'hide_pagespeed_suggestion' ),
-				'is_pro'                => WP_Smush::is_pro(),
-				'unsmushed_count'       => $unsmushed_count > 0 ? $unsmushed_count : 0,
-				'resmush_count'         => count( get_option( 'wp-smush-resmush-list', array() ) ),
-				'total_images_to_smush' => $total_images_to_smush,
-				'upgrade_url'           => $upgrade_url,
-				'bulk_upgrade_url'      => $bulk_upgrade_url,
+				'core'                            => $core,
+				'can_use_background'              => $bg_optimization->can_use_background(),
+				'unsmushed_count'                 => $unsmushed_count > 0 ? $unsmushed_count : 0,
+				'resmush_count'                   => count( get_option( 'wp-smush-resmush-list', array() ) ),
+				'total_images_to_smush'           => $total_images_to_smush,
+				'bulk_upgrade_url'                => $bulk_upgrade_url,
+				'upsell_cdn_url'				  => $upsell_cdn_url,
+				'background_processing_enabled'   => $background_processing_enabled,
+				'background_in_processing'        => $background_in_processing,
+				'background_in_processing_notice' => $bg_optimization->get_in_process_notice(),
+				'in_processing_notice' 			  => $in_processing_notice,
 			)
 		);
 	}
@@ -515,6 +591,12 @@ class Bulk extends Abstract_Summary_Page implements Interface_Page {
 			unset( $fields[ $key ] );
 		}
 
+		// Remove no_scale setting, as it's added separately.
+		$key = array_search( 'no_scale', $fields, true );
+		if ( false !== $key ) {
+			unset( $fields[ $key ] );
+		}
+
 		$this->view(
 			'bulk-settings/meta-box',
 			array(
@@ -522,41 +604,55 @@ class Bulk extends Abstract_Summary_Page implements Interface_Page {
 				'cdn_enabled'      => $this->settings->get( 'cdn' ),
 				'grouped_settings' => $fields,
 				'settings'         => $this->settings->get(),
+				'backups_count'    => count( WP_Smush::get_instance()->core()->mod->backup->get_attachments_with_backups() ),
 			)
 		);
 	}
 
 	/**
-	 * Pro features list box to show after settings.
+	 * Show a "new" tag near the super-smush option for free users.
+	 *
+	 * @since 3.10.0
+	 *
+	 * @param string $name Option name.
+	 *
+	 * @return void
 	 */
-	public function pro_features_meta_box() {
-		// Upgrade url for upsell.
-		$upsell_url = add_query_arg(
-			array(
-				'utm_source'   => 'smush',
-				'utm_medium'   => 'plugin',
-				'utm_campaign' => 'smush-advanced-settings-upsell',
-			),
-			$this->upgrade_url
-		);
-
-		// Upgrade url with analytics keys.
-		$upgrade_url = add_query_arg(
-			array(
-				'utm_source'   => 'smush',
-				'utm_medium'   => 'plugin',
-				'utm_campaign' => 'smush-advanced-settings-video-button',
-			),
-			$this->upgrade_url
-		);
-
-		$this->view(
-			'pro-features/meta-box',
-			array(
-				'upgrade_url' => $upgrade_url,
-				'upsell_url'  => $upsell_url,
-			)
-		);
+	public function add_lossy_new_tag( $name ) {
+		if ( 'lossy' !== $name ) {
+			return;
+		}
+		?>
+		<span class="sui-tag sui-tag-beta"><?php esc_html_e( 'New', 'wp-smushit' ); ?></span>
+		<?php
 	}
 
+	public function add_pro_tag( $name ) {
+		$settings = Settings::get_instance();
+		if ( ! $settings->is_pro_field( $name ) || $settings->can_access_pro_field( $name ) ) {
+			return;
+		}
+		?>
+		<span class="sui-tag sui-tag-pro"><?php esc_html_e( 'Pro', 'wp-smushit' ); ?></span>
+		<?php
+	}
+
+	function set_background_email_setting_visibility( $name ) {
+		if ( $name !== 'background_email' ) {
+			return;
+		}
+
+		$bg_optimization       = WP_Smush::get_instance()->core()->mod->bg_optimization;
+		$is_background_enabled = $bg_optimization->should_use_background();
+
+		if ( ! $is_background_enabled && $bg_optimization->can_use_background() ) {
+			?>
+			<style>
+				.background_email-settings-row {
+					display: none !important;
+				}
+			</style>
+			<?php
+		}
+	}
 }

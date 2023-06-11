@@ -78,7 +78,7 @@ class Forminator_Html extends Forminator_Field {
 	 * @return array
 	 */
 	public function autofill_settings( $settings = array() ) {
-		//Unsupported Autofill
+		// Unsupported Autofill.
 		$autofill_settings = array();
 
 		return $autofill_settings;
@@ -90,18 +90,19 @@ class Forminator_Html extends Forminator_Field {
 	 * @since 1.0
 	 *
 	 * @param $field
-	 * @param $settings
+	 * @param Forminator_Render_Form $views_obj Forminator_Render_Form object.
 	 *
 	 * @return mixed
 	 */
-	public function markup( $field, $settings = array() ) {
+	public function markup( $field, $views_obj ) {
+		$settings = $views_obj->model->settings;
 
 		$html    = '';
 		$label   = esc_html( self::get_property( 'field_label', $field ) );
 		$id      = self::get_property( 'element_id', $field );
 		$form_id = false;
 
-		$html .= '<div class="forminator-field forminator-merge-tags">';
+		$html .= '<div class="forminator-field forminator-merge-tags" data-field="' . $id . '">';
 
 		if ( $label ) {
 
@@ -111,13 +112,13 @@ class Forminator_Html extends Forminator_Field {
 			);
 		}
 
-			// Check if form_id exist
+			// Check if form_id exist.
 		if ( isset( $settings['form_id'] ) ) {
 			$form_id = $settings['form_id'];
 		}
 
 			$html .= forminator_replace_variables(
-				self::get_property( 'variations', $field ),
+				wp_kses_post( self::get_property( 'variations', $field ) ),
 				$form_id
 			);
 

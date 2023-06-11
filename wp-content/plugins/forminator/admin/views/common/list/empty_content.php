@@ -5,7 +5,6 @@ if ( isset( static::$module_slug ) ) {
 	$module_slug = Forminator_Admin_Module_Edit_Page::get_slug_ajax();
 }
 
-$import_dialog = 'import_' . forminator_get_prefix( $module_slug, 'c' );
 // Empty message.
 $image_empty   = forminator_plugin_url() . 'assets/images/forminator-empty-message.png';
 $image_empty2x = forminator_plugin_url() . 'assets/images/forminator-empty-message@2x.png';
@@ -25,7 +24,7 @@ $search_empty2x = forminator_plugin_url() . 'assets/images/forminator-no-result@
 				class="sui-image sui-image-center"
 				aria-hidden="true"/>
 
-		<?php else: ?>
+		<?php else : ?>
 
 			<img src="<?php echo esc_url( $search_empty ); ?>"
 				srcset="<?php echo esc_url( $search_empty2x ); ?> 1x, <?php echo esc_url( $search_empty2x ); ?> 2x"
@@ -49,9 +48,9 @@ $search_empty2x = forminator_plugin_url() . 'assets/images/forminator-no-result@
 
 					<a href="#"
 						class="sui-button wpmudev-open-modal"
-						data-modal="<?php echo esc_attr( $import_dialog ); ?>"
+						data-modal="<?php echo esc_attr( 'import_' . $module_slug ); ?>"
 						data-modal-title=""
-						data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_popup_' . $import_dialog ) ); ?>">
+						data-nonce="<?php echo esc_attr( wp_create_nonce( 'forminator_popup_import_' . $module_slug ) ); ?>">
 						<i class="sui-icon-upload-cloud" aria-hidden="true"></i> <?php esc_html_e( 'Import', 'forminator' ); ?>
 					</a>
 				</p>
@@ -64,17 +63,19 @@ $search_empty2x = forminator_plugin_url() . 'assets/images/forminator-no-result@
 
 			<?php endif; ?>
 
-		<?php else: // Search no-result message ?>
+		<?php else : // Search no-result message. ?>
 
-			<h2><?php
+			<h2>
+			<?php
 					echo sprintf(
-								'%s "%s"',
-								esc_html__( 'No results for', 'forminator' ),
-								esc_html( $search_keyword )
-								);
-			?></h2>
+						'%s "%s"',
+						esc_html__( 'No results for', 'forminator' ),
+						esc_html( $search_keyword )
+					);
+			?>
+				</h2>
 
-			<p><?php printf( esc_html__( "We couldn't find any %s matching your search keyword. Perhaps try again?", 'forminator' ), forminator_get_prefix( $module_slug, '', false, true ) ); ?></p>
+			<p><?php echo esc_html( sprintf( __( "We couldn't find any %s matching your search keyword. Perhaps try again?", 'forminator' ), forminator_get_prefix( $module_slug, '', false, true ) ) ); ?></p>
 
 		<?php endif; ?>
 

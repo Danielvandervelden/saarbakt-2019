@@ -19,20 +19,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 require_once dirname( __FILE__ ) . '/class-exception.php';
 
-// tokenizer
+// tokenizer.
 require_once dirname( __FILE__ ) . '/parser/class-token.php';
 require_once dirname( __FILE__ ) . '/parser/class-tokenizer.php';
 
-// load symbols
+// load symbols.
 require_once dirname( __FILE__ ) . '/symbol/class-loader.php';
 
-// load nodes
+// load nodes.
 require_once dirname( __FILE__ ) . '/parser/node/abstract-class.php';
 require_once dirname( __FILE__ ) . '/parser/node/class-container.php';
 require_once dirname( __FILE__ ) . '/parser/node/class-function.php';
 require_once dirname( __FILE__ ) . '/parser/node/class-symbol.php';
 
-// parser
+// parser.
 require_once dirname( __FILE__ ) . '/parser/class-parser.php';
 
 /**
@@ -153,7 +153,7 @@ class Forminator_Calculator {
 	 */
 	public function parse() {
 		try {
-			// reset
+			// reset.
 			$this->tokenizer->input = $this->term;
 			$this->tokenizer->reset();
 
@@ -169,7 +169,7 @@ class Forminator_Calculator {
 
 			return $root_node;
 		} catch ( Forminator_Calculator_Exception $e ) {
-			// suppress
+			// suppress.
 			forminator_maybe_log( __METHOD__, $e->getMessage(), $e->getTrace() );
 
 			if ( $this->is_throwable ) {
@@ -195,7 +195,7 @@ class Forminator_Calculator {
 		try {
 			$result = $this->calculate_node( $root_node );
 		} catch ( Forminator_Calculator_Exception $e ) {
-			// suppress
+			// suppress.
 			forminator_maybe_log( __METHOD__, $e->getMessage(), $e->getTrace() );
 
 			if ( $this->is_throwable ) {
@@ -231,7 +231,7 @@ class Forminator_Calculator {
 
 			return $this->calculate_container_node( $node );
 		} else {
-			throw new Forminator_Calculator_Exception( 'Error: Cannot calculate node of unknown type "' . get_class( $node ) . '"' );// @codeCoverageIgnore
+			throw new Forminator_Calculator_Exception( 'Error: Cannot calculate node of unknown type "' . get_class( $node ) . '"' );// @codeCoverageIgnore.
 		}
 	}
 
@@ -248,21 +248,21 @@ class Forminator_Calculator {
 	 */
 	protected function calculate_container_node( $container_node ) {
 		if ( $container_node instanceof Forminator_Calculator_Parser_Node_Function ) {
-			throw new Forminator_Calculator_Exception( 'Error: Expected container node but got a function node' ); // @codeCoverageIgnore
+			throw new Forminator_Calculator_Exception( 'Error: Expected container node but got a function node' ); // @codeCoverageIgnore.
 		}
 
 		$nodes = $container_node->get_child_nodes();
 
 		$ordered_operator_nodes = $this->detect_calculation_order( $nodes );
 
-		// Actually calculate the term. Iterates over the ordered operators and
+		// Actually calculate the term. Iterates over the ordered operators and.
 		// calculates them, then replaces the parts of the operation by the result.
 		foreach ( $ordered_operator_nodes as $index => $operator_node ) {
 			reset( $nodes );
 			while ( key( $nodes ) !== $index ) {
 				$left_operand       = current( $nodes );
 				$left_operand_index = key( $nodes );
-				next( $nodes ); // back to operator cursor
+				next( $nodes ); // back to operator cursor.
 			}
 
 			$right_operand       = next( $nodes );
@@ -275,7 +275,7 @@ class Forminator_Calculator {
 			if ( $operator_node->is_unary_operator() ) {
 				$result = $symbol->operate( null, $right_number );
 
-				// Replace the participating symbols of the operation by the result
+				// Replace the participating symbols of the operation by the result.
 				unset( $nodes[ $right_operand_index ] );
 				$nodes[ $index ] = $result;
 			} else {
@@ -284,7 +284,7 @@ class Forminator_Calculator {
 
 					$result = $symbol->operate( $left_number, $right_number );
 
-					// Replace the participating symbols of the operation by the result
+					// Replace the participating symbols of the operation by the result.
 					unset( $nodes[ $left_operand_index ] );
 					unset( $nodes[ $right_operand_index ] );
 					$nodes[ $index ] = $result;
@@ -300,11 +300,11 @@ class Forminator_Calculator {
 			throw new Forminator_Calculator_Exception( 'Error: Missing operators between parts of the term.' );
 		}
 
-		// The only remaining element of the $nodes array contains the overall result
+		// The only remaining element of the $nodes array contains the overall result.
 		$result = end( $nodes );
 
-		// If the $nodes array did not contain any operator (but only one node) than
-		// the result of this node has to be calculated now
+		// If the $nodes array did not contain any operator (but only one node) than.
+		// the result of this node has to be calculated now.
 		if ( ! is_numeric( $result ) ) {
 			return $this->calculate_node( $result );
 		}
@@ -323,7 +323,7 @@ class Forminator_Calculator {
 	protected function calculate_function_node( $function_node ) {
 		$nodes = $function_node->get_child_nodes();
 
-		$arguments            = array(); // ex : func(1+2,3,4) : 1+2 need to be calculated first
+		$arguments            = array(); // ex : func(1+2,3,4) : 1+2 need to be calculated first.
 		$argument_child_nodes = array();
 
 		foreach ( $nodes as $node ) {
@@ -370,7 +370,7 @@ class Forminator_Calculator {
 		if ( $symbol instanceof Forminator_Calculator_Symbol_Number ) {
 			$number = $symbol_node->get_token()->value;
 
-			// Convert string to int or float (depending on the type of the number)
+			// Convert string to int or float (depending on the type of the number).
 			// Attention: The fractional part of a PHP float can only have a limited length.
 			// If the number has a longer fractional part, it will be cut.
 			$number = 0 + $number;
@@ -398,7 +398,7 @@ class Forminator_Calculator {
 	protected function detect_calculation_order( $nodes ) {
 		$operator_nodes = array();
 
-		// Store all symbol nodes that have a symbol of type abstract operator in an array
+		// Store all symbol nodes that have a symbol of type abstract operator in an array.
 		foreach ( $nodes as $index => $node ) {
 			if ( $node instanceof Forminator_Calculator_Parser_Node_Symbol ) {
 				if ( $node->get_symbol() instanceof Forminator_Calculator_Symbol_Operator_Abstract ) {
@@ -424,7 +424,7 @@ class Forminator_Calculator {
 	 */
 	private function sort_operator_precedence( $node_one, $node_two ) {
 
-		// First-level precedence of node one
+		// First-level precedence of node one.
 		/** @var Forminator_Calculator_Symbol_Operator_Abstract $symbol_one */
 		$symbol_one     = $node_one->get_symbol();
 		$precedence_one = 2;
@@ -432,7 +432,7 @@ class Forminator_Calculator {
 			$precedence_one = 3;
 		}
 
-		// First-level precedence of node two
+		// First-level precedence of node two.
 		/** @var Forminator_Calculator_Symbol_Operator_Abstract $symbol_two */
 		$symbol_two     = $node_two->get_symbol();
 		$precedence_two = 2;
@@ -440,13 +440,13 @@ class Forminator_Calculator {
 			$precedence_two = 3;
 		}
 
-		// If the first-level precedence is the same, compare the second-level precedence
+		// If the first-level precedence is the same, compare the second-level precedence.
 		if ( $precedence_one === $precedence_two ) {
 			$precedence_one = $symbol_one->get_precedence();
 			$precedence_two = $symbol_two->get_precedence();
 		}
 
-		// If the second-level precedence is the same, we have to ensure that the sorting algorithm does
+		// If the second-level precedence is the same, we have to ensure that the sorting algorithm does.
 		// insert the node / token that is left in the term before the node / token that is right.
 		// Therefore we cannot return 0 but compare the positions and return 1 / -1.
 		if ( $precedence_one === $precedence_two ) {

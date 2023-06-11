@@ -90,6 +90,9 @@
 
 			this.$el.datepicker({
 				"beforeShow": function (input, inst) {
+					// elementor popup
+					var popup = $(this).closest('.elementor-popup-modal');
+
 					// Remove all Hustle UI related classes
 					( inst.dpDiv ).removeClass( function( index, css ) {
 						return ( css.match ( /\bhustle-\S+/g ) || []).join( ' ' );
@@ -107,11 +110,11 @@
 						$(this).datepicker( 'option', 'minDate', null );
 					}
 					if( minDate ) {
-						var min_date = new Date( minDate );
+						var min_date = new Date( minDate.replace(/-/g, '\/').replace(/T.+/, '') );
 						$(this).datepicker( 'option', 'minDate', min_date );
 					}
 					if( maxDate ) {
-						var max_date = new Date( maxDate );
+						var max_date = new Date( maxDate.replace(/-/g, '\/').replace(/T.+/, '') );
 						$(this).datepicker( 'option', 'maxDate', max_date );
 					}
 					if( startField ) {
@@ -126,6 +129,20 @@
 						if( 'undefined' !== typeof endDateVal ) {
 							$(this).datepicker( 'option', 'maxDate', endDateVal );
 						}
+					}
+
+					// if elementor popup append datepicker with input
+					if( popup.length ) {
+						popup.append($('#ui-datepicker-div'));
+						var rect = input.getBoundingClientRect();
+						setTimeout(function() {
+							inst.dpDiv.css({
+								top: rect.top + rect.height,
+								left: rect.left
+							});
+						}, 0);
+					} else {
+						$('body').append($('#ui-datepicker-div'));
 					}
 				},
 				"beforeShowDay": disabledWeekDays,
@@ -154,7 +171,7 @@
 		getLimitDate: function ( dependentField, offset ) {
 			var fieldVal = $('input[name ="'+ dependentField + '"]').val();
 			if( typeof fieldVal !== 'undefined' ) {
-				var DateFormat = $('input[name ="'+ dependentField + '"]').data('format').replaceAll('y', 'yy'),
+				var DateFormat = $('input[name ="'+ dependentField + '"]').data('format').replace(/y/g, 'yy'),
 					sdata = offset.split('_'),
 					newDate = moment( fieldVal, DateFormat.toUpperCase() );
 				if( '-' === sdata[0] ) {
@@ -174,14 +191,16 @@
 				day = date.getDay(),
 				date_string = jQuery.datepicker.formatDate('mm/dd/yy', date);
 
-			for ( var i = 0; i < disableRange.length; i++ ) {
+			if ( 0 !== disableRange[0].length ) {
+				for ( var i = 0; i < disableRange.length; i++ ) {
 
-				var disable_date_range = disableRange[i].split("-"),
-					start_date = new Date( $.trim( disable_date_range[0] ) ),
-					end_date = new Date( $.trim( disable_date_range[1] ) );
-				if ( date >= start_date && date <= end_date ) {
-					hasRange = false;
-					break;
+					var disable_date_range = disableRange[i].split("-"),
+						start_date = new Date( disable_date_range[0].trim() ),
+						end_date = new Date( disable_date_range[1].trim() );
+					if ( date >= start_date && date <= end_date ) {
+						hasRange = false;
+						break;
+					}
 				}
 			}
 
@@ -205,5 +224,4 @@
 			}
 		});
 	};
-
 })(jQuery, window, document);

@@ -21,7 +21,7 @@
 
 			<div class="sui-tabs-content">
 
-				<?php // TAB: Forms ?>
+				<?php // TAB: Forms. ?>
 				<div tabindex="0" role="tabpanel" id="dashboard-forms-panel" class="forms-content sui-tab-content active" aria-labelledby="dashboard-forms-tab">
 					<?php
 					$this->template(
@@ -36,7 +36,7 @@
 					?>
 				</div>
 
-				<?php // TAB: Polls ?>
+				<?php // TAB: Polls. ?>
 				<div tabindex="0" role="tabpanel" id="dashboard-polls-panel" class="polls-content sui-tab-content" aria-labelledby="dashboard-polls-tab" hidden>
 					<?php
 					$this->template(
@@ -51,7 +51,7 @@
 					?>
 				</div>
 
-				<?php // TAB: Quizzes ?>
+				<?php // TAB: Quizzes. ?>
 				<div tabindex="0" role="tabpanel" id="dashboard-quizzes-panel" class="quizzes-content sui-tab-content" aria-labelledby="dashboard-quizzes-tab" hidden>
 					<?php
 					$this->template(

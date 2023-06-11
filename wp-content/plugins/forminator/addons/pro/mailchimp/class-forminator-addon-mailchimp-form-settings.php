@@ -17,6 +17,27 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 	protected $addon;
 
 	/**
+	 * Stores mailchimp group data
+	 *
+	 * @var array Groups
+	 */
+	private $groups_data = array();
+
+	/**
+	 * Stores mailchimp GDPR data
+	 *
+	 * @var array
+	 */
+	private $gdpr_data = array();
+
+	/**
+	 * Stores mailchimp tags data ( static segments )
+	 *
+	 * @var array Tags
+	 */
+	private $tags_data = array();
+
+	/**
 	 * Forminator_Addon_Mailchimp_Form_Settings constructor.
 	 *
 	 * @since 1.0 Mailchimp Addon
@@ -42,9 +63,10 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 	 * @return array
 	 */
 	public function form_settings_wizards() {
-		// already filtered on Abstract
-		// numerical array steps
-		return array(
+		// Already filtered on Forminator_Addon_Abstract::get_wizard.
+		$this->addon_form_settings = $this->get_form_settings_values();
+		// Numerical array steps.
+		$steps = array(
 			// 1
 			array(
 				'callback'     => array( $this, 'choose_mail_list' ),
@@ -52,10 +74,45 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 			),
 			// 2
 			array(
+				'callback'     => array( $this, 'choose_tags' ),
+				'is_completed' => array( $this, 'step_is_completed' ),
+			),
+			// 3
+			array(
+				'callback'     => array( $this, 'choose_group' ),
+				'is_completed' => array( $this, 'step_is_completed' ),
+			),
+			// 4
+			array(
+				'callback'     => array( $this, 'choose_gdpr' ),
+				'is_completed' => array( $this, 'step_is_completed' ),
+			),
+			// 5
+			array(
 				'callback'     => array( $this, 'map_fields' ),
 				'is_completed' => array( $this, 'step_map_fields_is_completed' ),
 			),
 		);
+
+		if ( ! empty( $this->addon_form_settings['mail_list_id'] ) ) {
+			$this->set_tags();
+			$this->set_groups();
+			$this->set_gdpr_fields();
+			// Note: order DESC is neccessary here!
+			if ( empty( $this->gdpr_data ) ) {
+				unset( $steps[3] );
+			}
+			if ( empty( $this->groups_data ) ) {
+				unset( $steps[2] );
+			}
+			if ( empty( $this->tags_data ) ) {
+				unset( $steps[1] );
+			}
+		} else {
+			unset( $steps[3], $steps[2], $steps[1] );
+		}
+
+		return $steps;
 	}
 
 	/**
@@ -68,23 +125,14 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 	 * @return array
 	 */
 	public function choose_mail_list( $submitted_data ) {
-
-		// already filtered on Forminator_Addon_Abstract::get_wizard
-		$this->addon_form_settings = $this->get_form_settings_values();
-		$current_data              = array(
+		$default_data = array(
 			'mail_list_id'         => '',
 			'enable_double_opt_in' => '',
 			'enable_gdpr'          => '',
 			'gdpr_text'            => '',
 		);
 
-		foreach ( $current_data as $key => $current_field ) {
-			if ( isset( $submitted_data[ $key ] ) ) {
-				$current_data[ $key ] = $submitted_data[ $key ];
-			} elseif ( isset( $this->addon_form_settings[ $key ] ) ) {
-				$current_data[ $key ] = $this->addon_form_settings[ $key ];
-			}
-		}
+		$current_data = $this->get_current_data( $default_data, $submitted_data );
 
 		forminator_addon_maybe_log( __METHOD__, 'current_data', $current_data );
 
@@ -92,33 +140,55 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 
 		$error_message        = '';
 		$input_error_messages = array();
+		$api_error            = false;
 
 		$html_select_mail_list = '';
 		$html_field_mail_list  = '';
 
 		try {
-			$api = $this->addon->get_api();
-			$mail_lists = $api->get_all_lists();
+			$api        = $this->addon->get_api();
 
-			// Get mailchimp list to be selected, bail on empty
+			// Check API key first if valid.
+			$check_api  = $api->ping();
+			if ( 'Forminator_Addon_Mailchimp_Wp_Api_Exception' === get_class( $check_api ) ) {
+				$api_error = true;
+				throw new Forminator_Addon_Mailchimp_Exception( $check_api->getMessage() );
+			}
+
+			$mail_lists = $api->get_all_lists();
+			$lists      = wp_list_pluck( $mail_lists, 'name', 'id' );
+
+			// Get mailchimp list to be selected, bail on empty.
 			if ( empty( $mail_lists ) ) {
 				throw new Forminator_Addon_Mailchimp_Exception( 'Your Mailchimp Audiences is empty, please create one.' );
 			}
 
 			$html_select_mail_list  = '<div class="forminator-select-refresh">';
-			$html_select_mail_list .= '<select name="mail_list_id" class="sui-select sui-form-control">';
-			$html_select_mail_list .= self::email_lists_options( $mail_lists, $current_data['mail_list_id'] );
+			$html_select_mail_list .= '<select name="mail_list_id" class="sui-select">';
+			$html_select_mail_list .= self::get_select_html( $lists, $current_data['mail_list_id'] );
 			$html_select_mail_list .= '</select>';
 			$html_select_mail_list .= self::refresh_button();
 			$html_select_mail_list .= '</div>';
 
-			// logic when user submit mail list
+			// logic when user submit mail list.
 			if ( $is_submit ) {
 				forminator_addon_maybe_log( __METHOD__, '$submitted_data', $submitted_data );
 				$mail_list_name = $this->get_choosen_mail_list_name( $mail_lists, $submitted_data );
 				forminator_addon_maybe_log( __METHOD__, '$mail_list_name', $mail_list_name );
 				if ( empty( $mail_list_name ) ) {
 					throw new Forminator_Addon_Mailchimp_Form_Settings_Exception( __( 'Please select a valid Email Audience', 'forminator' ), 'mail_list_id' );
+				}
+				if ( ! empty( $this->addon_form_settings['mail_list_id'] ) && $this->addon_form_settings['mail_list_id'] !== $submitted_data['mail_list_id'] ) {
+					// reset cache cuz List id is changed.
+					unset(
+						$this->addon_form_settings['tags_data'],
+						$this->addon_form_settings['groups_data'],
+						$this->addon_form_settings['gdpr_data'],
+						$this->addon_form_settings['tags'],
+						$this->addon_form_settings['group'],
+						$this->addon_form_settings['group_interest'],
+						$this->addon_form_settings['gdpr']
+					);
 				}
 				$this->addon_form_settings['mail_list_id']   = $submitted_data['mail_list_id'];
 				$this->addon_form_settings['mail_list_name'] = $mail_list_name;
@@ -129,7 +199,7 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 					$this->addon_form_settings['enable_double_opt_in'] = 0;
 				}
 
-				// GDPR fields
+				// GDPR fields.
 				if ( Forminator_Addon_Mailchimp::is_enable_gdpr() ) {
 					if ( isset( $submitted_data['enable_gdpr'] ) ) {
 						$this->addon_form_settings['enable_gdpr'] = $submitted_data['enable_gdpr'];
@@ -145,78 +215,546 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 			}
 
 			$html_field_mail_list
-				= '<div class="sui-form-field">
+				= '<div class="sui-form-field" style="margin-bottom: 10px;">
 						<label class="sui-label">' . __( 'Email Audience', 'forminator' ) . '</label>
 						' . $html_select_mail_list . '
 					</div>';
 
 		} catch ( Forminator_Addon_Mailchimp_Form_Settings_Exception $e ) {
-			// send errors with related input
+			// send errors with related input.
 			$input_error_messages = $e->get_input_exceptions();
 			if ( isset( $input_error_messages['mail_list_id'] ) ) {
 				$html_field_mail_list
-					= '<div class="sui-form-field sui-form-field-error">
+					= '<div class="sui-form-field sui-form-field-error" style="margin-bottom: 10px;">
 							<label class="sui-label">' . __( 'Email Audience', 'forminator' ) . '</label>
 							' . $html_select_mail_list . '
 							<span class="sui-error-message">' . esc_html( $input_error_messages['mail_list_id'] ) . '</span>
 						</div>';
 			}
 		} catch ( Forminator_Addon_Mailchimp_Exception $e ) {
-			// send error back to client
-			$error_message = '<div class="sui-notice sui-notice-error"><p>' . $e->getMessage() . '</p></div>';
+			// send error back to client.
+			$error_message = '<div role="alert" class="sui-notice sui-notice-red sui-active" style="display: block; text-align: left;" aria-live="assertive">';
+
+				$error_message .= '<div class="sui-notice-content">';
+
+					$error_message .= '<div class="sui-notice-message">';
+
+						$error_message .= '<span class="sui-notice-icon sui-icon-info" aria-hidden="true"></span>';
+
+						$error_message .= '<p>' . $e->getMessage() . '</p>';
+
+						if ( $api_error ) {
+							$error_message .= '<p>' . esc_html__( 'See if creating a new API key helps.', 'forminator' ) . '</p>';
+						}
+
+					$error_message .= '</div>';
+
+				$error_message .= '</div>';
+
+			$error_message .= '</div>';
 		}
 
 		$buttons = array();
-		// add disconnect button if already is_form_connected
-		if ( $this->addon->is_form_connected( $this->form_id ) ) {
-			$buttons['disconnect']['markup'] = Forminator_Addon_Mailchimp::get_button_markup(
-				esc_html__( 'Deactivate', 'forminator' ),
-				'sui-button-ghost sui-tooltip sui-tooltip-top-center forminator-addon-form-disconnect',
-				esc_html__( 'Deactivate Mailchimp from this Form.', 'forminator' )
-			);
+
+		if ( ! $api_error ) {
+			// add disconnect button if already is_form_connected.
+			if ( $this->addon->is_form_connected( $this->form_id ) ) {
+				$buttons['disconnect']['markup'] = Forminator_Addon_Mailchimp::get_button_markup(
+					esc_html__( 'Deactivate', 'forminator' ),
+					'sui-button-ghost sui-tooltip sui-tooltip-top-center forminator-addon-form-disconnect',
+					esc_html__( 'Deactivate Mailchimp from this Form.', 'forminator' )
+				);
+			}
+
+			$buttons['next']['markup'] = '<div class="sui-actions-right">' .
+										Forminator_Addon_Mailchimp::get_button_markup( esc_html__( 'Next', 'forminator' ), 'forminator-addon-next' ) .
+										'</div>';
+
+			$gdpr_fields = '';
+			if ( Forminator_Addon_Mailchimp::is_enable_gdpr() ) {
+				$gdpr_fields = '<div class="sui-form-field">' .
+							'<label class="sui-label">' . __( 'Enable GDPR', 'forminator' ) . '</label>
+									<input type="checkbox" name="enable_gdpr" value="1" ' . checked( 1, $current_data['enable_double_opt_in'], false ) . '>
+								</div>
+
+								<div class="sui-form-field">
+									<label class="sui-label">' . __( 'GDPR Text', 'forminator' ) . '</label>
+									<textarea name="gdpr_text">' . $current_data['gdpr_text'] . '</textarea>
+								</div>';
+			}
 		}
 
-		$buttons['next']['markup'] = '<div class="sui-actions-right">' .
-									Forminator_Addon_Mailchimp::get_button_markup( esc_html__( 'Next', 'forminator' ), 'forminator-addon-next' ) .
-									'</div>';
+		$html  = '<div class="forminator-integration-popup__header">';
+			$html .= '<h3 id="dialogTitle2" class="sui-box-title sui-lg" style="overflow: initial; text-overflow: none; white-space: normal;">' . __( 'Choose Audience', 'forminator' ) . '</h3>';
+			$html .= '<p class="sui-description">' . __( 'Choose the audience you want to send form data to.', 'forminator' ) . '</p>';
+			$html .= $error_message;
+		$html .= '</div>';
 
-		$gdpr_fields = '';
-		if ( Forminator_Addon_Mailchimp::is_enable_gdpr() ) {
-			$gdpr_fields = '<div class="sui-form-field">' .
-						'<label class="sui-label">' . __( 'Enable GDPR', 'forminator' ) . '</label>
-								<input type="checkbox" name="enable_gdpr" value="1" ' . checked( 1, $current_data['enable_double_opt_in'], false ) . '>
-							</div>
-
-							<div class="sui-form-field">
-								<label class="sui-label">' . __( 'GDPR Text', 'forminator' ) . '</label>
-								<textarea name="gdpr_text">' . $current_data['gdpr_text'] . '</textarea>
-							</div>';
+		if ( ! $api_error ) {
+			$html .= '<form enctype="multipart/form-data">';
+				$html .= $html_field_mail_list;
+				$html .= '<div class="sui-form-field">';
+					$html .= '<label class="sui-toggle">';
+						$html .= '<input type="checkbox" name="enable_double_opt_in" value="1" id="forminator_addon_mailchimp_enable_double_opt_in" ' . checked( 1, $current_data['enable_double_opt_in'], false ) . ' />';
+						$html .= '<span class="sui-toggle-slider"></span>';
+						$html .= '<span class="sui-toggle-label">' . __( 'Use Double Opt in', 'forminator' ) . '</span>';
+					$html .= '</label>';
+				$html .= '</div>';
+				$html .= $gdpr_fields;
+			$html .= '</form>';
 		}
 
 		return array(
-			'html'       => '<div class="sui-box-content integration-header"><h3 class="sui-box-title" id="dialogTitle2">' . __( 'Choose your audience', 'forminator' ) . '</h3>
-							<span class="sui-description" style="margin-top: 20px;">' . __( 'Choose the audience you want to send form data to.', 'forminator' ) . '</span>
-							' . $error_message . '</div>
-							<form enctype="multipart/form-data">
-								' . $html_field_mail_list . '
-								<div class="sui-form-field">
-									<label class="sui-toggle">
-										<input type="checkbox"
-										name="enable_double_opt_in"
-										id="forminator_addon_mailchimp_enable_double_opt_in"
-										value="1" ' . checked( 1, $current_data['enable_double_opt_in'], false ) . '>
-										<span class="sui-toggle-slider"></span>
-									</label>
-									<span class="sui-toggle-label" for="forminator_addon_mailchimp_enable_double_opt_in">' . __( 'Use Double Opt in', 'forminator' ) . '</span>
-								</div>
-								' . $gdpr_fields . '
-							</form>',
+			'html'       => $html,
 			'redirect'   => false,
 			'buttons'    => $buttons,
 			'has_errors' => ( ! empty( $error_message ) || ! empty( $input_error_messages ) ),
 			'size'       => 'small',
 		);
 
+	}
+
+	/**
+	 * Get current data based on submitted or saved data
+	 *
+	 * @param array $current_data Default data.
+	 * @param array $submitted_data Submitted data.
+	 * @return array
+	 */
+	private function get_current_data( $current_data, $submitted_data ) {
+		foreach ( array_keys( $current_data ) as $key ) {
+			if ( isset( $submitted_data[ $key ] ) ) {
+				$current_data[ $key ] = $submitted_data[ $key ];
+			} elseif ( isset( $this->addon_form_settings[ $key ] ) ) {
+				$current_data[ $key ] = $this->addon_form_settings[ $key ];
+			}
+		}
+
+		return $current_data;
+	}
+
+	/**
+	 * Check if it's submission a step.
+	 *
+	 * @param array $submitted_data Submitted data.
+	 * @param int   $step Step.
+	 * @return boolean
+	 */
+	private static function is_submit( $submitted_data, $step ) {
+		if ( ! empty( $submitted_data ) ) {
+			return true;
+		}
+
+		$post_data = isset( $_POST['data'] ) ? Forminator_Core::sanitize_array( $_POST['data'], 'data' ) : array();
+
+		if ( ! is_array( $post_data ) && is_string( $post_data ) ) {
+			$post_string = $post_data;
+			$post_data   = array();
+			wp_parse_str( $post_string, $post_data );
+
+			return in_array( 'is_submit', array_keys( $post_data ), true ) && strval( $step ) === $post_data['is_submit'];
+		}
+
+		return false;
+	}
+
+	/**
+	 * Choose Tags wizard
+	 *
+	 * @since 1.15.3 Mailchimp Addon
+	 * @param array $submitted_data Submitted data.
+	 * @return array
+	 */
+	public function choose_tags( $submitted_data ) {
+		$step         = 2;
+		$default_data = array(
+			'tags' => array(),
+		);
+		$is_submit    = self::is_submit( $submitted_data, $step );
+
+		if ( $is_submit && empty( $submitted_data ) ) {
+			$submitted_data = $default_data;
+		}
+		$current_data = $this->get_current_data( $default_data, $submitted_data );
+
+		forminator_addon_maybe_log( __METHOD__, 'current_data', $current_data );
+
+		$selectbox = $this->get_second_step_options_tags( $current_data['tags'] );
+
+		// Logic when user submit tags.
+		if ( $is_submit ) {
+			forminator_addon_maybe_log( __METHOD__, '$submitted_data', $submitted_data );
+
+			if ( is_array( $submitted_data['tags'] ) ) {
+
+				$save_tags = array();
+				// Store the tag id and tag name.
+				foreach ( $submitted_data['tags'] as $tag_id ) {
+
+					if ( '-1' === $tag_id || empty( $this->tags_data[ $tag_id ] ) ) {
+						continue;
+					}
+
+					$save_tags[ $tag_id ] = esc_html( $this->tags_data[ $tag_id ] );
+				}
+
+				$this->addon_form_settings['tags'] = $save_tags;
+			}
+
+			$this->save_form_settings_values( $this->addon_form_settings );
+		}
+
+		$buttons = array(
+			'cancel' => array(
+				'markup' => Forminator_Addon_Mailchimp::get_button_markup( esc_html__( 'Back', 'forminator' ), 'sui-button-ghost forminator-addon-back' ),
+			),
+			'next'   => array(
+				'markup' => '<div class="sui-actions-right">' .
+					Forminator_Addon_Mailchimp::get_button_markup( esc_html__( 'Next', 'forminator' ), 'forminator-addon-next' ) .
+				'</div>',
+			),
+		);
+
+		$html  = '<div class="forminator-integration-popup__header">';
+			$html .= '<h3 id="dialogTitle2" class="sui-box-title sui-lg" style="overflow: initial; text-overflow: none; white-space: normal;">' . esc_html__( 'Mailchimp Tags', 'forminator' ) . '</h3>';
+			$html .= '<p class="sui-description">' . esc_html__( 'Mailchimp tags help you organize your audience. You can add as many tags as you’d like to your form subscribers.', 'forminator' ) . '</p>';
+		$html .= '</div>';
+		$html .= '<form enctype="multipart/form-data">';
+			$html .= $selectbox;
+			$html .= '<input type="hidden" name="is_submit" value="' . $step . '">';
+		$html .= '</form>';
+
+		return array(
+			'html'     => $html,
+			'redirect' => false,
+			'buttons'  => $buttons,
+			'has_back' => true,
+		);
+	}
+
+	/**
+	 * Choose Groups wizard
+	 *
+	 * @since 1.15.3 Mailchimp Addon
+	 * @param array $submitted_data Submitted data.
+	 * @return array
+	 */
+	public function choose_group( $submitted_data ) {
+		$default_data = array(
+			'group' => '',
+		);
+		$is_submit    = ! empty( $submitted_data );
+
+		if ( $is_submit && empty( $submitted_data ) ) {
+			$submitted_data = $default_data;
+		}
+		$current_data = $this->get_current_data( $default_data, $submitted_data );
+
+		forminator_addon_maybe_log( __METHOD__, 'current_data', $current_data );
+
+		$selectbox = $this->get_third_step_options_groups( $current_data['group'] );
+
+		// Logic when user submit group.
+		if ( $is_submit ) {
+			forminator_addon_maybe_log( __METHOD__, '$submitted_data', $submitted_data );
+			$group_id = $submitted_data['group'];
+
+			// Store the selected group_id.
+			$this->addon_form_settings['group'] = $group_id;
+
+			if ( ! empty( $submitted_data['group'] ) ) {
+				// Store the group name.
+				$this->addon_form_settings['group_name'] = $this->groups_data[ $group_id ]['name'];
+
+				// Store the group type.
+				$this->addon_form_settings['group_type'] = $this->groups_data[ $group_id ]['type'];
+			}
+			$this->addon_form_settings['group_interest'] = isset( $submitted_data['group_interest'] ) ? $submitted_data['group_interest'] : '';
+			$interests                                   = $this->get_interests();
+
+			$this->addon_form_settings['interest_options'] = $interests;
+
+			$this->addon_form_settings['group_interest_placeholder'] = isset( $submitted_data['group_interest_placeholder'] ) ? $submitted_data['group_interest_placeholder'] : '';
+
+			$this->save_form_settings_values( $this->addon_form_settings );
+		}
+
+		$buttons = array(
+			'cancel' => array(
+				'markup' => Forminator_Addon_Mailchimp::get_button_markup( esc_html__( 'Back', 'forminator' ), 'sui-button-ghost forminator-addon-back' ),
+			),
+			'next'   => array(
+				'markup' => '<div class="sui-actions-right">' .
+					Forminator_Addon_Mailchimp::get_button_markup( esc_html__( 'Next', 'forminator' ), 'forminator-addon-next' ) .
+				'</div>',
+			),
+		);
+
+		$html  = '<div class="forminator-integration-popup__header">';
+			$html .= '<h3 id="dialogTitle2" class="sui-box-title sui-lg" style="overflow: initial; text-overflow: none; white-space: normal;">' . esc_html__( 'Mailchimp Groups', 'forminator' ) . '</h3>';
+			$html .= '<p class="sui-description">' . esc_html__( 'Mailchimp groups allow you to categorize your audience based on their interests. Use the options below to group your audience based on submitted form data.', 'forminator' ) . '</p>';
+		$html .= '</div>';
+		$html .= '<form enctype="multipart/form-data">';
+			$html .= $selectbox;
+		$html .= '</form>';
+
+		return array(
+			'html'     => $html,
+			'redirect' => false,
+			'buttons'  => $buttons,
+			'has_back' => true,
+		);
+	}
+
+	/**
+	 * Choose GDPR wizard
+	 *
+	 * @since 1.15.3 Mailchimp Addon
+	 * @param array $submitted_data Submitted data.
+	 * @return array
+	 */
+	public function choose_gdpr( $submitted_data ) {
+		$step         = 4;
+		$default_data = array(
+			'gdpr' => array(),
+		);
+		$is_submit    = self::is_submit( $submitted_data, $step );
+
+		if ( $is_submit && empty( $submitted_data ) ) {
+			$submitted_data = $default_data;
+		}
+		$current_data = $this->get_current_data( $default_data, $submitted_data );
+
+		forminator_addon_maybe_log( __METHOD__, 'current_data', $current_data );
+
+		$checkboxes = $this->get_forth_step_options_gdpr( array_keys( $current_data['gdpr'] ) );
+
+		// Logic when user submit gdpr.
+		if ( $is_submit ) {
+			forminator_addon_maybe_log( __METHOD__, '$submitted_data', $submitted_data );
+
+			if ( is_array( $submitted_data['gdpr'] ) ) {
+
+				$save_data = array();
+				// Store the gdpr id and gdpr title.
+				foreach ( $submitted_data['gdpr'] as $gdpr_id ) {
+
+					if ( empty( $this->gdpr_data[ $gdpr_id ] ) ) {
+						continue;
+					}
+
+					$save_data[ $gdpr_id ] = esc_html( $this->gdpr_data[ $gdpr_id ] );
+				}
+
+				$this->addon_form_settings['gdpr'] = $save_data;
+			}
+
+			$this->save_form_settings_values( $this->addon_form_settings );
+		}
+
+		$buttons = array(
+			'cancel' => array(
+				'markup' => Forminator_Addon_Mailchimp::get_button_markup( esc_html__( 'Back', 'forminator' ), 'sui-button-ghost forminator-addon-back' ),
+			),
+			'next'   => array(
+				'markup' => '<div class="sui-actions-right">' .
+					Forminator_Addon_Mailchimp::get_button_markup( esc_html__( 'Next', 'forminator' ), 'forminator-addon-next' ) .
+				'</div>',
+			),
+		);
+
+		$html  = '<div class="forminator-integration-popup__header">';
+			$html .= '<h3 id="dialogTitle2" class="sui-box-title sui-lg" style="overflow: initial; text-overflow: none; white-space: normal;">' . esc_html__( 'Mailchimp GDPR Permissions', 'forminator' ) . '</h3>';
+			$html .= '<p class="sui-description">' . esc_html__( 'You can optionally opt-in the subscribers into your Mailchimp’s audience permissions. Choose the GDPR permissions to opt-in your subscribers.', 'forminator' ) . '</p>';
+		$html .= '</div>';
+		$html .= '<form enctype="multipart/form-data">';
+			$html .= $checkboxes;
+			$html .= '<input type="hidden" name="is_submit" value="' . $step . '">';
+		$html .= '</form>';
+
+		return array(
+			'html'     => $html,
+			'redirect' => false,
+			'buttons'  => $buttons,
+			'has_back' => true,
+		);
+	}
+
+	/**
+	 * Returns Mailchimp group interests list
+	 *
+	 * @param array $data Data.
+	 * @return string
+	 */
+	public function get_group_interests( $data ) {
+		if ( ! empty( $data['global_id'] ) ) {
+			$this->addon->multi_global_id = $data['global_id'];
+		}
+
+		$this->addon_form_settings = $this->get_form_settings_values();
+
+		if ( ! empty( $data['group'] ) ) {
+			$group = $data['group'];
+		} else {
+			return '';
+		}
+
+		$api       = $this->addon->get_api();
+		$interests = $api->get_interests(
+			$this->addon_form_settings['mail_list_id'],
+			$group
+		);
+
+		// If no group was selected or the selected group doesn't have interests.
+		if ( empty( $interests ) || ! is_array( $interests ) ) {
+			return '';
+		}
+
+		if ( isset( $this->addon_form_settings['group'] ) && isset( $this->addon_form_settings['group_interest'] ) && $this->addon_form_settings['group'] === $group ) {
+			$interest_id = $this->addon_form_settings['group_interest'];
+		} else {
+			$interest_id = '';
+		}
+
+		$this->set_groups();
+		$groups     = wp_list_pluck( $this->groups_data, 'type', 'id' );
+		$group_type = isset( $groups[ $group ] ) ? $groups[ $group ] : '';
+
+		$html = $this->get_group_interest_options( $group_type, $interests, $interest_id );
+
+		return $html;
+	}
+
+	/**
+	 * Return an array of options used to display the settings of Group interests.
+	 *
+	 * @todo use $interest_id to show the selected values if set. This can be an array if group type is checkbox.
+	 *
+	 * @param string $type Group type.
+	 * @param array  $interests Interests.
+	 * @param string $interest_id Interest ID.
+	 * @return array
+	 */
+	private function get_group_interest_options( $type, $interests, $interest_id ) {
+		if ( in_array( $type, array( 'dropdown' ), true ) ) {
+			$type = 'select';
+		}
+		if ( in_array( $type, array( 'hidden' ), true ) ) {
+			$type = 'checkboxes';
+		}
+
+		$choose_prompt = esc_html__( 'Select Interest(s)', 'forminator' );
+		$input_name    = 'group_interest';
+
+		$html  = '<div class="sui-form-field">';
+		$html .= '<label class="sui-label" for="' . $input_name . '">' . $choose_prompt . '</label>';
+
+		switch ( $type ) {
+			case 'checkboxes':
+				$html .= self::get_checkboxes_html( $interests, $input_name . '[]', $interest_id );
+				break;
+
+			case 'radio':
+				$html .= self::get_radios_html( $interests, $input_name, $interest_id );
+				break;
+
+			default:
+				$html .= '<select id="' . $input_name . '" name="' . $input_name . '" class="sui-select">';
+				$html .= self::get_select_html( $interests, $interest_id );
+				$html .= '</select>';
+				break;
+		}
+
+		$html .= '</div>';
+
+		return $html;
+	}
+
+	/**
+	 * Return html of options used to display the settings of the 2nd step for tags.
+	 *
+	 * @since 1.15.3
+	 *
+	 * @param array $selected_ids Selected Tag ID.
+	 * @return array
+	 */
+	private function get_second_step_options_tags( $selected_ids ) {
+		ob_start();
+		// Reset cache.
+		try {
+			$this->set_tags( true );
+			?>
+				<div class="sui-form-field">
+					<label class="sui-label" for="tags"><strong><?php echo esc_html__( 'Tags', 'forminator' ) . '</strong>&nbsp;(' . esc_html__( 'Optional', 'forminator' ) . ')'; ?></label>
+					<select class="sui-select" name="tags[]" id="tags"
+							multiple="multiple"
+							data-tags="false"
+							data-token-separators="[',']"
+							data-placeholder="<?php esc_html_e( 'Start typing to add tags', 'forminator' ); ?>"
+							data-allow-clear="false">
+
+					<?php foreach ( $this->tags_data as $tag_id => $name ) { ?>
+						<option value="<?php echo esc_attr( $tag_id ); ?>"<?php selected( in_array( $tag_id, array_keys( $selected_ids ), true ) ); ?>><?php echo esc_html( $name ); ?></option>
+					<?php } ?>
+					</select>
+				</div>
+			<?php
+		} catch ( Exception $e ) {
+			?>
+				<div role="alert" class="sui-notice sui-notice-red sui-active" style="display: block; text-align: left;" aria-live="assertive">
+					<div class="sui-notice-content">
+						<div class="sui-notice-message"><span class="sui-notice-icon sui-icon-info" aria-hidden="true"></span>
+							<p><?php echo esc_html( $e->getMessage() ); ?></p>
+						</div>
+					</div>
+				</div>
+			<?php
+		}
+		$html = ob_get_clean();
+
+		return $html;
+	}
+
+	/**
+	 * Return html of options used to display the settings of the 3rd step for groups.
+	 *
+	 * @since 1.15.3
+	 *
+	 * @param string $selected_id Selected group ID.
+	 * @return array
+	 */
+	private function get_third_step_options_groups( $selected_id ) {
+		// Reset cache.
+		$this->set_groups( true );
+		$lists = wp_list_pluck( $this->groups_data, 'name', 'id' );
+
+		$html  = '<div class="sui-form-field">';
+		$html .= '<label class="sui-label" for="group"><strong>' . esc_html__( 'Group category', 'forminator' ) . '</strong>&nbsp;(' . esc_html__( 'Optional', 'forminator' ) . ')</label>';
+		$html .= '<select id="group" name="group" data-nonce="' . wp_create_nonce( 'forminator_mailchimp_interests' ) . '" class="sui-select" data-placeholder="' . esc_html__( 'Select group category', 'forminator' ) . '">';
+			$html .= '<option></option>';
+			$html .= self::get_select_html( $lists, $selected_id );
+		$html .= '</select>';
+		$html .= '<span class="sui-description">' . esc_html__( 'Select a group category to see more options.', 'forminator' ) . '</span>';
+		$html .= '</div>';
+
+		return $html;
+	}
+
+	/**
+	 * Return html of options used to display the settings of the 4rd step for GDPR.
+	 *
+	 * @since 1.15.3
+	 *
+	 * @param string $selected_ids Selected GDRP ID.
+	 * @return array
+	 */
+	private function get_forth_step_options_gdpr( $selected_ids ) {
+		$html  = '<div class="sui-form-field">';
+		$html .= '<label class="sui-label"><strong>' . esc_html__( 'GDPR permissions', 'forminator' ) . '</strong>&nbsp;(' . esc_html__( 'Optional', 'forminator' ) . ')</label>';
+		$html .= self::get_checkboxes_html( $this->gdpr_data, 'gdpr[]', $selected_ids );
+		$html .= '</div>';
+
+		return $html;
 	}
 
 	/**
@@ -230,16 +768,14 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 	 * @return array
 	 */
 	public function map_fields( $submitted_data ) {
-		$this->addon_form_settings = $this->get_form_settings_values();
-		$is_close                  = false;
-
+		$is_close              = false;
 		$is_submit             = ! empty( $submitted_data );
 		$error_message         = '';
 		$html_input_map_fields = '';
 		$input_error_messages  = array();
 
 		try {
-			// get merge fields
+			// get merge fields.
 			$mailchimp_fields_list_request = $this->addon->get_api()->get_list_merge_fields( $this->addon_form_settings['mail_list_id'], array() );
 			$mailchimp_required_fields     = array();
 			$mailchimp_required_fields_ids = array();
@@ -264,7 +800,7 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 				}
 			}
 
-			// find type of email
+			// find type of email.
 			$email_fields = array();
 			foreach ( $this->form_fields as $form_field ) {
 				if ( 'email' === $form_field['type'] ) {
@@ -272,7 +808,7 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 				}
 			}
 
-			// EMAIL
+			// EMAIL.
 			$current_data['fields_map']['EMAIL'] = '';
 			if ( isset( $submitted_data['fields_map']['EMAIL'] ) ) {
 				$current_data['fields_map']['EMAIL'] = $submitted_data['fields_map']['EMAIL'];
@@ -324,7 +860,21 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 				}
 			}
 		} catch ( Forminator_Addon_Mailchimp_Exception $e ) {
-			$error_message = '<div class="sui-notice sui-notice-error"><p>' . $e->getMessage() . '</p></div>';
+			$error_message = '<div role="alert" class="sui-notice sui-notice-red sui-active" style="display: block; text-align: left;" aria-live="assertive">';
+
+				$error_message .= '<div class="sui-notice-content">';
+
+					$error_message .= '<div class="sui-notice-message">';
+
+						$error_message .= '<span class="sui-notice-icon sui-icon-info" aria-hidden="true"></span>';
+
+						$error_message .= '<p>' . $e->getMessage() . '</p>';
+
+					$error_message .= '</div>';
+
+				$error_message .= '</div>';
+
+			$error_message .= '</div>';
 		}
 
 		//cleanup map fields input markup placeholder
@@ -337,18 +887,16 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 			}
 		}
 
-		$buttons = array();
-		if ( $this->addon->is_form_connected( $this->form_id ) ) {
-			$buttons['disconnect']['markup'] = Forminator_Addon_Mailchimp::get_button_markup(
-				esc_html__( 'Deactivate', 'forminator' ),
-				'sui-button-ghost sui-tooltip sui-tooltip-top-center forminator-addon-form-disconnect',
-				esc_html__( 'Deactivate Mailchimp from this Form.', 'forminator' )
-			);
-		}
-
-		$buttons['next']['markup'] = '<div class="sui-actions-right">' .
-									Forminator_Addon_Mailchimp::get_button_markup( esc_html__( 'Save', 'forminator' ), 'sui-button-primary forminator-addon-finish' ) .
-									'</div>';
+		$buttons = array(
+			'cancel' => array(
+				'markup' => Forminator_Addon_Mailchimp::get_button_markup( esc_html__( 'Back', 'forminator' ), 'sui-button-ghost forminator-addon-back' ),
+			),
+			'next'   => array(
+				'markup' => '<div class="sui-actions-right">' .
+					Forminator_Addon_Mailchimp::get_button_markup( esc_html__( 'Save', 'forminator' ), 'sui-button-primary forminator-addon-finish' ) .
+				'</div>',
+			),
+		);
 
 		$notification = array();
 
@@ -359,13 +907,17 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 			);
 		}
 
+		$html  = '<div class="forminator-integration-popup__header">';
+			$html .= '<h3 id="dialogTitle2" class="sui-box-title sui-lg" style="overflow: initial; text-overflow: none; white-space: normal;">' . __( 'Assign Fields', 'forminator' ) . '</h3>';
+			$html .= '<p class="sui-description">' . __( 'Lastly, match up your form fields with your campaign fields to make sure we\'re sending data to the right place.', 'forminator' ) . '</p>';
+			$html .= $error_message;
+		$html .= '</div>';
+		$html .= '<form enctype="multipart/form-data">';
+			$html .= $html_input_map_fields;
+		$html .= '</form>';
+
 		return array(
-			'html'         => '<div class="sui-box-content integration-header"><h3 class="sui-box-title" id="dialogTitle2">' . __( 'Assign Fields', 'forminator' ) . '</h3>
-							<span class="sui-description" style="margin-top: 20px;">' . __( 'Lastly, match up your form fields with your campaign fields to make sure we\'re sending data to the right place.', 'forminator' ) . '</span>
-							' . $error_message . '</div>
-							<form enctype="multipart/form-data">
-								' . $html_input_map_fields . '
-							</form>',
+			'html'         => $html,
 			'redirect'     => false,
 			'is_close'     => $is_close,
 			'buttons'      => $buttons,
@@ -400,6 +952,7 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 				<td>Email Address <span class="integrations-required-field">*</span></td>
 				<td>
 					<div class="sui-form-field {{$error_css_class_EMAIL}}">
+						<?php // DEV NOTE: Select without JS. ?>
 						<select class="sui-select" name="fields_map[EMAIL]">
 							<?php if ( empty( $email_fields ) ) { ?>
 								<option value=""><?php esc_html_e( 'None', 'forminator' ); ?></option>
@@ -407,7 +960,7 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 								<?php foreach ( $email_fields as $email_field ) { ?>
 									<option value="<?php echo esc_attr( $email_field['element_id'] ); ?>"
 										<?php selected( $current_data['fields_map']['EMAIL'], $email_field['element_id'] ); ?>>
-										<?php echo esc_html( $email_field['field_label'] . ' | ' . $email_field['element_id'] ); ?>
+										<?php echo esc_html( strip_tags( $email_field['field_label'] ) . ' | ' . $email_field['element_id'] ); ?>
 									</option>
 								<?php } ?>
 							<?php } ?>
@@ -425,7 +978,7 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 						$address_require_sign = 'addr2' === $addr ? '' : $require_sign;
 						?>
 						<tr>
-							<td><?php echo esc_html( $item->name . ' - ' . $address ); ?> <?php echo esc_html( $address_require_sign ); ?></td>
+							<td><?php echo esc_html( $item->name . ' - ' . $address ); ?> <?php echo wp_kses_post( $address_require_sign ); ?></td>
 							<td>
 								<div class="sui-form-field {{$error_css_class_<?php echo esc_attr( $item->tag ); ?>_<?php echo esc_attr( $addr ); ?>}}">
 									<select class="sui-select" name="fields_map[<?php echo esc_attr( $item->tag ); ?>][<?php echo esc_attr( $addr ); ?>]">
@@ -433,7 +986,7 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 										<?php foreach ( $this->form_fields as $form_field ) { ?>
 											<option value="<?php echo esc_attr( $form_field['element_id'] ); ?>"
 												<?php selected( $current_data['fields_map'][ $item->tag ][ $addr ], $form_field['element_id'] ); ?>>
-												<?php echo esc_html( $form_field['field_label'] . ' | ' . $form_field['element_id'] ); ?>
+												<?php echo esc_html( strip_tags( $form_field['field_label'] ) . ' | ' . $form_field['element_id'] ); ?>
 											</option>
 										<?php } ?>
 									</select>
@@ -446,7 +999,7 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 				} else {
 					?>
 					<tr>
-						<td><?php echo esc_html( $item->name ); ?> <?php echo esc_html( $require_sign ); ?></td>
+						<td><?php echo esc_html( $item->name ); ?> <?php echo wp_kses_post( $require_sign ); ?></td>
 						<td>
 							<div class="sui-form-field {{$error_css_class_<?php echo esc_attr( $item->tag ); ?>}}">
 								<select class="sui-select" name="fields_map[<?php echo esc_attr( $item->tag ); ?>]">
@@ -454,7 +1007,7 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 									<?php foreach ( $this->form_fields as $form_field ) { ?>
 										<option value="<?php echo esc_attr( $form_field['element_id'] ); ?>"
 											<?php selected( $current_data['fields_map'][ $item->tag ], $form_field['element_id'] ); ?>>
-											<?php echo esc_html( $form_field['field_label'] . ' | ' . $form_field['element_id'] ); ?>
+											<?php echo esc_html( strip_tags( $form_field['field_label'] ) . ' | ' . $form_field['element_id'] ); ?>
 										</option>
 									<?php } ?>
 								</select>
@@ -496,6 +1049,103 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 	}
 
 	/**
+	 * Set the tags of the given list.
+	 *
+	 * @param bool $force Optional. If true - don't use cache.
+	 * @since 1.15.3
+	 */
+	private function set_tags( $force = false ) {
+		if ( ! $force && isset( $this->addon_form_settings['tags_data'] ) ) {
+			$tags = $this->addon_form_settings['tags_data'];
+		} else {
+			$list_id = $this->addon_form_settings['mail_list_id'];
+			$api     = $this->addon->get_api();
+			$tags    = $api->get_tags( $list_id );
+
+			$this->addon_form_settings['tags_data'] = $tags;
+			$this->save_form_settings_values( $this->addon_form_settings );
+		}
+		$this->tags_data = $tags;
+	}
+
+	/**
+	 * Set the GDPR fields that belong to the given list.
+	 *
+	 * @since 1.15.3
+	 */
+	private function set_gdpr_fields() {
+		if ( isset( $this->addon_form_settings['gdpr_data'] ) ) {
+			$gdpr_fields = $this->addon_form_settings['gdpr_data'];
+		} else {
+			$list_id = $this->addon_form_settings['mail_list_id'];
+			$api     = $this->addon->get_api();
+
+			$gdpr_fields = $api->get_gdpr_fields( $list_id );
+
+			$this->addon_form_settings['gdpr_data'] = $gdpr_fields;
+			$this->save_form_settings_values( $this->addon_form_settings );
+		}
+
+		$this->gdpr_data = $gdpr_fields;
+	}
+
+	/**
+	 * Init the list groups.
+	 *
+	 * @param bool $force Optional. If true - don't use cache.
+	 * @since 1.15.3
+	 */
+	private function set_groups( $force = false ) {
+		if ( ! $force && isset( $this->addon_form_settings['groups_data'] ) ) {
+			$groups_data = $this->addon_form_settings['groups_data'];
+		} else {
+			$list_id = $this->addon_form_settings['mail_list_id'];
+			$api     = $this->addon->get_api();
+			$groups  = $api->get_list_categories( $list_id, array( 'count' => 1000 ) );
+
+			$groups_data = array();
+
+			foreach ( $groups as $group ) {
+				$group = (array) $group;
+
+				// Create an array with the groups data to use it before saving.
+				$groups_data[ $group['id'] ]['id']   = $group['id'];
+				$groups_data[ $group['id'] ]['type'] = $group['type'];
+				$groups_data[ $group['id'] ]['name'] = $group['title'] . ' ( ' . ucfirst( $group['type'] ) . ' )';
+			}
+
+			$this->addon_form_settings['groups_data'] = $groups_data;
+			$this->save_form_settings_values( $this->addon_form_settings );
+		}
+
+		$this->groups_data = $groups_data;
+	}
+
+	/**
+	 * Calls the API to fetch remote interest options
+	 *
+	 * @return array
+	 */
+	private function get_interests() {
+		$list_id = $this->addon_form_settings['mail_list_id'];
+		$group   = $this->addon_form_settings['group'];
+		$api     = $this->addon->get_api();
+
+		if ( empty( $group ) ) {
+			return array();
+		}
+
+		$interests = $api->get_category_interests( $list_id, $group, array( 'count' => 1000 ) );
+		if ( is_wp_error( $interests ) || ! is_array( $interests->interests ) ) {
+			$interests = array();
+		} else {
+			$interests = wp_list_pluck( $interests->interests, 'name', 'id' );
+		}
+
+		return $interests;
+	}
+
+	/**
 	 * Validate submitted data by user as expected by merge field on mailchimp mail list
 	 *
 	 * @since 1.0 Mailchimp Addon
@@ -532,13 +1182,13 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 			$this->addon_form_settings['fields_map'] = array();
 		}
 
-		// set fields_map from post_data for reuse
+		// set fields_map from post_data for reuse.
 		foreach ( $post_data as $mailchimp_field_tag => $forminator_field_id ) {
 			$this->addon_form_settings['fields_map'][ $mailchimp_field_tag ] = $post_data[ $mailchimp_field_tag ];
 		}
 
 		$input_exceptions = new Forminator_Addon_Mailchimp_Form_Settings_Exception();
-		// EMAIL : super required**
+		// EMAIL : super required**.
 		if ( ! isset( $post_data['EMAIL'] ) || empty( $post_data['EMAIL'] ) ) {
 			$this->_update_form_settings_error_message = __( 'Please choose valid Forminator field for email address.', 'forminator' );
 			$input_exceptions->add_input_exception( $this->_update_form_settings_error_message, 'EMAIL' );
@@ -553,7 +1203,7 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 						if ( ! isset( $post_data[ $mailchimp_required_field->tag ][ $addr ] ) || empty( $post_data[ $mailchimp_required_field->tag ][ $addr ] ) ) {
 							$this->_update_form_settings_error_message =
 								/* translators: ... */
-								sprintf( __( '%s is required by Mailchimp, please choose valid Forminator field.', 'forminator' ), $mailchimp_required_field->name );
+								sprintf( __( '%s is required by Mailchimp, please choose valid Forminator field.', 'forminator' ), esc_html( $mailchimp_required_field->name ) );
 							$input_exceptions->add_sub_input_exception( $this->_update_form_settings_error_message, $mailchimp_required_field->tag, $addr );
 						}
 					}
@@ -562,12 +1212,12 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 			if ( ! isset( $post_data[ $mailchimp_required_field->tag ] ) || empty( $post_data[ $mailchimp_required_field->tag ] ) ) {
 				$this->_update_form_settings_error_message =
 					/* translators: ... */
-					sprintf( __( '%s is required by Mailchimp, please choose valid Forminator field.', 'forminator' ), $mailchimp_required_field->name );
+					sprintf( __( '%s is required by Mailchimp, please choose valid Forminator field.', 'forminator' ), esc_html( $mailchimp_required_field->name ) );
 				$input_exceptions->add_input_exception( $this->_update_form_settings_error_message, $mailchimp_required_field->tag );
 			}
 		}
 
-		// Check availibility on forminator field
+		// Check availibility on forminator field.
 		foreach ( $this->addon_form_settings['fields_map'] as $mailchimp_field_tag => $forminator_field_id ) {
 			if ( empty( $forminator_field_id ) ) {
 				continue;
@@ -588,7 +1238,7 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 
 						$this->_update_form_settings_error_message =
 							/* translators: ... */
-							sprintf( __( 'Please choose valid Forminator field for %s.', 'forminator' ), $mailchimp_field_name );
+							sprintf( __( 'Please choose valid Forminator field for %s.', 'forminator' ), esc_html( $mailchimp_field_name ) );
 						$input_exceptions->add_sub_input_exception( $this->_update_form_settings_error_message, $mailchimp_field_tag, $addr );
 					}
 				}
@@ -603,7 +1253,7 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 
 				$this->_update_form_settings_error_message =
 					/* translators: ... */
-					sprintf( __( 'Please choose valid Forminator field for %s.', 'forminator' ), $mailchimp_field_name );
+					sprintf( __( 'Please choose valid Forminator field for %s.', 'forminator' ), esc_html( $mailchimp_field_name ) );
 				$input_exceptions->add_input_exception( $this->_update_form_settings_error_message, $mailchimp_field_tag );
 			}
 		}
@@ -662,7 +1312,7 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 	public function step_choose_mail_list_is_completed() {
 		$this->addon_form_settings = $this->get_form_settings_values();
 		if ( ! isset( $this->addon_form_settings['mail_list_id'] ) ) {
-			// preliminary value
+			// preliminary value.
 			$this->addon_form_settings['mail_list_id'] = 0;
 
 			return false;
@@ -680,6 +1330,16 @@ class Forminator_Addon_Mailchimp_Form_Settings extends Forminator_Addon_Form_Set
 		 */
 
 		return true;
+	}
+
+	/**
+	 * Return as if the step is indeed completed.
+	 * The second and third steps are optional, so no real validation is done here.
+	 *
+	 * @return boolean
+	 */
+	public function step_is_completed() {
+		return $this->step_choose_mail_list_is_completed();
 	}
 
 }

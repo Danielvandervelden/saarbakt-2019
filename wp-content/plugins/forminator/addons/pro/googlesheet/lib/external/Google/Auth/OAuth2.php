@@ -28,9 +28,9 @@ class Forminator_Google_Auth_OAuth2 extends Forminator_Google_Auth_Abstract
   const OAUTH2_REVOKE_URI = 'https://accounts.google.com/o/oauth2/revoke';
   const OAUTH2_TOKEN_URI = 'https://accounts.google.com/o/oauth2/token';
   const OAUTH2_AUTH_URL = 'https://accounts.google.com/o/oauth2/auth';
-  const CLOCK_SKEW_SECS = 300; // five minutes in seconds
-  const AUTH_TOKEN_LIFETIME_SECS = 300; // five minutes in seconds
-  const MAX_TOKEN_LIFETIME_SECS = 86400; // one day in seconds
+  const CLOCK_SKEW_SECS = 300; // five minutes in seconds.
+  const AUTH_TOKEN_LIFETIME_SECS = 300; // five minutes in seconds.
+  const MAX_TOKEN_LIFETIME_SECS = 86400; // one day in seconds.
   const OAUTH2_ISSUER = 'accounts.google.com';
   const OAUTH2_ISSUER_HTTPS = 'https://accounts.google.com';
 
@@ -100,8 +100,8 @@ class Forminator_Google_Auth_OAuth2 extends Forminator_Google_Auth_Abstract
         $arguments['redirect_uri'] = $this->client->getClassConfig($this, 'redirect_uri');
     }
 
-    // We got here from the redirect from a successful authorization grant,
-    // fetch the access token
+    // We got here from the redirect from a successful authorization grant,.
+    // fetch the access token.
     $request = new Forminator_Google_Http_Request(
         self::OAUTH2_TOKEN_URI,
         'POST',
@@ -161,7 +161,7 @@ class Forminator_Google_Auth_OAuth2 extends Forminator_Google_Auth_Abstract
     $params = $this->maybeAddParam($params, 'openid.realm');
     $params = $this->maybeAddParam($params, 'include_granted_scopes');
 
-    // If the list of scopes contains plus.login, add request_visible_actions
+    // If the list of scopes contains plus.login, add request_visible_actions.
     // to auth URL.
     $rva = $this->client->getClassConfig($this, 'request_visible_actions');
     if (strpos($scope, 'plus.login') && strlen($rva) > 0) {
@@ -223,7 +223,7 @@ class Forminator_Google_Auth_OAuth2 extends Forminator_Google_Auth_Abstract
    */
   public function sign(Forminator_Google_Http_Request $request)
   {
-    // add the developer key to the request before signing it
+    // add the developer key to the request before signing it.
     if ($this->client->getClassConfig($this, 'developer_key')) {
       $request->setQueryParam('key', $this->client->getClassConfig($this, 'developer_key'));
     }
@@ -233,7 +233,7 @@ class Forminator_Google_Auth_OAuth2 extends Forminator_Google_Auth_Abstract
       return $request;
     }
 
-    // Check if the token is set to expire in the next 30 seconds
+    // Check if the token is set to expire in the next 30 seconds.
     // (or has already expired).
     if ($this->isAccessTokenExpired()) {
       if ($this->assertionCredentials) {
@@ -254,7 +254,7 @@ class Forminator_Google_Auth_OAuth2 extends Forminator_Google_Auth_Abstract
 
     $this->client->getLogger()->debug('OAuth2 authentication');
 
-    // Add the OAuth2 header to the request
+    // Add the OAuth2 header to the request.
     $request->setRequestHeaders(
         array('Authorization' => 'Bearer ' . $this->token['access_token'])
     );
@@ -293,8 +293,8 @@ class Forminator_Google_Auth_OAuth2 extends Forminator_Google_Auth_Abstract
     $cacheKey = $assertionCredentials->getCacheKey();
 
     if ($cacheKey) {
-      // We can check whether we have a token available in the
-      // cache. If it is expired, we can retrieve a new one from
+      // We can check whether we have a token available in the.
+      // cache. If it is expired, we can retrieve a new one from.
       // the assertion.
       $token = $this->client->getCache()->get($cacheKey);
       if ($token) {
@@ -376,7 +376,7 @@ class Forminator_Google_Auth_OAuth2 extends Forminator_Google_Auth_Abstract
   {
     if (!$token) {
       if (!$this->token) {
-        // Not initialized, no token to actually revoke
+        // Not initialized, no token to actually revoke.
         return false;
       } elseif (array_key_exists('refresh_token', $this->token)) {
         $token = $this->token['refresh_token'];
@@ -419,7 +419,7 @@ class Forminator_Google_Auth_OAuth2 extends Forminator_Google_Auth_Abstract
   }
 
   // Gets federated sign-on certificates to use for verifying identity tokens.
-  // Returns certs as array structure, where keys are key ids, and values
+  // Returns certs as array structure, where keys are key ids, and values.
   // are PEM encoded certificates.
   private function getFederatedSignOnCerts()
   {
@@ -533,14 +533,14 @@ class Forminator_Google_Auth_OAuth2 extends Forminator_Google_Auth_Abstract
       throw new Forminator_Google_Auth_Exception("Can't parse token envelope: " . $segments[0]);
     }
 
-    // Parse token
+    // Parse token.
     $json_body = Forminator_Google_Utils::urlSafeB64Decode($segments[1]);
     $payload = json_decode($json_body, true);
     if (!$payload) {
       throw new Forminator_Google_Auth_Exception("Can't parse token payload: " . $segments[1]);
     }
 
-    // Check signature
+    // Check signature.
     $verified = false;
     foreach ($certs as $keyName => $pem) {
       $public_key = new Forminator_Google_Verifier_Pem($pem);
@@ -554,7 +554,7 @@ class Forminator_Google_Auth_OAuth2 extends Forminator_Google_Auth_Abstract
       throw new Forminator_Google_Auth_Exception("Invalid token signature: $jwt");
     }
 
-    // Check issued-at timestamp
+    // Check issued-at timestamp.
     $iat = 0;
     if (array_key_exists("iat", $payload)) {
       $iat = $payload["iat"];
@@ -564,7 +564,7 @@ class Forminator_Google_Auth_OAuth2 extends Forminator_Google_Auth_Abstract
     }
     $earliest = $iat - self::CLOCK_SKEW_SECS;
 
-    // Check expiration timestamp
+    // Check expiration timestamp.
     $now = time();
     $exp = 0;
     if (array_key_exists("exp", $payload)) {
@@ -601,8 +601,8 @@ class Forminator_Google_Auth_OAuth2 extends Forminator_Google_Auth_Abstract
       );
     }
 
-    // support HTTP and HTTPS issuers
-    // @see https://developers.google.com/identity/sign-in/web/backend-auth
+    // support HTTP and HTTPS issuers.
+    // @see https://developers.google.com/identity/sign-in/web/backend-auth.
     $iss = $payload['iss'];
     if ($issuer && !in_array($iss, (array) $issuer)) {
       throw new Forminator_Google_Auth_Exception(
@@ -615,7 +615,7 @@ class Forminator_Google_Auth_OAuth2 extends Forminator_Google_Auth_Abstract
       );
     }
 
-    // Check audience
+    // Check audience.
     $aud = $payload["aud"];
     if ($aud != $required_audience) {
       throw new Forminator_Google_Auth_Exception(

@@ -13,7 +13,7 @@ class Forminator_Addon_Hubspot_Wp_Api {
 	const CLIENT_SECRET = '502c3a75-38fe-4a1f-9fc4-ff2464b639bf';
 	const HAPIKEY       = '7cf97e44-4037-4708-a032-0955318e0e76';
 
-	public static $oauth_scopes = 'contacts%20tickets';
+	public static $oauth_scopes = 'tickets crm.lists.write crm.lists.read crm.objects.contacts.write crm.objects.contacts.read crm.schemas.contacts.write crm.schemas.contacts.read';
 
 	/**
 	 * Instances of hubspot api
@@ -55,6 +55,8 @@ class Forminator_Addon_Hubspot_Wp_Api {
 
 	private $_token = '';
 
+	private $_global_id = '';
+
 	/**
 	 * @var string
 	 */
@@ -69,13 +71,22 @@ class Forminator_Addon_Hubspot_Wp_Api {
 	 *
 	 * @throws Forminator_Addon_Hubspot_Wp_Api_Exception
 	 */
-	public function __construct( $_token ) {
+	public function __construct( $_token, $_global_id ) {
 		//prerequisites
 		if ( ! $_token ) {
 			throw new Forminator_Addon_Hubspot_Wp_Api_Exception( __( 'Missing required Token', 'forminator' ) );
 		}
 
-		$this->_token = $_token;
+		$this->_token       = $_token;
+		$this->_global_id   = $_global_id;
+		$this->option_name .= $_global_id;
+	}
+
+	/**
+	 * Clear Database
+	 */
+	public function clear_db() {
+		delete_option( $this->option_name );
 	}
 
 	/**
@@ -88,9 +99,9 @@ class Forminator_Addon_Hubspot_Wp_Api {
 	 * @return Forminator_Addon_Hubspot_Wp_Api|null
 	 * @throws Forminator_Addon_Hubspot_Wp_Api_Exception
 	 */
-	public static function get_instance( $_token ) {
+	public static function get_instance( $_token, $global_id ) {
 		if ( ! isset( self::$_instances[ md5( $_token ) ] ) ) {
-			self::$_instances[ md5( $_token ) ] = new self( $_token );
+			self::$_instances[ md5( $_token ) ] = new self( $_token, $global_id );
 		}
 
 		return self::$_instances[ md5( $_token ) ];
@@ -113,7 +124,7 @@ class Forminator_Addon_Hubspot_Wp_Api {
 		 *
 		 * @since 1.1
 		 *
-		 * @param string $user_agent current user agent
+		 * @param string $user_agent current user agent.
 		 */
 		$user_agent = apply_filters( 'forminator_addon_hubspot_api_user_agent', $user_agent );
 
@@ -140,7 +151,7 @@ class Forminator_Addon_Hubspot_Wp_Api {
 			$args = array();
 		}
 
-		// Adding extra user agent for wp remote request
+		// Adding extra user agent for wp remote request.
 		add_filter( 'http_headers_useragent', array( $this, 'filter_user_agent' ) );
 
 		$url  = trailingslashit( $this->_endpoint ) . $path;
@@ -151,10 +162,10 @@ class Forminator_Addon_Hubspot_Wp_Api {
 		 *
 		 * @since 1.1
 		 *
-		 * @param string $url full url with scheme
-		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`
-		 * @param string $path requested path resource
-		 * @param array $args argument sent to this function
+		 * @param string $url full url with scheme.
+		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`.
+		 * @param string $path requested path resource.
+		 * @param array $args argument sent to this function.
 		 */
 		$url = apply_filters( 'forminator_addon_hubspot_api_url', $url, $verb, $path, $args );
 
@@ -176,9 +187,9 @@ class Forminator_Addon_Hubspot_Wp_Api {
 		 * @since 1.1
 		 *
 		 * @param array $headers
-		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`
-		 * @param string $path requested path resource
-		 * @param array $args argument sent to this function
+		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`.
+		 * @param string $path requested path resource.
+		 * @param array $args argument sent to this function.
 		 */
 		$headers = apply_filters( 'forminator_addon_hubspot_api_request_headers', $headers, $verb, $path, $args );
 
@@ -193,9 +204,9 @@ class Forminator_Addon_Hubspot_Wp_Api {
 		 *
 		 * @since 1.1
 		 *
-		 * @param array $request_data it will be `http_build_query`-ed when `GET` or `wp_json_encode`-ed otherwise
-		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`
-		 * @param string $path requested path resource
+		 * @param array $request_data it will be `http_build_query`-ed when `GET` or `wp_json_encode`-ed otherwise.
+		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`.
+		 * @param string $path requested path resource.
 		 */
 		$args = apply_filters( 'forminator_addon_hubspot_api_request_data', $request_data, $verb, $path );
 		if ( $json ) {
@@ -231,16 +242,16 @@ class Forminator_Addon_Hubspot_Wp_Api {
 
 				if ( 404 === $status_code ) {
 					/* translators: ... */
-					throw new Forminator_Addon_Hubspot_Wp_Api_Not_Found_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), $msg ) );
+					throw new Forminator_Addon_Hubspot_Wp_Api_Not_Found_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), esc_html( $msg ) ) );
 				}
 				/* translators: ... */
-				throw new Forminator_Addon_Hubspot_Wp_Api_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), $msg ) );
+				throw new Forminator_Addon_Hubspot_Wp_Api_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), esc_html( $msg ) ) );
 			}
 		}
 
 		$body = wp_remote_retrieve_body( $res );
 
-		// probably silent mode
+		// probably silent mode.
 		if ( ! empty( $body ) ) {
 			$res = json_decode( $body );
 
@@ -248,7 +259,7 @@ class Forminator_Addon_Hubspot_Wp_Api {
 			if ( isset( $res->status ) && 'error' === $res->status ) {
 				$message = isset( $res->message ) ? $res->message : __( 'Invalid', 'forminator' );
 				/* translators: ... */
-				throw new Forminator_Addon_Hubspot_Wp_Api_Not_Found_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), $message ) );
+				throw new Forminator_Addon_Hubspot_Wp_Api_Not_Found_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), esc_html( $message ) ) );
 			}
 			if ( isset( $res->ok ) && false === $res->ok ) {
 				$msg = '';
@@ -256,7 +267,7 @@ class Forminator_Addon_Hubspot_Wp_Api {
 					$msg = $res->error;
 				}
 				/* translators: ... */
-				throw new Forminator_Addon_Hubspot_Wp_Api_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), $msg ) );
+				throw new Forminator_Addon_Hubspot_Wp_Api_Exception( sprintf( __( 'Failed to process request : %s', 'forminator' ), esc_html( $msg ) ) );
 			}
 		}
 
@@ -266,9 +277,9 @@ class Forminator_Addon_Hubspot_Wp_Api {
 		 *
 		 * @since 1.1
 		 *
-		 * @param mixed $response original wp remote request response or decoded body if available
-		 * @param string $body original content of http response's body
-		 * @param array|WP_Error $wp_response original wp remote request response
+		 * @param mixed $response original wp remote request response or decoded body if available.
+		 * @param string $body original content of http response's body.
+		 * @param array|WP_Error $wp_response original wp remote request response.
 		 */
 		$res = apply_filters( 'forminator_addon_hubspot_api_response', $response, $body, $wp_response );
 
@@ -425,7 +436,7 @@ class Forminator_Addon_Hubspot_Wp_Api {
 			'grant_type'    => 'authorization_code',
 			'client_id'     => self::CLIENT_ID,
 			'client_secret' => self::CLIENT_SECRET,
-			'scope'         => self::$oauth_scopes,
+			'scope'         => rawurlencode( self::$oauth_scopes ),
 		);
 		$args         = array_merge( $default_args, $args );
 
@@ -440,7 +451,7 @@ class Forminator_Addon_Hubspot_Wp_Api {
 
 			$token_data['expires_in'] += time();
 
-			// Update auth token
+			// Update auth token.
 			$this->update_auth_token( $token_data );
 		}
 
@@ -673,6 +684,27 @@ class Forminator_Addon_Hubspot_Wp_Api {
 		$response = $this->send_authenticated( 'GET', 'properties/v1/contacts/properties', $args );
 
 		return $response;
+	}
+
+	/**
+	 * Get Property of field
+	 *
+	 * @param string $property
+	 * @param string $field
+	 * @param array $args
+	 *
+	 * @return array|mixed|object
+	 * @throws Forminator_Addon_Hubspot_Wp_Api_Exception
+	 * @throws Forminator_Addon_Hubspot_Wp_Api_Not_Found_Exception
+	 */
+	public function get_property( $property, $field, $args ) {
+		$response = $this->send_authenticated( 'GET', 'properties/v1/contacts/properties/named/' . $field, $args );
+
+		if ( property_exists( $response, $property ) ) {
+			return $response->$property;
+		} else {
+			return __( 'Property does not exist', 'forminator' );
+		}
 	}
 
 }

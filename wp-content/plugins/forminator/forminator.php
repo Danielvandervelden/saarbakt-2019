@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Forminator
- * Version: 1.14.12.1
+ * Version: 1.24.1
  * Plugin URI:  https://wpmudev.com/project/forminator/
  * Description: Capture user information (as detailed as you like), engage users with interactive polls that show real-time results and graphs, “no wrong answer” Facebook-style quizzes and knowledge tests.
  * Author: WPMU DEV
@@ -12,7 +12,7 @@
  */
 /*
 Copyright 2009-2018 Incsub (http://incsub.com)
-Author – Cvetan Cvetanov (cvetanov)
+Author – Cvetan Cvetanov (cvetanov), Dixita Dusara (dency)
 Contributors –
 
 This program is free software; you can redistribute it and/or modify
@@ -34,11 +34,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 if ( ! defined( 'FORMINATOR_VERSION' ) ) {
-	define( 'FORMINATOR_VERSION', '1.14.12.1' );
+	define( 'FORMINATOR_VERSION', '1.24.1' );
 }
 
 if ( ! defined( 'FORMINATOR_SUI_VERSION' ) ) {
-	define( 'FORMINATOR_SUI_VERSION', '2.6.0' );
+	define( 'FORMINATOR_SUI_VERSION', '2.12.13' );
 }
 
 if ( ! defined( 'FORMINATOR_STRIPE_LIB_VERSION' ) ) {
@@ -126,6 +126,7 @@ if ( ! class_exists( 'Forminator' ) ) {
 		 */
 		public function __construct() {
 			add_action( 'admin_init', array( $this, 'initialize_admin' ) );
+			add_action( 'admin_init', array( $this, 'add_custom_cap' ) );
 
 			$this->includes();
 			$this->include_vendors();
@@ -169,6 +170,18 @@ if ( ! class_exists( 'Forminator' ) ) {
 			if ( is_admin() && 'activated' === get_option( 'forminator_activation_hook' ) ) {
 				delete_option( 'forminator_activation_hook' );
 				flush_rewrite_rules();
+			}
+		}
+
+		/**
+		 * Add manage_forminator custom capability
+		 *
+		 * @since 1.15
+		 */
+		public function add_custom_cap() {
+			$admin = get_role( 'administrator' );
+			if ( $admin ) {
+				$admin->add_cap( 'manage_forminator', true );
 			}
 		}
 
@@ -404,7 +417,7 @@ if ( ! class_exists( 'Forminator' ) ) {
 		 */
 		private function include_vendors() {
 			if ( file_exists( forminator_plugin_dir() . 'library/lib/dash-notice/wpmudev-dash-notification.php' ) ) {
-				//load dashboard notice
+				// load dashboard notice
 				global $wpmudev_notices;
 				$wpmudev_notices[] = array(
 					'id'      => 2097296,
@@ -489,13 +502,12 @@ if ( ! class_exists( 'Forminator' ) ) {
 							'forminator_page_forminator-entries',
 							'forminator_page_forminator-entries-network',
 							'forminator_page_forminator-integrations',
-							'forminator_page_forminator-integrations-network'
+							'forminator_page_forminator-integrations-network',
 						),
 						array( 'after', '.sui-wrap .sui-header' ) // selector
 					);
 
 				}
-
 			}
 
 		}

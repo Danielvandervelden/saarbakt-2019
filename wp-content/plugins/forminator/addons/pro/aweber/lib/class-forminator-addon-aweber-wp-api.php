@@ -117,7 +117,7 @@ class Forminator_Addon_Aweber_Wp_Api {
 		 *
 		 * @since 1.1
 		 *
-		 * @param string $user_agent current user agent
+		 * @param string $user_agent current user agent.
 		 */
 		$user_agent = apply_filters( 'forminator_addon_aweber_api_user_agent', $user_agent );
 
@@ -140,7 +140,7 @@ class Forminator_Addon_Aweber_Wp_Api {
 	 * @throws Forminator_Addon_Aweber_Wp_Api_Not_Found_Exception
 	 */
 	private function request( $verb, $url, $args = array(), $headers = array() ) {
-		// Adding extra user agent for wp remote request
+		// Adding extra user agent for wp remote request.
 		add_filter( 'http_headers_useragent', array( $this, 'filter_user_agent' ) );
 		$verb = ! empty( $verb ) ? $verb : 'GET';
 
@@ -149,10 +149,10 @@ class Forminator_Addon_Aweber_Wp_Api {
 		 *
 		 * @since 1.1
 		 *
-		 * @param string $url  full url with scheme
-		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`
-		 * @param string $path requested path resource
-		 * @param array  $args argument sent to this function
+		 * @param string $url  full url with scheme.
+		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`.
+		 * @param string $path requested path resource.
+		 * @param array  $args argument sent to this function.
 		 */
 		$url = apply_filters( 'forminator_addon_aweber_api_url', $url, $verb, $args );
 
@@ -162,9 +162,9 @@ class Forminator_Addon_Aweber_Wp_Api {
 		 * @since 1.1
 		 *
 		 * @param array  $headers
-		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`
-		 * @param string $url  full url with scheme
-		 * @param array  $args argument sent to this function
+		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`.
+		 * @param string $url  full url with scheme.
+		 * @param array  $args argument sent to this function.
 		 */
 		$headers = apply_filters( 'forminator_addon_aweber_api_request_headers', $headers, $verb, $url, $args );
 
@@ -182,12 +182,12 @@ class Forminator_Addon_Aweber_Wp_Api {
 		 * @since 1.1
 		 *
 		 * @param array  $request_data
-		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`
-		 * @param string $url  full url with scheme
+		 * @param string $verb `GET` `POST` `PUT` `DELETE` `PATCH`.
+		 * @param string $url  full url with scheme.
 		 */
 		$args = apply_filters( 'forminator_addon_aweber_api_request_data', $request_data, $verb, $url );
 
-		// $oauth_url_params doesnt need to be included
+		// $oauth_url_params doesnt need to be included.
 		$this->_last_url_request = $url;
 
 		if ( 'PATCH' === $verb ) {
@@ -258,10 +258,10 @@ class Forminator_Addon_Aweber_Wp_Api {
 
 		$body = wp_remote_retrieve_body( $res );
 
-		// probably silent mode
+		// probably silent mode.
 		if ( ! empty( $body ) ) {
 			$res = json_decode( $body );
-			// fallback to parse args when fail
+			// fallback to parse args when fail.
 			if ( empty( $res ) ) {
 				$res = wp_parse_args( $body, array() );
 
@@ -277,9 +277,9 @@ class Forminator_Addon_Aweber_Wp_Api {
 		 *
 		 * @since 1.1
 		 *
-		 * @param mixed          $response    original wp remote request response or decoded body if available
-		 * @param string         $body        original content of http response's body
-		 * @param array|WP_Error $wp_response original wp remote request response
+		 * @param mixed          $response    original wp remote request response or decoded body if available.
+		 * @param string         $body        original content of http response's body.
+		 * @param array|WP_Error $wp_response original wp remote request response.
 		 */
 		$res = apply_filters( 'forminator_addon_aweber_api_response', $response, $body, $wp_response );
 
@@ -311,8 +311,8 @@ class Forminator_Addon_Aweber_Wp_Api {
 		 *
 		 * @since 1.3
 		 *
-		 * @param array $oauth_request_data default oauth request data
-		 * @param int   $timestamp          current timestamp for future reference
+		 * @param array $oauth_request_data default oauth request data.
+		 * @param int   $timestamp          current timestamp for future reference.
 		 */
 		$oauth_request_data = apply_filters( 'forminator_addon_aweber_oauth_request_data', $oauth_request_data, $timestamp );
 
@@ -361,9 +361,9 @@ class Forminator_Addon_Aweber_Wp_Api {
 	 *
 	 * @since 1.0 Aweber Addon
 	 *
-	 * @param mixed $method HTTP method
-	 * @param mixed $url    URL for the request
-	 * @param mixed $data   The data to generate oauth data and be signed
+	 * @param mixed $method HTTP method.
+	 * @param mixed $url    URL for the request.
+	 * @param mixed $data   The data to generate oauth data and be signed.
 	 *
 	 * @return array
 	 */
@@ -542,6 +542,20 @@ class Forminator_Addon_Aweber_Wp_Api {
 			'email' => '',
 		);
 		$args         = array_merge( $default_args, $args );
+
+		/**
+		 * Filter for Aweber integration for removing old tags during re-subscription.
+		 *
+		 * @param bool Dafault value.
+		 * @param string $account_id Account ID.
+		 * @param string $list_id List ID.
+		 * @param array  $args Arguments.
+		 */
+		$remove_old_tags = apply_filters( 'forminator_aweber_remove_old_tags', false, $account_id, $list_id, $args );
+
+		if ( ! $remove_old_tags ) {
+			unset( $args['tags']['remove'] );
+		}
 
 		if ( empty( $args['email'] ) ) {
 			throw new Forminator_Addon_Aweber_Wp_Api_Exception( __( 'Email is required on update AWeber subscriber.', 'forminator' ) );

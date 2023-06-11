@@ -18,7 +18,6 @@
 	var pluginName = "forminatorFrontCalculate",
 	    defaults   = {
 		    forminatorFields: [],
-		    maxExpand: 5,
 		    generalMessages: {},
 	    };
 
@@ -35,7 +34,6 @@
 		this._defaults         = defaults;
 		this._name             = pluginName;
 		this.calculationFields = [];
-		this.currentExpand     = 0;
 		this.triggerInputs     = [];
 		this.isError           = false;
 		this.init();
@@ -65,8 +63,10 @@
 					if ($(this).data('isHidden')) {
 						$(this).closest('.forminator-col').addClass('forminator-hidden forminator-hidden-option');
 						var rowField = $(this).closest('.forminator-row');
+						rowField.addClass('forminator-hidden-option');
+
 						if (rowField.find('> .forminator-col:not(.forminator-hidden)').length === 0) {
-							rowField.addClass('forminator-hidden forminator-hidden-option');
+							rowField.addClass('forminator-hidden');
 						}
 					}
 				});
@@ -84,6 +84,8 @@
 				this.attachEventToTriggeringFields();
 				this.debouncedReCalculateAll();
 			}
+
+			this.$el.off( 'forminator:recalculate' ).on( 'forminator:recalculate', function() { self.recalculateAll(); } );
 		},
 
 		// Memoize an expensive function by storing its results.
@@ -131,70 +133,25 @@
 				var calcField = this.calculationFields[i];
 				var formula   = calcField.formula;
 
-				this.currentExpand = 0;
-
-				// Disable formula expand to allow formula calculation based on conditions
-				//formula          = this.maybeExpandCalculationFieldOnFormula(formula);
-
 				calcField.formula = formula;
 
 				this.calculationFields[i] = calcField;
 			}
 		},
 
-		maybeExpandCalculationFieldOnFormula: function (formula) {
-
-			if (this.currentExpand > this.settings.maxExpand) {
-				return formula;
-			}
-
-			var joinedFieldTypes      = this.settings.forminatorFields.join('|');
-			var incrementFieldPattern = "(" + joinedFieldTypes + ")-\\d+";
-			var pattern               = new RegExp('\\{(' + incrementFieldPattern + ')(\\-[A-Za-z-_]+)?\\}', 'g');
-			var parsedFormula         = formula;
-
-			var matches;
-			var needExpand = false;
-			while (matches = pattern.exec(formula)) {
-				var fullMatch = matches[0];
-				var inputName = matches[1];
-				var fieldType = matches[2];
-
-				var replace = fullMatch;
-
-				if (fullMatch === undefined || inputName === undefined || fieldType === undefined) {
-					continue;
-				}
-
-				if (fieldType === 'calculation') {
-					needExpand = true;
-
-					// find input with name, and get formula
-					// bracketify
-					replace = '(' + this.$el.find('input[name="' + inputName + '"]').data('formula') + ')';
-				}
-
-				parsedFormula = parsedFormula.replace(fullMatch, replace);
-			}
-
-			if (needExpand) {
-				this.currentExpand++;
-				parsedFormula = this.maybeExpandCalculationFieldOnFormula(parsedFormula);
-			}
-
-			return parsedFormula;
-		},
-
 		findTriggerInputs: function (calcField) {
 			var formula               = calcField.formula;
 			var joinedFieldTypes      = this.settings.forminatorFields.join('|');
 			var incrementFieldPattern = "(" + joinedFieldTypes + ")-\\d+";
-			var pattern               = new RegExp('\\{(' + incrementFieldPattern + ')(\\-[A-Za-z-_]+)?\\}', 'g');
+			var pattern               = new RegExp('\\{(' + incrementFieldPattern + ')(\\-[A-Za-z-_]+)?(\\-[A-Za-z0-9-_]+)?\\}', 'g');
+
+			formula = this.maybeReplaceCalculationGroups(formula);
 
 			var matches;
 			while (matches = pattern.exec(formula)) {
 				var fullMatch = matches[0];
-				var inputName = matches[1];
+				var groupSuffix = matches[4] || '';
+				var inputName = matches[1] + groupSuffix;
 				var fieldType = matches[2];
 
 				if (fullMatch === undefined || inputName === undefined || fieldType === undefined) {
@@ -234,20 +191,33 @@
 		// taken from forminatorFrontCondition
 		get_form_field: function (element_id) {
 			//find element by suffix -field on id input (default behavior)
-			var $element = this.$el.find('#' + element_id + '-field');
-			if ($element.length === 0) {
-				//find element by its on name (for radio on singlevalue)
-				$element = this.$el.find('input[name=' + element_id + ']');
+			let $form = this.$el;
+			if ( $form.hasClass( 'forminator-grouped-fields' ) ) {
+				$form = $form.closest( 'form.forminator-ui' );
+			}
+			var $form_id = $form.data( 'form-id' ),
+				$uid 	 = $form.data( 'uid' ),
+				$element = $form.find('#forminator-form-' + $form_id + '__field--' + element_id + '_' + $uid );
+			if ( $element.length === 0 ) {
+				var $element = $form.find('#' + element_id + '-field' );
 				if ($element.length === 0) {
-					// for text area that have uniqid, so we check its name instead
-					$element = this.$el.find('textarea[name=' + element_id + ']');
+					//find element by its on name (for radio on singlevalue)
+					$element = $form.find('input[name=' + element_id + ']');
 					if ($element.length === 0) {
-						//find element by its on name[] (for checkbox on multivalue)
-						$element = this.$el.find('input[name="' + element_id + '[]"]');
+						// for text area that have uniqid, so we check its name instead
+						$element = $form.find('textarea[name=' + element_id + ']');
 						if ($element.length === 0) {
-							//find element by direct id (for name field mostly)
-							//will work for all field with element_id-[somestring]
-							$element = this.$el.find('#' + element_id);
+							//find element by its on name[] (for checkbox on multivalue)
+							$element = $form.find('input[name="' + element_id + '[]"]');
+							if ($element.length === 0) {
+								//find element by select name
+								$element = this.$el.find('select[name="' + element_id + '"]');
+								if ($element.length === 0) {
+									//find element by direct id (for name field mostly)
+									//will work for all field with element_id-[somestring]
+									$element = $form.find('#' + element_id);
+								}
+							}
 						}
 					}
 				}
@@ -313,31 +283,56 @@
 				if (!isFinite(res)) {
 					throw ('Infinity calculation result.');
 				}
-				res = parseFloat(res).toFixed(calcField.precision);
 			} catch (e) {
 				this.isError = true;
 				console.log(e);
 				// override error message
 				this.displayErrorMessage( $input, this.settings.generalMessages.calculation_error );
-				res = 0;
+				res = '0';
 			}
+			// Support cases like 1.005. Correct result is 1.01.
+			res = ( +( Math.round( res + `e+${calcField.precision}` )  + `e-${calcField.precision}` ) ).toFixed(calcField.precision);
 
-			if ($input.val() !== String(res)) {
+			const inputVal = $input.val();
+			var decimal_point = $input.data('decimal-point');
+			res = String(res).replace(".", decimal_point );
+			if (inputVal !== res) {
 				$input.val(res).trigger("change");
-				//$input.mask( calcField.separators, { reverse: true } );
 			}
 		},
 
+		maybeReplaceCalculationGroups: function (formula) {
+			var pattern = new RegExp('\\{((?:calculation|number|currency|radio|select|checkbox)-\\d+)-\\*\\}', 'g');
+			var matches;
+			while( matches = pattern.exec( formula ) ) {
+				var fullMatch = matches[0];
+				var selector  = matches[1];
+				var repeatedFields = this.$el.find( "[name='" + selector + "'], [name='" + selector + "\[\]'], [name^='" + selector + "-']" ).map(function() {
+					const name = this.name.replace( '[]', '' );
+					return '{' + name + '}';
+				}).get();
+
+				repeatedFields = $.unique(repeatedFields.sort());
+				repeatedFields = '(' + repeatedFields.join('+') + ')';
+
+				formula = formula.replace( fullMatch, repeatedFields );
+			}
+			return formula;
+		},
+
 		maybeReplaceFieldOnFormula: function (formula) {
+			formula = this.maybeReplaceCalculationGroups(formula);
+
 			var joinedFieldTypes      = this.settings.forminatorFields.join('|');
 			var incrementFieldPattern = "(" + joinedFieldTypes + ")-\\d+";
-			var pattern               = new RegExp('\\{(' + incrementFieldPattern + ')(\\-[A-Za-z-_]+)?\\}', 'g');
+			var pattern               = new RegExp('\\{(' + incrementFieldPattern + ')(\\-[A-Za-z-_]+)?(\\-[A-Za-z0-9-_]+)?\\}', 'g');
 			var parsedFormula         = formula;
 
 			var matches;
 			while (matches = pattern.exec(formula)) {
 				var fullMatch = matches[0];
-				var inputName = matches[1];
+				var groupSuffix = matches[4] || '';
+				var inputName = matches[1] + groupSuffix;
 				var fieldType = matches[2];
 
 				var replace = fullMatch;
@@ -348,13 +343,16 @@
 
 				if(this.is_hidden(inputName)) {
 					replace = 0;
-					var quotedOperand = fullMatch.replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, "\\$1");
-					var regexp = new RegExp('([\\+\\-\\*\\/]?)[^\\+\\-\\*\\/\\(]*' + quotedOperand + '[^\\)\\+\\-\\*\\/]*([\\+\\-\\*\\/]?)');
-					var mt = regexp.exec(formula);
-					if (mt) {
-						// if operand in multiplication or division set value = 1
-						if (mt[1] === '*' || mt[1] === '/' || mt[2] === '*' || mt[2] === '/') {
-							replace = 1;
+					const $element = this.get_form_field(inputName);
+					if ( 'zero' !== $element.data('hidden-behavior') ) {
+						var quotedOperand = fullMatch.replace(/([\\\.\+\*\?\[\^\]\$\(\)\{\}\=\!\<\>\|\:])/g, "\\$1");
+						var regexp = new RegExp('([\\+\\-\\*\\/]?)[^\\+\\-\\*\\/\\(]*' + quotedOperand + '[^\\)\\+\\-\\*\\/]*([\\+\\-\\*\\/]?)');
+						var mt = regexp.exec(parsedFormula);
+						if (mt) {
+							// if operand in multiplication or division set value = 1
+							if (mt[1] === '*' || mt[1] === '/' || mt[2] === '*' || mt[2] === '/') {
+								replace = 1;
+							}
 						}
 					}
 				} else {
@@ -437,11 +435,28 @@
 						value = Number(calculation);
 					}
 				}
-			} else {
-				value = Number($element.val());
+			} else if ( this.field_has_inputMask( $element ) ) {
+				value = parseFloat( $element.inputmask('unmaskedvalue').replace(',','.') );
+			} else if ( $element.length ) {
+				var number = $element.val();
+				value = parseFloat( number.replace(',','.') );
 			}
 
 			return isNaN(value) ? 0 : value;
+		},
+
+		field_has_inputMask: function ( $element ) {
+			var hasMask = false;
+
+			$element.each(function () {
+				if ( undefined !== $( this ).attr( 'data-inputmask' ) ) {
+					hasMask = true;
+					//break
+					return false;
+				}
+			});
+
+			return hasMask;
 		},
 
 		field_is_radio: function ($element) {
@@ -482,9 +497,23 @@
 			}
 
 			var $error_holder = $field_holder.find('.forminator-error-message');
+			var $error_id = $element.attr('id') + '-error';
+			var $element_aria_describedby = $element.attr('aria-describedby');
+
+			if ($element_aria_describedby) {
+				var ids = $element_aria_describedby.split(' ');
+				var errorIdExists = ids.includes($error_id);
+				if (!errorIdExists) {
+					ids.push($error_id);
+				}
+				var updatedAriaDescribedby = ids.join(' ');
+				$element.attr('aria-describedby', updatedAriaDescribedby);
+			} else {
+				$element.attr('aria-describedby', $error_id);
+			}
 
 			if ($error_holder.length === 0) {
-				$field_holder.append('<span class="forminator-error-message" aria-hidden="true"></span>');
+				$field_holder.append('<span class="forminator-error-message" id="' + $error_id + '"></span>');
 				$error_holder = $field_holder.find('.forminator-error-message');
 			}
 
@@ -501,11 +530,25 @@
 			}
 
 			var $error_holder = $field_holder.find('.forminator-error-message');
+			var $error_id = $element.attr('id') + '-error';
+			var $element_aria_describedby = $element.attr('aria-describedby');
+		  
+			if ($element_aria_describedby) {
+				var ids = $element_aria_describedby.split(' ');
+				ids = ids.filter(function (id) {
+					return id !== $error_id;
+				});
+				var updatedAriaDescribedby = ids.join(' ');
+			  	$element.attr('aria-describedby', updatedAriaDescribedby);
+			} else {
+			  	$element.removeAttr('aria-describedby');
+			}
 
 			$element.removeAttr('aria-invalid');
 			$error_holder.remove();
 			$field_holder.removeClass('forminator-has_error');
-		}
+		},
+
 	});
 
 	// A really lightweight plugin wrapper around the constructor,

@@ -60,7 +60,7 @@ class Forminator_Calculator_Parser {
 	protected function detect_symbols( $tokens ) {
 		$symbol_nodes = array();
 
-		$expecting_opening_bracket = false; // True if we expect an opening bracket (after a function name)
+		$expecting_opening_bracket = false; // True if we expect an opening bracket (after a function name).
 		$open_bracket_counter      = 0;
 
 		foreach ( $tokens as $token ) {
@@ -74,14 +74,14 @@ class Forminator_Calculator_Parser {
 					throw new Forminator_Calculator_Exception( 'Error: Detected unknown or invalid string identifier: ' . $identifier . '.' );
 				}
 			} elseif ( Forminator_Calculator_Parser_Token::TYPE_NUMBER === $type ) {
-				// Notice: Numbers do not have an identifier
+				// Notice: Numbers do not have an identifier.
 				$symbol_numbers = $this->symbol_loader->find_sub_types( 'Forminator_Calculator_Symbol_Number' );
 				if ( empty( $symbol_numbers ) || ! is_array( $symbol_numbers ) ) {
-					throw new Forminator_Calculator_Exception( 'Error: Unavailable number symbol processor.' );// @codeCoverageIgnore
+					throw new Forminator_Calculator_Exception( 'Error: Unavailable number symbol processor.' );// @codeCoverageIgnore.
 				}
 
 				$symbol = $symbol_numbers[0];
-			} else { // Type Token::TYPE_CHARACTER:
+			} else { // Type Token::TYPE_CHARACTER:.
 				$identifier = $token->value;
 				$symbol     = $this->symbol_loader->find( $identifier );
 
@@ -95,14 +95,14 @@ class Forminator_Calculator_Parser {
 				if ( $symbol instanceof Forminator_Calculator_Symbol_Closing_Bracket ) {
 					$open_bracket_counter --;
 
-					// Make sure there are not too many closing brackets
+					// Make sure there are not too many closing brackets.
 					if ( $open_bracket_counter < 0 ) {
 						throw new Forminator_Calculator_Exception( 'Error: Found closing bracket that does not have an opening bracket.' );
 					}
 				}
 			}
 
-			// Make sure a function is not followed by a symbol that is not of type opening bracket
+			// Make sure a function is not followed by a symbol that is not of type opening bracket.
 			if ( $expecting_opening_bracket ) {
 				if ( ! $symbol instanceof Forminator_Calculator_Symbol_Opening_Bracket ) {
 					throw new Forminator_Calculator_Exception( 'Error: Expected opening bracket (after a function) but got something else.' );
@@ -120,12 +120,12 @@ class Forminator_Calculator_Parser {
 			$symbol_nodes[] = $symbol_node;
 		}
 
-		// Make sure the term does not end with the name of a function but without an opening bracket
+		// Make sure the term does not end with the name of a function but without an opening bracket.
 		if ( $expecting_opening_bracket ) {
 			throw new Forminator_Calculator_Exception( 'Error: Expected opening bracket (after a function) but reached the end of the term' );
 		}
 
-		// Make sure there are not too many opening brackets
+		// Make sure there are not too many opening brackets.
 		if ( $open_bracket_counter > 0 ) {
 			throw new Forminator_Calculator_Exception( 'Error: There is at least one opening bracket that does not have a closing bracket' );
 		}
@@ -146,12 +146,12 @@ class Forminator_Calculator_Parser {
 	 */
 	protected function create_tree_by_brackets( $symbol_nodes ) {
 		$tree                 = array();
-		$nodes_in_brackets    = array(); // AbstractSymbol nodes inside level-0-brackets
+		$nodes_in_brackets    = array(); // AbstractSymbol nodes inside level-0-brackets.
 		$open_bracket_counter = 0;
 
 		foreach ( $symbol_nodes as $index => $symbol_node ) {
 			if ( ! $symbol_node instanceof Forminator_Calculator_Parser_Node_Symbol ) {
-				throw new Forminator_Calculator_Exception( 'Error: Expected symbol node, but got "' . gettype( $symbol_node ) . '"' );// @codeCoverageIgnore
+				throw new Forminator_Calculator_Exception( 'Error: Expected symbol node, but got "' . gettype( $symbol_node ) . '"' );// @codeCoverageIgnore.
 			}
 
 			if ( $symbol_node->get_symbol() instanceof Forminator_Calculator_Symbol_Opening_Bracket ) {
@@ -163,12 +163,12 @@ class Forminator_Calculator_Parser {
 			} elseif ( $symbol_node->get_symbol() instanceof Forminator_Calculator_Symbol_Closing_Bracket ) {
 				$open_bracket_counter --;
 
-				// Found a closing bracket on level 0
+				// Found a closing bracket on level 0.
 				if ( 0 === $open_bracket_counter ) {
 					$sub_tree = $this->create_tree_by_brackets( $nodes_in_brackets );
 
-					// Subtree can be empty for example if the term looks like this: "()" or "functioname()"
-					// But this is okay, we need to allow this so we can call functions without a parameter
+					// Subtree can be empty for example if the term looks like this: "()" or "functioname()".
+					// But this is okay, we need to allow this so we can call functions without a parameter.
 					$tree[]            = new Forminator_Calculator_Parser_Node_Container( $sub_tree );
 					$nodes_in_brackets = array();
 				} else {
@@ -212,7 +212,7 @@ class Forminator_Calculator_Parser {
 					$function_symbol_node = null;
 				} else {
 
-					// not a function
+					// not a function.
 					$node->set_child_nodes( $transformed_child_nodes );
 					$transformed_nodes[] = $node;
 				}
@@ -241,8 +241,8 @@ class Forminator_Calculator_Parser {
 	 * @throws Forminator_Calculator_Exception
 	 */
 	protected function check_grammar( $nodes ) {
-		// TODO Make sure that separators are only in the child nodes of the array node of a function node
-		// (If this happens the calculator will throw an exception)
+		// TODO Make sure that separators are only in the child nodes of the array node of a function node.
+		// (If this happens the calculator will throw an exception).
 
 		foreach ( $nodes as $index => $node ) {
 			if ( $node instanceof Forminator_Calculator_Parser_Node_Symbol ) {
@@ -256,7 +256,7 @@ class Forminator_Calculator_Parser {
 					$pos_of_right_operand = $index + 1;
 
 					// Make sure the operator is positioned left of a (potential) operand (=prefix notation).
-					// Example term: "-1"
+					// Example term: "-1".
 					if ( $pos_of_right_operand >= count( $nodes ) ) {
 						throw new Forminator_Calculator_Exception( 'Error: Found operator that does not stand before an operand.' );
 					}
@@ -265,28 +265,28 @@ class Forminator_Calculator_Parser {
 
 					$left_operand = null;
 
-					// Operator is unary if positioned at the beginning of a term
+					// Operator is unary if positioned at the beginning of a term.
 					if ( $pos_of_left_operand >= 0 ) {
 						$left_operand = $nodes[ $pos_of_left_operand ];
 
 						if ( $left_operand instanceof Forminator_Calculator_Parser_Node_Symbol ) {
 							/** @var $left_operand Forminator_Calculator_Parser_Node_Symbol */
-							if ( $left_operand->get_symbol() instanceof Forminator_Calculator_Symbol_Operator_Abstract  // example 1`+-`5 : + = operator, - = unary
-								|| $left_operand->get_symbol() instanceof Forminator_Calculator_Symbol_Separator // example func(1`,-`5) ,= separator, - = unary
+							if ( $left_operand->get_symbol() instanceof Forminator_Calculator_Symbol_Operator_Abstract  // example 1`+-`5 : + = operator, - = unary.
+								|| $left_operand->get_symbol() instanceof Forminator_Calculator_Symbol_Separator // example func(1`,-`5) ,= separator, - = unary.
 							) {
-								// Operator is unary if positioned right to another operator
+								// Operator is unary if positioned right to another operator.
 								$left_operand = null;
 							}
 						}
 					}
 
-					// If null, the operator is unary
+					// If null, the operator is unary.
 					if ( null === $left_operand ) {
 						if ( ! $symbol->get_operates_unary() ) {
 							throw new Forminator_Calculator_Exception( 'Error: Found operator in unary notation that is not unary.' );
 						}
 
-						// Remember that this node represents a unary operator
+						// Remember that this node represents a unary operator.
 						$node->set_is_unary_operator( true );
 					} else {
 						if ( ! $symbol->get_operates_binary() ) {

@@ -101,8 +101,8 @@ interface Forminator_Autofill_Provider_Interface {
 	 *          'PROVIDER_SLUG.ATTRIBUTE_PROVIDER_KEY'
 	 *              ],
 	 *   'text' => [
-	 *          // you can add multiple here
-	 *          // or you can add other provider too simply by knowing its slug and attribute key
+	 *          // you can add multiple here.
+	 *          // or you can add other provider too simply by knowing its slug and attribute key.
 	 *          'simple.simple_text',
 	 *              ],
 	 *    'number' => [

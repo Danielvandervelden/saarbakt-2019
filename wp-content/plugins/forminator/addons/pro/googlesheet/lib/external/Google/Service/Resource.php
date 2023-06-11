@@ -99,17 +99,17 @@ class Forminator_Google_Service_Resource
     $method = $this->methods[$name];
     $parameters = $arguments[0];
 
-    // postBody is a special case since it's not defined in the discovery
+    // postBody is a special case since it's not defined in the discovery.
     // document as parameter, but we abuse the param entry for storing it.
     $postBody = null;
     if (isset($parameters['postBody'])) {
       if ($parameters['postBody'] instanceof Forminator_Google_Model) {
-        // In the cases the post body is an existing object, we want
-        // to use the smart method to create a simple object for
+        // In the cases the post body is an existing object, we want.
+        // to use the smart method to create a simple object for.
         // for JSONification.
         $parameters['postBody'] = $parameters['postBody']->toSimpleObject();
       } else if (is_object($parameters['postBody'])) {
-        // If the post body is another kind of object, we will try and
+        // If the post body is another kind of object, we will try and.
         // wrangle it into a sensible format.
         $parameters['postBody'] =
             $this->convertToArrayAndStripNulls($parameters['postBody']);
@@ -121,7 +121,7 @@ class Forminator_Google_Service_Resource
       unset($parameters['postBody']);
     }
 
-    // TODO: optParams here probably should have been
+    // TODO: optParams here probably should have been.
     // handled already - this may well be redundant code.
     if (isset($parameters['optParams'])) {
       $optParams = $parameters['optParams'];

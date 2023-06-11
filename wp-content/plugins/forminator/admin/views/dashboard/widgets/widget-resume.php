@@ -1,10 +1,10 @@
 <?php
 $total_modules           = forminator_total_forms();
 $count_active            = forminator_total_forms( 'publish' );
-$forms_total_submissions = Forminator_Form_Entry_Model::count_all_entries_by_type( 'custom-forms' ); // phpcs:ignore -- forminator_cforms_total();
-$poll_total_submissions  = Forminator_Form_Entry_Model::count_all_entries_by_type( 'poll' );// phpcs:ignore -- forminator_polls_total();
-$quiz_total_submissions  = Forminator_Form_Entry_Model::count_all_entries_by_type( 'quizzes' );// phpcs:ignore -- forminator_quizzes_total();
-$last_submission         = forminator_get_latest_entry_time( 'custom-forms' );
+$forms_total_submissions = Forminator_Form_Entry_Model::count_all_entries_by_type( 'custom-forms' );
+$poll_total_submissions  = Forminator_Form_Entry_Model::count_all_entries_by_type( 'poll' );
+$quiz_total_submissions  = Forminator_Form_Entry_Model::count_all_entries_by_type( 'quizzes' );
+$last_submission         = forminator_get_latest_entry_time( 'all' );
 ?>
 
 <div class="sui-box sui-summary <?php echo esc_attr( $this->get_box_summary_classes() ); ?>">

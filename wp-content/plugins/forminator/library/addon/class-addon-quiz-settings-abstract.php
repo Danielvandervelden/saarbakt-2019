@@ -41,7 +41,6 @@ abstract class Forminator_Addon_Quiz_Settings_Abstract extends Forminator_Addon_
 	 *
 	 * @example $_activation_error_message can be dynamically set on activate() to display custom error messages when activation failed
 	 *          Default is empty, which will be replaced by forminator default messages
-	 *
 	 */
 
 	/**
@@ -106,6 +105,8 @@ abstract class Forminator_Addon_Quiz_Settings_Abstract extends Forminator_Addon_
 	 */
 	protected $form_settings;
 
+	protected static $module_slug = 'quiz';
+
 	/**
 	 * Forminator_Addon_Quiz_Settings_Abstract constructor.
 	 *
@@ -119,28 +120,17 @@ abstract class Forminator_Addon_Quiz_Settings_Abstract extends Forminator_Addon_
 	public function __construct( Forminator_Addon_Abstract $addon, $quiz_id ) {
 		$this->addon   = $addon;
 		$this->quiz_id = $quiz_id;
-		$this->quiz    = Forminator_Quiz_Model::model()->load( $this->quiz_id );
+		$this->quiz    = Forminator_Base_Form_Model::get_model( $this->quiz_id );
 		if ( ! $this->quiz ) {
 			/* translators: ... */
 			throw new Forminator_Addon_Exception( sprintf( __( 'Quiz with id %d could not be found', 'forminator' ), $this->quiz_id ) );
 		}
 		$this->quiz_settings = forminator_addon_format_quiz_settings( $this->quiz );
 		if ( isset( $this->quiz_settings['hasLeads'] ) && $this->quiz_settings['hasLeads'] ) {
-			$lead_model = Forminator_Form_Model::model()->load( $this->quiz_settings['leadsId'] );
-			$this->form_fields   = forminator_addon_format_form_fields( $lead_model );
-			$this->form_settings = forminator_addon_format_form_settings( $lead_model );
+			$lead_model          = Forminator_Base_Form_Model::get_model( $this->quiz_settings['leadsId'] );
+			$this->form_fields   = ! empty( $lead_model ) ? forminator_addon_format_form_fields( $lead_model ) : array();
+			$this->form_settings = ! empty( $lead_model ) ? forminator_addon_format_form_settings( $lead_model ) : array();
 		}
-	}
-
-
-	/**
-	 * Meta key that will be used to save addon quiz setting on WP post_meta
-	 *
-	 * @since 1.6.2
-	 * @return string
-	 */
-	final public function get_quiz_settings_meta_key() {
-		return 'forminator_addon_' . $this->addon->get_slug() . '_quiz_settings';
 	}
 
 	/**
@@ -180,8 +170,8 @@ abstract class Forminator_Addon_Quiz_Settings_Abstract extends Forminator_Addon_
 	 * @return array
 	 */
 	final public function get_quiz_settings_values() {
-		// get single meta key
-		$values = get_post_meta( $this->quiz_id, $this->get_quiz_settings_meta_key(), true );
+		// get single meta key.
+		$values = get_post_meta( $this->quiz_id, $this->get_settings_meta_key(), true );
 
 		if ( ! $values ) {
 			$values = array();
@@ -196,7 +186,7 @@ abstract class Forminator_Addon_Quiz_Settings_Abstract extends Forminator_Addon_
 		 * @since 1.6.2
 		 *
 		 * @param mixed $values
-		 * @param int   $quiz_id current quiz id
+		 * @param int   $quiz_id current quiz id.
 		 */
 		$values = apply_filters( 'forminator_addon_' . $addon_slug . '_get_quiz_settings_values', $values, $quiz_id );
 
@@ -221,11 +211,11 @@ abstract class Forminator_Addon_Quiz_Settings_Abstract extends Forminator_Addon_
 		 *
 		 * @since 1.6.2
 		 *
-		 * @param mixed $values  current quiz settings values
-		 * @param int   $quiz_id current quiz id
+		 * @param mixed $values  current quiz settings values.
+		 * @param int   $quiz_id current quiz id.
 		 */
 		$values = apply_filters( 'forminator_addon_' . $addon_slug . '_save_quiz_settings_values', $values, $quiz_id );
-		update_post_meta( $this->quiz_id, $this->get_quiz_settings_meta_key(), $values );
+		update_post_meta( $this->quiz_id, $this->get_settings_meta_key(), forminator_sanitize_array_field( $values ) );
 	}
 
 	/**
@@ -370,9 +360,9 @@ abstract class Forminator_Addon_Quiz_Settings_Abstract extends Forminator_Addon_
 	 * @return array
 	 */
 	public function quiz_settings_wizards() {
-		// What this function return should looks like
+		// What this function return should looks like.
 		$steps = array(
-			// First Step / step `0`
+			// First Step / step `0`.
 			array(
 				/**
 				 * Value of `callback` will be passed as first argument of `call_user_func`
@@ -384,7 +374,6 @@ abstract class Forminator_Addon_Quiz_Settings_Abstract extends Forminator_Addon_
 				 * This callback should return an array @see Forminator_Addon_Abstract::sample_setting_first_step()
 				 *
 				 * @see Forminator_Addon_Abstract::sample_setting_first_step()
-				 *
 				 */
 				'callback'     => array( $this, 'sample_setting_first_step' ),
 				/**
@@ -463,12 +452,12 @@ abstract class Forminator_Addon_Quiz_Settings_Abstract extends Forminator_Addon_
 	 *
 	 * @param      $multi_id
 	 * @param      $settings
-	 * @param bool $replace
+	 * @param bool     $replace
 	 */
 	public function save_multi_id_quiz_setting_values( $multi_id, $settings, $replace = false ) {
 		$this->addon_quiz_settings = $this->get_quiz_settings_values();
 
-		// merge old values if not replace
+		// merge old values if not replace.
 		if ( isset( $this->addon_quiz_settings[ $multi_id ] ) && ! $replace ) {
 			$current_settings = $this->addon_quiz_settings[ $multi_id ];
 			$settings         = array_merge( $current_settings, $settings );
@@ -507,7 +496,7 @@ abstract class Forminator_Addon_Quiz_Settings_Abstract extends Forminator_Addon_
 	 *
 	 * @param        $multi_id
 	 * @param        $key
-	 * @param mixed  $default
+	 * @param mixed    $default
 	 *
 	 * @return mixed|string
 	 */
@@ -619,7 +608,7 @@ abstract class Forminator_Addon_Quiz_Settings_Abstract extends Forminator_Addon_
 		do_action( "forminator_addon_{$addon_slug}_on_import_quiz_settings_data", $quiz_id, $import_data );
 
 		try {
-			// pre-basic-validation
+			// pre-basic-validation.
 			if ( empty( $import_data ) ) {
 				throw new Forminator_Addon_Exception( 'import_data_empty' );
 			}
@@ -639,7 +628,7 @@ abstract class Forminator_Addon_Quiz_Settings_Abstract extends Forminator_Addon_
 
 		} catch ( Forminator_Addon_Exception $e ) {
 			forminator_addon_maybe_log( $e->getMessage() );
-			//do nothing
+			// do nothing.
 		}
 
 	}

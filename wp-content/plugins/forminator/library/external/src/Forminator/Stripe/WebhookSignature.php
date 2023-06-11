@@ -11,11 +11,11 @@ abstract class WebhookSignature
      * Exception\SignatureVerificationException exception if the verification fails for
      * any reason.
      *
-     * @param string $payload the payload sent by Stripe
-     * @param string $header the contents of the signature header sent by
+     * @param string $payload the payload sent by Stripe.
+     * @param string $header the contents of the signature header sent by.
      *  Stripe
-     * @param string $secret secret used to generate the signature
-     * @param int $tolerance maximum difference allowed between the header's
+     * @param string $secret secret used to generate the signature.
+     * @param int $tolerance maximum difference allowed between the header's.
      *  timestamp and the current time
      *
      * @throws Exception\SignatureVerificationException if the verification fails
@@ -24,7 +24,7 @@ abstract class WebhookSignature
      */
     public static function verifyHeader($payload, $header, $secret, $tolerance = null)
     {
-        // Extract timestamp and signatures from header
+        // Extract timestamp and signatures from header.
         $timestamp = self::getTimestamp($header);
         $signatures = self::getSignatures($header, self::EXPECTED_SCHEME);
         if (-1 === $timestamp) {
@@ -42,8 +42,8 @@ abstract class WebhookSignature
             );
         }
 
-        // Check if expected signature is found in list of signatures from
-        // header
+        // Check if expected signature is found in list of signatures from.
+        // header.
         $signedPayload = "{$timestamp}.{$payload}";
         $expectedSignature = self::computeSignature($signedPayload, $secret);
         $signatureFound = false;
@@ -62,7 +62,7 @@ abstract class WebhookSignature
             );
         }
 
-        // Check if timestamp is within tolerance
+        // Check if timestamp is within tolerance.
         if (($tolerance > 0) && (\abs(\time() - $timestamp) > $tolerance)) {
             throw Exception\SignatureVerificationException::factory(
                 'Timestamp outside the tolerance zone',
@@ -77,7 +77,7 @@ abstract class WebhookSignature
     /**
      * Extracts the timestamp in a signature header.
      *
-     * @param string $header the signature header
+     * @param string $header the signature header.
      *
      * @return int the timestamp contained in the header, or -1 if no valid
      *  timestamp is found
@@ -103,8 +103,8 @@ abstract class WebhookSignature
     /**
      * Extracts the signatures matching a given scheme in a signature header.
      *
-     * @param string $header the signature header
-     * @param string $scheme the signature scheme to look for
+     * @param string $header the signature header.
+     * @param string $scheme the signature scheme to look for.
      *
      * @return array the list of signatures matching the provided scheme
      */
@@ -128,8 +128,8 @@ abstract class WebhookSignature
      *
      * The current scheme used by Stripe ("v1") is HMAC/SHA-256.
      *
-     * @param string $payload the payload to sign
-     * @param string $secret the secret used to generate the signature
+     * @param string $payload the payload to sign.
+     * @param string $secret the secret used to generate the signature.
      *
      * @return string the signature as a string
      */

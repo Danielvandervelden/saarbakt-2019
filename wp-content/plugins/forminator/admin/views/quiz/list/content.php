@@ -1,29 +1,25 @@
 <?php
 /** @var Forminator_Quiz_Page $this */
 
-// Search keyword
-$search_keyword = null;
-$is_search = false;
+// Search keyword.
+$search_keyword      = Forminator_Core::sanitize_text_field( 'module-search' );
+$is_search           = (bool) $search_keyword;
 $search_module_nonce = esc_attr( 'forminator-nonce-search-module' );
-if ( isset( $_GET['module-search'] ) && strlen( trim( $_GET['module-search'] ) ) ) {
-	$search_keyword = sanitize_text_field( $_GET['module-search'] );
-	$is_search 		= true;
-}
 
-// Get modules
+// Get modules.
 $modules = $this->getModules();
 
-// Count total quizzes
-$count        = ! $is_search ? $this->countModules() : count( $modules );
+// Count total quizzes.
+$count = ! $is_search ? $this->countModules() : count( $modules );
 
-// Start date for retrieving the information of the last 30 days in sql format
-$sql_month_start_date = date( 'Y-m-d H:i:s', strtotime( '-30 days midnight' ) );// phpcs:ignore
+// Start date for retrieving the information of the last 30 days in sql format.
+$sql_month_start_date = date( 'Y-m-d H:i:s', strtotime( '-30 days midnight' ) );
 
 $entry_type  = 'quizzes';
 $most_entry  = Forminator_Form_Entry_Model::get_most_entry( $entry_type );
 $wizard_page = null;
 if ( $most_entry ) {
-	$most_entry_model = Forminator_Quiz_Model::model()->load( $most_entry->form_id );
+	$most_entry_model = Forminator_Base_Form_Model::get_model( $most_entry->form_id );
 	$wizard_page      = 'forminator-' . ( 'nowrong' === $most_entry_model->quiz_type ? $most_entry_model->quiz_type : 'knowledge' ) . '-wizard';
 }
 $empty_title   = esc_html__( 'Create fun or challenging quizzes for your visitors to take and share on social media.', 'forminator' );

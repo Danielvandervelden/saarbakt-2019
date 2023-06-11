@@ -1,21 +1,29 @@
 <?php
-$nonce = wp_create_nonce( 'forminator_save_import_custom_form_gravity' );
+$nonce = wp_create_nonce( 'forminator_save_import_form_gravity' );
 $forms = forminator_list_thirdparty_contact_forms( 'gravityforms' );
 ?>
 
 <div class="sui-box-body wpmudev-popup-form">
 
-	<div class="sui-notice sui-notice-error wpmudev-ajax-error-placeholder sui-hidden"><p></p></div>
+	<div
+		role="alert"
+		id="wpmudev-ajax-error-placeholder"
+		class="sui-notice sui-notice-error"
+		aria-live="assertive"
+	>
+		<!-- Nothing should be placed here -->
+	</div>
 
 	<div class="sui-form-field">
 		<select class="sui-form-dropdown" name="gravityforms">
-			<option value="all"><?php esc_html_e('All Forms', 'forminator'); ?></option>
+			<option value="all"><?php esc_html_e( 'All Forms', 'forminator' ); ?></option>
 			<?php
-			if ( ! empty( $forms ) ):
-				foreach ($forms as $key => $value) {
-					echo sprintf('<option value="%f">%s</option>', 
-						absint( $value['id'] ), 
-						esc_html( $value['title'] ) 
+			if ( ! empty( $forms ) ) :
+				foreach ( $forms as $key => $value ) {
+					echo sprintf(
+						'<option value="%f">%s</option>',
+						absint( $value['id'] ),
+						esc_html( $value['title'] )
 					);
 				}
 			endif;

@@ -25,7 +25,7 @@ class Forminator_Migration {
 			return $settings;
 		}
 
-		// skip alpha/beta ... from migration
+		// skip alpha/beta ... from migration.
 		if ( version_compare( $version, '1.6-alpha.1', 'lt' ) ) {
 			/**
 			 * Migrate pagination settings
@@ -72,6 +72,20 @@ class Forminator_Migration {
 		 */
 		$settings = self::migrate_pagination_form_settings( $settings, $fields );
 
+		/**
+		 * Migrate Data Storage settings
+		 *
+		 * @since 1.15.12
+		 */
+		$settings = self::migrate_data_storage_settings( $settings );
+
+		/**
+		 * Migrate behaviour settings
+		 *
+		 * @since 1.15.12
+		 */
+		$settings = self::migrate_data_behaviour_settings( $settings, $fields );
+
 		return $settings;
 	}
 
@@ -92,12 +106,12 @@ class Forminator_Migration {
 			$version = FORMINATOR_VERSION;
 		}
 
-		// Fallback if field type is undefined
+		// Fallback if field type is undefined.
 		if ( ! isset( $field['type'] ) ) {
 			return $field;
 		}
 
-		// skip alpha/beta ... from migration
+		// skip alpha/beta ... from migration.
 		if ( version_compare( $version, '1.6-alpha.1', 'lt' ) ) {
 
 			/**
@@ -183,7 +197,19 @@ class Forminator_Migration {
 		 */
 		$field = self::migrate_date_limit_1_13( $field );
 
+		/**
+		 * Migrate Payment plan on `stripe` field
+		 *
+		 * @since 1.15
+		 */
+		$field = self::migrate_payment_plan_field( $field );
 
+		/**
+		 * Migrate captcha provider field
+		 *
+		 * @since 1.15.8
+		 */
+		$field = self::migrate_captcha_provider_field( $field );
 
 		return $field;
 	}
@@ -220,6 +246,12 @@ class Forminator_Migration {
 			$settings = self::migrate_padding_border_settings_1_6_1( $settings );
 		}
 
+		/**
+		 * Migrate Data Storage settings
+		 *
+		 * @since 1.15.12
+		 */
+		$settings = self::migrate_data_storage_settings( $settings );
 
 		return $settings;
 	}
@@ -249,6 +281,12 @@ class Forminator_Migration {
 			$settings = self::migrate_share_settings_1_6_2( $settings );
 		}
 
+		/**
+		 * Migrate Data Storage settings
+		 *
+		 * @since 1.15.12
+		 */
+		$settings = self::migrate_data_storage_settings( $settings );
 
 		return $settings;
 	}
@@ -291,19 +329,19 @@ class Forminator_Migration {
 	 * @return mixed
 	 */
 	public static function migrate_field_types_1_6( $field ) {
-		// Migrate text to textarea
-		if ( "text" === $field['type'] && isset( $field['input_type'] ) && "paragraph" === $field['input_type'] ) {
-			$field['type'] = "textarea";
+		// Migrate text to textarea.
+		if ( 'text' === $field['type'] && isset( $field['input_type'] ) && 'paragraph' === $field['input_type'] ) {
+			$field['type'] = 'textarea';
 		}
 
-		// Migrate text to textarea
-		if ( "select" === $field['type'] && isset( $field['value_type'] ) && "radio" === $field['value_type'] ) {
-			$field['type'] = "radio";
+		// Migrate text to textarea.
+		if ( 'select' === $field['type'] && isset( $field['value_type'] ) && 'radio' === $field['value_type'] ) {
+			$field['type'] = 'radio';
 		}
 
-		// Migrate multi select to select
-		if ( "checkbox" === $field['type'] && ( isset( $field['value_type'] ) && "multiselect" === $field['value_type'] ) ) {
-			$field['type'] = "select";
+		// Migrate multi select to select.
+		if ( 'checkbox' === $field['type'] && ( isset( $field['value_type'] ) && 'multiselect' === $field['value_type'] ) ) {
+			$field['type'] = 'select';
 		}
 
 		return $field;
@@ -320,10 +358,10 @@ class Forminator_Migration {
 	 */
 	public static function migrate_invisible_captcha_1_6( $field ) {
 
-		if ( "captcha" === $field['type'] ) {
+		if ( 'captcha' === $field['type'] ) {
 			$is_invisible_captcha = isset( $field['invisible_captcha'] ) ? filter_var( $field['invisible_captcha'], FILTER_VALIDATE_BOOLEAN ) : false;
 			if ( $is_invisible_captcha ) {
-				$field['captcha_type'] = "invisible";
+				$field['captcha_type'] = 'invisible';
 			}
 			unset( $field['invisible_captcha'] );
 		}
@@ -342,8 +380,8 @@ class Forminator_Migration {
 	 */
 	public static function migrate_email_validation_1_6( $field ) {
 
-		// Migrate email validation message
-		if ( "email" === $field['type'] ) {
+		// Migrate email validation message.
+		if ( 'email' === $field['type'] ) {
 			$validation_text = isset( $field['validation_text'] ) ? $field['validation_text'] : '';
 			if ( ! empty( $validation_text ) ) {
 				$field['validation_message'] = $validation_text;
@@ -365,11 +403,11 @@ class Forminator_Migration {
 	 * @return mixed
 	 */
 	public static function migrate_section_border_1_6( $field, $settings ) {
-		if ( "section" === $field['type'] ) {
+		if ( 'section' === $field['type'] ) {
 			$has_border = $field['section_border'];
 			$has_border = filter_var( $has_border, FILTER_VALIDATE_BOOLEAN );
 
-			// Check if we need migration
+			// Check if we need migration.
 			if ( $has_border && ! isset( $field['border_width'] ) && ! isset( $field['border_color'] ) ) {
 				$field['section_border'] = 'solid';
 				$field['border_width']   = '1';
@@ -392,9 +430,9 @@ class Forminator_Migration {
 	public static function migrate_phone_validation_1_6( $field ) {
 		if ( isset( $field['validation'] ) ) {
 			if ( true === $field['validation'] ) {
-				$field['validation'] = "true";
+				$field['validation'] = 'true';
 			} else {
-				$field['validation'] = "false";
+				$field['validation'] = 'false';
 			}
 		}
 
@@ -412,8 +450,8 @@ class Forminator_Migration {
 	 */
 	public static function migrate_multiple_required_1_6( $field ) {
 
-		// migrate name required to multi
-		if ( "name" === $field['type'] ) {
+		// migrate name required to multi.
+		if ( 'name' === $field['type'] ) {
 			$is_multi        = isset( $field['multiple_name'] ) ? filter_var( $field['multiple_name'], FILTER_VALIDATE_BOOLEAN ) : false;
 			$is_old_required = isset( $field['required'] ) ? filter_var( $field['required'], FILTER_VALIDATE_BOOLEAN ) : false;
 			if ( $is_multi && $is_old_required ) {
@@ -425,8 +463,8 @@ class Forminator_Migration {
 			}
 		}
 
-		// migrate address required to multi
-		if ( "address" === $field['type'] ) {
+		// migrate address required to multi.
+		if ( 'address' === $field['type'] ) {
 			$is_old_required = isset( $field['required'] ) ? filter_var( $field['required'], FILTER_VALIDATE_BOOLEAN ) : false;
 			if ( $is_old_required ) {
 				$field['street_address_required']  = true;
@@ -454,7 +492,7 @@ class Forminator_Migration {
 	public static function migrate_pagination_settings_1_6( $settings ) {
 
 		if ( isset( $settings['pagination-header-design'] ) ) {
-			if ( "bar" === $settings['pagination-header-design'] || "nav" === $settings['pagination-header-design'] ) {
+			if ( 'bar' === $settings['pagination-header-design'] || 'nav' === $settings['pagination-header-design'] ) {
 				$settings['pagination-header']        = $settings['pagination-header-design'];
 				$settings['pagination-header-design'] = 'show';
 			}
@@ -541,7 +579,7 @@ class Forminator_Migration {
 		if ( ! isset( $settings['form-font-family'] ) ) {
 			$needs_migration = false;
 
-			// List of old font toggles
+			// List of old font toggles.
 			$old_settings = array(
 				'cform-label-font-settings',
 				'cform-input-font-settings',
@@ -553,19 +591,19 @@ class Forminator_Migration {
 				'cform-pagination-font-settings',
 			);
 
-			// Check if we have enabled custom font settings
+			// Check if we have enabled custom font settings.
 			foreach ( $old_settings as $prop ) {
 				if ( isset( $settings[ $prop ] ) && $settings[ $prop ] ) {
 					$needs_migration = true;
 				}
 			}
 
-			// We need to migrate
+			// We need to migrate.
 			if ( $needs_migration ) {
-				// Update new property
-				$settings['form-font-family'] = "custom";
+				// Update new property.
+				$settings['form-font-family'] = 'custom';
 
-				// Unset all old properties
+				// Unset all old properties.
 				foreach ( $old_settings as $prop ) {
 					unset( $settings[ $prop ] );
 				}
@@ -669,8 +707,8 @@ class Forminator_Migration {
 	 * @return mixed
 	 */
 	public static function migrate_text_limit_1_6( $field ) {
-		// Migrate text_limit to limit
-		// text area added here because its executed after types migrated
+		// Migrate text_limit to limit.
+		// text area added here because its executed after types migrated.
 		if ( 'text' === $field['type'] || 'textarea' === $field['type'] ) {
 			if ( isset( $field['text_limit'] ) ) {
 				$has_limit = filter_var( $field['text_limit'], FILTER_VALIDATE_BOOLEAN );
@@ -679,7 +717,6 @@ class Forminator_Migration {
 				}
 				unset( $field['text_limit'] );
 			}
-
 		}
 
 		return $field;
@@ -713,16 +750,16 @@ class Forminator_Migration {
 	 */
 	public static function migrate_page_break_pagination_field( $field ) {
 
-		// Migrate page break
-		if ( 'pagination' === $field[ 'type' ] ) {
-			$field[ 'type' ] = 'page-break';
-			$element_id = $field[ 'element_id' ];
-			$element_num = explode( '-', $element_id );
-			if ( isset( $element_num[ 1 ] ) ) {
-				$element_id = $field[ 'type' ] . '-' . $element_num[ 1 ];
+		// Migrate page break.
+		if ( 'pagination' === $field['type'] ) {
+			$field['type'] = 'page-break';
+			$element_id    = $field['element_id'];
+			$element_num   = explode( '-', $element_id );
+			if ( isset( $element_num[1] ) ) {
+				$element_id = $field['type'] . '-' . $element_num[1];
 			}
 
-			$field[ 'element_id' ] = $element_id;
+			$field['element_id'] = $element_id;
 		}
 
 		return $field;
@@ -739,7 +776,7 @@ class Forminator_Migration {
 	 */
 	public static function migrate_date_limit_1_13( $field ) {
 
-		// Migrate page break
+		// Migrate page break.
 		if ( 'date' === $field['type'] ) {
 			if ( isset( $field['howto-restrict'] ) && 'custom' === $field['howto-restrict'] ) {
 				$field['howto-restrict'] = 'all';
@@ -786,10 +823,10 @@ class Forminator_Migration {
 
 		foreach ( $fields as $field ) {
 			if ( isset( $field['type'] ) && 'pagination' === $field['type'] ) {
-				$element_id    = $field['element_id'];
-				$element_num   = explode( '-', $element_id );
+				$element_id  = $field['element_id'];
+				$element_num = explode( '-', $element_id );
 				if ( isset( $element_num[1] ) ) {
-					$element_id =  'page-break-' . $element_num[1];
+					$element_id = 'page-break-' . $element_num[1];
 				}
 				if ( isset( $field['pagination-label'] ) ) {
 					$settings['paginationData'][ $element_id . '-steps' ] = $field['pagination-label'];
@@ -809,7 +846,7 @@ class Forminator_Migration {
 			}
 		}
 
-		if ( ! isset( $settings['paginationData']['pagination-header-design']  ) && isset( $settings['pagination-header-design'] ) ) {
+		if ( ! isset( $settings['paginationData']['pagination-header-design'] ) && isset( $settings['pagination-header-design'] ) ) {
 			$settings['paginationData']['pagination-header-design'] = $settings['pagination-header-design'];
 		}
 
@@ -918,8 +955,8 @@ class Forminator_Migration {
 		if ( ! isset( $forms['notifications'] ) || empty( $forms['notifications'] ) ) {
 			if ( isset( $settings['use-admin-email'] ) && ! empty( $settings['use-admin-email'] ) ) {
 				$admin_args = array(
-					'slug'             => 'notification-1111-2222',
-					'label'            => 'Admin Email',
+					'slug'  => 'notification-1111-2222',
+					'label' => 'Admin Email',
 				);
 				if ( ! empty( $settings['admin-email-recipients'] ) ) {
 					$admin_args['recipients'] = implode( ',', $settings['admin-email-recipients'] );
@@ -972,6 +1009,113 @@ class Forminator_Migration {
 		}
 
 		return $field;
+	}
+
+	/**
+	 * Migrate payment plan
+	 *
+	 * @param $field
+	 *
+	 * @return mixed
+	 */
+	public static function migrate_payment_plan_field( $field ) {
+		if ( 'stripe' === $field['type'] && empty( $field['payments'] ) ) {
+			$payment_plan = array(
+				'plan_name'                => __( 'Plan 1', 'forminator' ),
+				'payment_method'           => 'single',
+				'amount_type'              => isset( $field['amount_type'] ) ? $field['amount_type'] : 'fixed',
+				'subscription_amount_type' => 'fixed',
+				'quantity_type'            => 'fixed',
+				'quantity'                 => '1',
+				'bill_input'               => '1',
+			);
+
+			if ( isset( $field['amount'] ) ) {
+				$payment_plan['amount'] = $field['amount'];
+			}
+			if ( isset( $field['variable'] ) ) {
+				$payment_plan['variable'] = $field['variable'];
+			}
+
+			$field['payments'][] = $payment_plan;
+		}
+
+		return $field;
+	}
+
+	/**
+	 * Migrate captcha field
+	 *
+	 * @param $field
+	 *
+	 * @return mixed
+	 */
+	public static function migrate_captcha_provider_field( $field ) {
+		if ( 'captcha' === $field['type'] ) {
+			if ( ! isset( $field['captcha_provider'] ) ) {
+				$field['captcha_provider'] = 'recaptcha';
+			}
+		}
+
+		return $field;
+	}
+
+	/**
+	 *  Migrate Data storage setting - Enabled by default
+	 *
+	 * @param $settings
+	 *
+	 * @since 1.15.12
+	 *
+	 * @return mixed
+	 */
+	public static function migrate_data_storage_settings( $settings ) {
+		if (
+			(
+				! isset( $settings['store'] ) &&
+				! isset( $settings['store_submissions'] )
+			) ||
+			(
+				isset( $settings['store'] ) &&
+				! filter_var( $settings['store'], FILTER_VALIDATE_BOOLEAN )
+			)
+		) {
+
+			$settings['store_submissions'] = '1';
+
+		} elseif (
+			isset( $settings['store'] ) &&
+			filter_var( $settings['store'], FILTER_VALIDATE_BOOLEAN )
+		) {
+
+			$settings['store_submissions'] = '';
+		}
+
+		unset( $settings['store'] );
+
+		return $settings;
+	}
+
+	/**
+	 *  Migrate Behaviour data
+	 *
+	 * @param $settings
+	 * @param $field
+	 *
+	 * @return mixed
+	 */
+	public static function migrate_data_behaviour_settings( $settings, $fields ) {
+		if ( empty( $fields ) ) {
+			return $settings;
+		}
+
+		foreach ( $fields as $field ) {
+			if ( isset( $field['type'] ) && 'stripe' === $field['type'] ) {
+				$settings['enable-ajax'] = 'true';
+			}
+		}
+
+		return $settings;
 	}
 }
 

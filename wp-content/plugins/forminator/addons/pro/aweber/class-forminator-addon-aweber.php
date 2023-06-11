@@ -41,19 +41,12 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 	private $_account_id = 0;
 
 	/**
-	 * API Adapter
-	 *
-	 * @var Forminator_Addon_Aweber_Wp_Api
-	 */
-	private static $api;
-
-	/**
 	 * Forminator_Addon_Aweber constructor.
 	 *
 	 * @since 1.0 Aweber Addon
 	 */
 	public function __construct() {
-		// late init to allow translation
+		// late init to allow translation.
 		$this->_description                = __( 'Get awesome by your form.', 'forminator' );
 		$this->_activation_error_message   = __( 'Sorry but we failed to activate AWeber Integration, don\'t hesitate to contact us', 'forminator' );
 		$this->_deactivation_error_message = __( 'Sorry but we failed to deactivate AWeber Integration, please try again', 'forminator' );
@@ -67,6 +60,10 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 		$this->_icon_x2  = forminator_addon_aweber_assets_url() . 'icons/aweber@2x.png';
 		$this->_image    = forminator_addon_aweber_assets_url() . 'img/aweber.png';
 		$this->_image_x2 = forminator_addon_aweber_assets_url() . 'img/aweber@2x.png';
+
+		$this->is_multi_global = true;
+
+		$this->global_id_for_new_integrations = uniqid( '', true );
 	}
 
 	/**
@@ -92,15 +89,15 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 	 */
 	public function is_connected() {
 		try {
-			// check if its active
+			// check if its active.
 			if ( ! $this->is_active() ) {
 				throw new Forminator_Addon_Aweber_Exception( __( 'AWeber is not active', 'forminator' ) );
 			}
 
-			// if user completed api setup
+			// if user completed api setup.
 			$is_connected   = false;
 			$setting_values = $this->get_settings_values();
-			// if user completed api setup
+			// if user completed api setup.
 			if ( isset( $setting_values['account_id'] ) && ! empty( $setting_values['account_id'] ) ) {
 				$is_connected = true;
 			}
@@ -136,12 +133,12 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 				throw new Forminator_Addon_Aweber_Exception( __( ' AWeber is not connected', 'forminator' ) );
 			}
 
-			$form_settings_instance = $this->get_addon_form_settings( $form_id );
+			$form_settings_instance = $this->get_addon_settings( $form_id, 'form' );
 			if ( ! $form_settings_instance instanceof Forminator_Addon_Aweber_Form_Settings ) {
 				throw new Forminator_Addon_Aweber_Exception( __( 'Invalid Form Settings of AWeber', 'forminator' ) );
 			}
 
-			// Mark as active when there is at least one active connection
+			// Mark as active when there is at least one active connection.
 			if ( false === $form_settings_instance->find_one_active_connection() ) {
 				throw new Forminator_Addon_Aweber_Exception( __( 'No active AWeber connection found in this form', 'forminator' ) );
 			}
@@ -158,8 +155,8 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 		 * @since 1.0
 		 *
 		 * @param bool                                       $is_form_connected
-		 * @param int                                        $form_id                Current Form ID
-		 * @param Forminator_Addon_Aweber_Form_Settings|null $form_settings_instance Instance of form settings, or null when unavailable
+		 * @param int                                        $form_id                Current Form ID.
+		 * @param Forminator_Addon_Aweber_Form_Settings|null $form_settings_instance Instance of form settings, or null when unavailable.
 		 *
 		 */
 		$is_form_connected = apply_filters( 'forminator_addon_aweber_is_form_connected', $is_form_connected, $form_id, $form_settings_instance );
@@ -300,7 +297,7 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 	public function is_authorized( $submitted_data ) {
 		$setting_values = $this->get_settings_values();
 
-		// check account_id there
+		// check account_id there.
 		return isset( $setting_values['account_id'] ) && ! empty( $setting_values['account_id'] );
 	}
 
@@ -347,6 +344,7 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 			try {
 				$authorization_code = $query_args['authorization_code'];
 
+				$identifier  = ! empty( $query_args['identifier'] ) ? $query_args['identifier'] : '';
 				$split_codes = explode( '|', $authorization_code );
 
 				//https://labs.aweber.com/docs/authentication#distributed-app
@@ -361,9 +359,13 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 				$token_secret       = $split_codes[3];
 				$oauth_verifier     = $split_codes[4];
 
-				$this->validate_access_token( $application_key, $application_secret, $request_token, $token_secret, $oauth_verifier );
-				$this->_account_id = $this->get_validated_account_id();
+				if ( ! empty( $query_args['global_id'] ) ) {
+					$this->multi_global_id = $query_args['global_id'];
+				}
 
+				$api = $this->validate_access_token( $application_key, $application_secret, $request_token, $token_secret, $oauth_verifier );
+
+				$this->_account_id = $this->get_validated_account_id( $api );
 				if ( ! $this->is_active() ) {
 					$activated = Forminator_Addon_Loader::get_instance()->activate_addon( $this->_slug );
 					if ( ! $activated ) {
@@ -374,10 +376,11 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 
 				$this->save_settings_values(
 					array(
+						'identifier'         => $identifier,
 						'application_key'    => $application_key,
 						'application_secret' => $application_secret,
-						'oauth_token'        => $this->get_api()->get_oauth_token(),
-						'oauth_token_secret' => $this->get_api()->get_oauth_token_secret(),
+						'oauth_token'        => $api->get_oauth_token(),
+						'oauth_token_secret' => $api->get_oauth_token_secret(),
 					)
 				);
 				$template_params['is_close'] = true;
@@ -404,12 +407,12 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 		$authorize_url = 'https://auth.aweber.com/1.0/oauth/authorize_app/' . trim( $app_id );
 
 		if ( ! $return_url ) {
-			$return_url = forminator_addon_integration_section_admin_url( $this->_slug, 'authorize', true );
+			$return_url = forminator_addon_integration_section_admin_url( $this, 'authorize', true );
 		}
 		$return_url = rawurlencode( $return_url );
 
 		$auth_params = array(
-			'oauth_callback' => $return_url, // un-official https://labs.aweber.com/getting_started/public#1
+			'oauth_callback' => $return_url, // un-official https://labs.aweber.com/getting_started/public#1.
 		);
 
 		/**
@@ -437,7 +440,7 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 	 */
 	public function get_app_id() {
 		$app_id = $this->_app_id;
-		// check override by config constant
+		// check override by config constant.
 		if ( defined( 'FORMINATOR_ADDON_AWEBER_APP_ID' ) && FORMINATOR_ADDON_AWEBER_APP_ID ) {
 			$app_id = FORMINATOR_ADDON_AWEBER_APP_ID;
 		}
@@ -465,32 +468,27 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 	 * @throws Forminator_Addon_Aweber_Wp_Api_Exception
 	 */
 	public function get_api( $api_credentials = null ) {
-		if ( is_null( self::$api ) ) {
-			if ( is_null( $api_credentials ) ) {
-				$api_credentials      = array();
-				$setting_values       = $this->get_settings_values();
-				$api_credentials_keys = array(
-					'application_key',
-					'application_secret',
-					'oauth_token',
-					'oauth_token_secret',
-				);
+		if ( is_null( $api_credentials ) ) {
+			$api_credentials      = array();
+			$setting_values       = $this->get_settings_values();
+			$api_credentials_keys = array(
+				'application_key',
+				'application_secret',
+				'oauth_token',
+				'oauth_token_secret',
+			);
 
-				foreach ( $api_credentials_keys as $api_credentials_key ) {
-					$api_credentials[ $api_credentials_key ] = isset( $setting_values[ $api_credentials_key ] ) ? $setting_values[ $api_credentials_key ] : '';
-				}
+			foreach ( $api_credentials_keys as $api_credentials_key ) {
+				$api_credentials[ $api_credentials_key ] = isset( $setting_values[ $api_credentials_key ] ) ? $setting_values[ $api_credentials_key ] : '';
 			}
-
-			$_application_key    = isset( $api_credentials['application_key'] ) ? $api_credentials['application_key'] : '';
-			$_application_secret = isset( $api_credentials['application_secret'] ) ? $api_credentials['application_secret'] : '';
-			$_oauth_token        = isset( $api_credentials['oauth_token'] ) ? $api_credentials['oauth_token'] : '';
-			$_oauth_token_secret = isset( $api_credentials['oauth_token_secret'] ) ? $api_credentials['oauth_token_secret'] : '';
-
-			$api       = new Forminator_Addon_Aweber_Wp_Api( $_application_key, $_application_secret, $_oauth_token, $_oauth_token_secret );
-			self::$api = $api;
 		}
 
-		return self::$api;
+		$_application_key    = isset( $api_credentials['application_key'] ) ? $api_credentials['application_key'] : '';
+		$_application_secret = isset( $api_credentials['application_secret'] ) ? $api_credentials['application_secret'] : '';
+		$_oauth_token        = isset( $api_credentials['oauth_token'] ) ? $api_credentials['oauth_token'] : '';
+		$_oauth_token_secret = isset( $api_credentials['oauth_token_secret'] ) ? $api_credentials['oauth_token_secret'] : '';
+
+		return new Forminator_Addon_Aweber_Wp_Api( $_application_key, $_application_secret, $_oauth_token, $_oauth_token_secret );
 	}
 
 	/**
@@ -506,9 +504,6 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 	 * @throws Forminator_Addon_Aweber_Wp_Api_Not_Found_Exception
 	 */
 	public function validate_access_token( $application_key, $application_secret, $request_token, $token_secret, $oauth_verifier ) {
-		// reinit api
-		self::$api = null;
-
 		//get access_token
 		$api           = $this->get_api(
 			array(
@@ -520,10 +515,7 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 		);
 		$access_tokens = $api->get_access_token( $oauth_verifier );
 
-		// reinit api with new access token open success for future usage
-		self::$api = null;
-
-		$this->get_api(
+		return $this->get_api(
 			array(
 				'application_key'    => $application_key,
 				'application_secret' => $application_secret,
@@ -541,9 +533,7 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 	 * @throws Forminator_Addon_Aweber_Wp_Api_Exception
 	 * @throws Forminator_Addon_Aweber_Wp_Api_Not_Found_Exception
 	 */
-	public function get_validated_account_id() {
-		$api = $this->get_api();
-
+	public function get_validated_account_id( $api ) {
 		$accounts = $api->get_accounts();
 		if ( ! isset( $accounts->entries ) ) {
 			throw new Forminator_Addon_Aweber_Exception( __( 'Failed to get AWeber account information', 'forminator' ) );
@@ -641,12 +631,12 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 				throw new Forminator_Addon_Aweber_Exception( __( ' AWeber is not connected', 'forminator' ) );
 			}
 
-			$quiz_settings_instance = $this->get_addon_quiz_settings( $quiz_id );
+			$quiz_settings_instance = $this->get_addon_settings( $quiz_id, 'quiz' );
 			if ( ! $quiz_settings_instance instanceof Forminator_Addon_Aweber_Quiz_Settings ) {
 				throw new Forminator_Addon_Aweber_Exception( __( 'Invalid Quiz Settings of AWeber', 'forminator' ) );
 			}
 
-			// Mark as active when there is at least one active connection
+			// Mark as active when there is at least one active connection.
 			if ( false === $quiz_settings_instance->find_one_active_connection() ) {
 				throw new Forminator_Addon_Aweber_Exception( __( 'No active AWeber connection found in this quiz', 'forminator' ) );
 			}
@@ -663,8 +653,8 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 		 * @since 1.0
 		 *
 		 * @param bool                                       $is_quiz_connected
-		 * @param int                                        $quiz_id                Current Quiz ID
-		 * @param Forminator_Addon_Aweber_Form_Settings|null $quiz_settings_instance Instance of quiz settings, or null when unavailable
+		 * @param int                                        $quiz_id                Current Quiz ID.
+		 * @param Forminator_Addon_Aweber_Form_Settings|null $quiz_settings_instance Instance of quiz settings, or null when unavailable.
 		 *
 		 */
 		$is_quiz_connected = apply_filters( 'forminator_addon_aweber_is_form_connected', $is_quiz_connected, $quiz_id, $quiz_settings_instance );
@@ -685,13 +675,13 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 	public function is_quiz_lead_connected( $quiz_id ) {
 
 		try {
-			// initialize with null
+			// initialize with null.
 			$quiz_settings_instance = null;
 			if ( ! $this->is_connected() ) {
 				throw new Forminator_Addon_Aweber_Exception( __( ' AWeber is not connected', 'forminator' ) );
 			}
 
-			$quiz_settings_instance = $this->get_addon_quiz_settings( $quiz_id );
+			$quiz_settings_instance = $this->get_addon_settings( $quiz_id, 'quiz' );
 			if ( ! $quiz_settings_instance instanceof Forminator_Addon_Aweber_Quiz_Settings ) {
 				throw new Forminator_Addon_Aweber_Exception( __( 'Invalid Quiz Settings of AWeber', 'forminator' ) );
 			}
@@ -715,8 +705,8 @@ final class Forminator_Addon_Aweber extends Forminator_Addon_Abstract {
 		 * @since 1.1
 		 *
 		 * @param bool $is_quiz_connected
-		 * @param int $quiz_id Current Quiz ID
-		 * @param Forminator_Addon_Aweber_Quiz_Settings|null $quiz_settings_instance Instance of quiz settings, or null when unavailable
+		 * @param int $quiz_id Current Quiz ID.
+		 * @param Forminator_Addon_Aweber_Quiz_Settings|null $quiz_settings_instance Instance of quiz settings, or null when unavailable.
 		 *
 		 */
 		$is_quiz_connected = apply_filters( 'forminator_addon_aweber_is_quiz_lead_connected', $is_quiz_connected, $quiz_id, $quiz_settings_instance );

@@ -52,7 +52,7 @@
 	// Avoid Plugin.prototype conflicts
 	$.extend(ForminatorLoader.prototype, {
 		init: function () {
-			var param = (document.location.search).replace(/(^\?)/, '').split("&").map(function (n) {
+			var param = (decodeURI(document.location.search)).replace(/(^\?)/, '').split("&").map(function (n) {
 				return n = n.split("="), this[n[0]] = n[1], this
 			}.bind({}))[0];
 
@@ -72,6 +72,7 @@
 			}
 
 			this.load_ajax(param);
+			this.handleDiviPopup();
 
 		},
 		load_ajax: function (param) {
@@ -158,8 +159,7 @@
 					},
 				}
 			).always(function () {
-				$(document).trigger('after.load.forminator', param.id)
-				;
+				$(document).trigger('after.load.forminator', param.id);
 			});
 		},
 
@@ -284,7 +284,12 @@
 				self.script_on_load();
 			};
 
-			body.appendChild(script);
+			// Check if script is already loaded or not.
+			if ( 0 === $( 'script[src="' + script.src + '"]' ).length ) {
+				body.appendChild(script);
+			} else {
+				self.script_on_load();
+			}
 		},
 
 		script_on_load: function () {
@@ -335,7 +340,23 @@
 					forminatorFront.hide();
 				}
 			}
-		}
+		},
+
+		handleDiviPopup: function () {
+			var self = this;
+
+			if ( 'undefined' !== typeof DiviArea ) {
+				DiviArea.addAction( 'show_area', function( area ) {
+					var $form = area.find( '#' + self.element.id );
+
+					if ( 0 !== $form.length ) {
+						self.frontInitCalled = false;
+						self.init_front();
+						forminator_render_hcaptcha();
+					}
+				});
+			}
+		},
 	});
 
 	// A really lightweight plugin wrapper around the constructor,

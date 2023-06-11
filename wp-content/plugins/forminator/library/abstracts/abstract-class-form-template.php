@@ -20,7 +20,13 @@ abstract class Forminator_Template {
 	 *
 	 * @var array
 	 */
-	protected $template_fields = array();
+	public $fields;
+	/*
+	 * Template settings
+	 *
+	 * @var array
+	 */
+	public $settings;
 
 	/*
 	 * Template options

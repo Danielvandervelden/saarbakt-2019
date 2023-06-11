@@ -79,7 +79,7 @@ class Forminator_Section extends Forminator_Field {
 	 * @return array
 	 */
 	public function autofill_settings( $settings = array() ) {
-		//Unsupported Autofill
+		// Unsupported Autofill.
 		$autofill_settings = array();
 
 		return $autofill_settings;
@@ -91,22 +91,19 @@ class Forminator_Section extends Forminator_Field {
 	 * @since 1.0
 	 *
 	 * @param $field
-	 * @param $settings
+	 * @param Forminator_Render_Form $views_obj Forminator_Render_Form object.
 	 *
 	 * @return mixed
 	 */
-	public function markup( $field, $settings = array() ) {
+	public function markup( $field, $views_obj ) {
 
 		$this->field = $field;
 
 		$html         = '';
 		$id           = self::get_property( 'element_id', $field );
-		$name         = $id;
 		$id           = $id . '-field';
-		$required     = self::get_property( 'required', $field, false );
 		$title        = esc_html( self::get_property( 'section_title', $field ) );
 		$subtitle     = esc_html( self::get_property( 'section_subtitle', $field ) );
-		$type         = self::get_property( 'section_type', $field );
 		$border       = self::get_property( 'section_border', $field, 'none' );
 		$border_width = self::get_property( 'cform-section-border-width', $field, 1 );
 		$border_color = self::get_property( 'cform-section-border-color', $field, 1 );
@@ -114,13 +111,13 @@ class Forminator_Section extends Forminator_Field {
 		$html .= '<div class="forminator-field">';
 
 		if ( ! empty( $title ) ) {
-			$title = $this->sanitize_output( $title );
-			$html .= sprintf( '<h2 class="forminator-title">%s</h2>', wp_specialchars_decode( $title ) );
+			$title = wp_specialchars_decode( $title );
+			$html .= sprintf( '<h2 class="forminator-title">%s</h2>', $this->sanitize_output( $title ) );
 		}
 
 		if ( ! empty( $subtitle ) ) {
-			$subtitle = $this->sanitize_output( $subtitle );
-			$html    .= sprintf( '<h3 class="forminator-subtitle">%s</h3>', wp_specialchars_decode( $subtitle ) );
+			$subtitle = wp_specialchars_decode( $subtitle );
+			$html    .= sprintf( '<h3 class="forminator-subtitle">%s</h3>', $this->sanitize_output( $subtitle ) );
 		}
 
 		if ( 'none' !== $border ) {

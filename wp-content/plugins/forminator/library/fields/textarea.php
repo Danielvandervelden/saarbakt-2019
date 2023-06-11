@@ -108,34 +108,34 @@ class Forminator_Textarea extends Forminator_Field {
 	 * @since 1.0
 	 *
 	 * @param $field
-	 * @param $settings
+	 * @param Forminator_Render_Form $views_obj Forminator_Render_Form object.
 	 *
 	 * @return mixed
 	 */
-	public function markup( $field, $settings = array() ) {
+	public function markup( $field, $views_obj, $draft_value = null ) {
 
+		$settings            = $views_obj->model->settings;
+		$use_ajax_load       = ! empty( $settings['use_ajax_load'] ) || ! empty( $field['parent_group'] );
 		$this->field         = $field;
 		$this->form_settings = $settings;
 
-		$this->init_autofill( $settings );
+		$html           = '';
+		$id             = self::get_property( 'element_id', $field );
+		$name           = $id;
+		$ariaid         = $id;
+		$id             = 'forminator-field-' . $id . '_' . Forminator_CForm_Front::$uid;
+		$required       = self::get_property( 'required', $field, false, 'bool' );
+		$default        = esc_html( self::get_property( 'default', $field, false ) );
+		$placeholder    = $this->sanitize_value( self::get_property( 'placeholder', $field ) );
+		$design         = $this->get_form_style( $settings );
+		$label          = esc_html( self::get_property( 'field_label', $field, '' ) );
+		$description    = self::get_property( 'description', $field, '' );
+		$limit          = self::get_property( 'limit', $field, 0, 'num' );
+		$limit_type     = self::get_property( 'limit_type', $field, '', 'str' );
+		$editor_type    = self::get_property( 'editor-type', $field, false, 'bool' );
+		$default_height = self::get_property( 'default-height', $field, 140 );
 
-		$html        = '';
-		$id          = self::get_property( 'element_id', $field );
-		$name        = $id;
-		$ariaid      = $id;
-		$id          = 'forminator-field-' . $id;
-		$required    = self::get_property( 'required', $field, false, 'bool' );
-		$default     = esc_html( self::get_property( 'default', $field, false ) );
-		$placeholder = $this->sanitize_value( self::get_property( 'placeholder', $field ) );
-		$design      = $this->get_form_style( $settings );
-		$label       = esc_html( self::get_property( 'field_label', $field, '' ) );
-		$description = self::get_property( 'description', $field, '' );
-		$limit       = self::get_property( 'limit', $field, 0, 'num' );
-		$limit_type  = self::get_property( 'limit_type', $field, '', 'str' );
-		$editor_type  = self::get_property( 'editor-type', $field, false, 'bool' );
-		$default_height  = self::get_property( 'default-height', $field, 140 );
-
-		$autofill_markup = $this->get_element_autofill_markup_attr( self::get_property( 'element_id', $field ), $this->form_settings );
+		$autofill_markup = $this->get_element_autofill_markup_attr( self::get_property( 'element_id', $field ) );
 
 		$textarea = array(
 			'name'        => $name,
@@ -143,17 +143,20 @@ class Forminator_Textarea extends Forminator_Field {
 			'id'          => $id,
 			'class'       => 'forminator-textarea',
 			'rows'        => 6,
-			'style'       => 'min-height:' . $default_height . 'px;'
+			'style'       => 'min-height:' . $default_height . 'px;',
 		);
 
-        // Add maxlength attribute if limit_type is characters
-        if ( ! empty( $limit ) && 'characters' === $limit_type ) {
-            $textarea['maxlength'] = $limit;
-        }
+		// Add maxlength attribute if limit_type is characters.
+		if ( ! empty( $limit ) && 'characters' === $limit_type ) {
+			$textarea['maxlength'] = $limit;
+		}
 
-		// Check if Pre-fill parameter used
-		if ( $this->has_prefill( $field ) ) {
-			// We have pre-fill parameter, use its value or $value
+		if ( isset( $draft_value['value'] ) ) {
+
+			$default = wp_kses_post( $draft_value['value'] );
+
+		} elseif ( $this->has_prefill( $field ) ) {
+			// We have pre-fill parameter, use its value or $value.
 			$default = $this->get_prefill( $field, $default );
 		}
 
@@ -164,24 +167,43 @@ class Forminator_Textarea extends Forminator_Field {
 			unset( $autofill_markup['value'] );
 		}
 
+		// Add required class if form ajax load is enabled.
+		if ( $required && true === $editor_type && $use_ajax_load ) {
+			$textarea['class'] .= esc_attr( ' do-validate forminator-wp-editor-required' );
+		}
+
+		if ( ! empty( $description ) || '' !== $description ) {
+			$textarea['aria-describedby'] = $id . '-description';
+		}
+
 		$textarea = array_merge( $textarea, $autofill_markup );
 
 		$html .= '<div class="forminator-field">';
-		if ( true === $editor_type && empty( $settings['use_ajax_load'] ) ) {
-			$html .= self::create_wp_editor( $textarea, $label, '', $required );
+		if ( true === $editor_type && ! $use_ajax_load ) {
+			$html .= self::create_wp_editor( $textarea, $label, '', $required, $default_height, $limit );
+			$desc_id = 'forminator-wp-editor-' . $id . '-description';
 		} else {
 			$html .= self::create_textarea( $textarea, $label, '', $required, $design );
-			if ( true === $editor_type && ! empty( $settings['use_ajax_load'] ) ) {
-				$args  = self::get_tinymce_args( $id );
-				$html .= '<script>wp.editor.initialize("' . esc_attr( $id ) . '", ' . $args . ');</script>';
+			$desc_id = $id . '-description';
+			if ( true === $editor_type && $use_ajax_load ) {
+				$args   = self::get_tinymce_args( $id );
+				$script = '<script>wp.editor.initialize("' . esc_attr( $id ) . '", ' . $args . ');</script>';
+				// if it's inside group field and 'Load form using AJAX' option is disabled.
+				if ( empty( $settings['use_ajax_load'] ) && ! empty( $field['parent_group'] ) ) {
+					// wrap into document ready.
+					$script = str_replace( array( '<script>', '</script>' ), array( '<script>jQuery(function() {', '});</script>' ), $script );
+				}
+				$html .= $script;
+
+				Forminator_CForm_Front::$load_wp_enqueue_editor = true;
 			}
 		}
-		// Counter
+		// Counter.
 		if ( ! empty( $description ) || ( ! empty( $limit ) && ! empty( $limit_type ) ) ) {
-			$html .= '<span class="forminator-description">';
+			$html .= sprintf( '<span id="%s" class="forminator-description">', esc_attr( $desc_id ) );
 
 			if ( ! empty( $description ) ) {
-				$html .= $description;
+				$html .= esc_html( $description );
 			}
 
 			if ( ( ! empty( $limit ) && ! empty( $limit_type ) ) ) {
@@ -291,10 +313,10 @@ class Forminator_Textarea extends Forminator_Field {
 	 *
 	 * @param array        $field
 	 * @param array|string $data
-	 * @param array        $post_data
 	 */
-	public function validate( $field, $data, $post_data = array() ) {
+	public function validate( $field, $data ) {
 		$id = self::get_property( 'element_id', $field );
+		$data = html_entity_decode( $data );
 
 		if ( ! isset( $field['limit'] ) ) {
 			$field['limit'] = 0;
@@ -312,7 +334,7 @@ class Forminator_Textarea extends Forminator_Field {
 			}
 		}
 		if ( $this->has_limit( $field ) ) {
-			if ( ( isset( $field['limit_type'] ) && 'characters' === trim( $field['limit_type'] ) ) && ( mb_strlen( strip_tags( $data ) ) > $field['limit'] ) ) { // phpcs:ignore
+			if ( ( isset( $field['limit_type'] ) && 'characters' === trim( $field['limit_type'] ) ) && ( mb_strlen( strip_tags( $data ) ) > $field['limit'] ) ) {
 				$this->validation_message[ $id ] = apply_filters(
 					'forminator_text_field_characters_validation_message',
 					__( 'You exceeded the allowed amount of characters. Please check again.', 'forminator' ),
@@ -334,23 +356,25 @@ class Forminator_Textarea extends Forminator_Field {
 	}
 
 	/**
+	 * Sanitization was improved and moved to class-core.php - sanitize_array
+	 *
 	 * Sanitize data
 	 *
 	 * @since 1.0.2
 	 *
 	 * @param array        $field
-	 * @param array|string $data - the data to be sanitized
+	 * @param array|string $data - the data to be sanitized.
 	 *
 	 * @return array|string $data - the data after sanitization
 	 */
 	public function sanitize( $field, $data ) {
 		$original_data = $data;
 		$editor_type   = self::get_property( 'editor-type', $field, false, 'bool' );
-		// Sanitize
+		// Sanitize.
 		if ( true === $editor_type ) {
 			$data = wp_kses_post( $data );
 		} else {
-			$data = forminator_sanitize_field( $data );
+			$data = forminator_sanitize_textarea( $data );
 		}
 
 		return apply_filters( 'forminator_field_text_sanitize', $data, $field, $original_data );

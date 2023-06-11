@@ -48,7 +48,7 @@ class Forminator_Page_Break extends Forminator_Field {
 	/**
 	 * @var string
 	 */
-	public $icon = 'sui-icon-pagination';
+	public $icon = 'sui-icon forminator-icon-pagination';
 
 	/**
 	 * Forminator_Pagination constructor.
@@ -89,7 +89,7 @@ class Forminator_Page_Break extends Forminator_Field {
 	 * @return array
 	 */
 	public function autofill_settings( $settings = array() ) {
-		//Unsupported Autofill
+		// Unsupported Autofill.
 		$autofill_settings = array();
 
 		return $autofill_settings;

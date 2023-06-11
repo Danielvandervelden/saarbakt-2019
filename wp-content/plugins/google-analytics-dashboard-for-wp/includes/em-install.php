@@ -97,6 +97,10 @@ class ExactMetrics_Install {
 				$this->v650_upgrades();
 			}
 
+            if ( version_compare( $version, '7.13.1', '<' ) ) {
+                $this->v7131_ga4_check();
+            }
+
 			// Do not use. See exactmetrics_after_install_routine comment below.
 			do_action( 'exactmetrics_after_existing_upgrade_routine', $version );
 			$version = get_option( 'exactmetrics_current_version', $version );
@@ -197,7 +201,7 @@ class ExactMetrics_Install {
 			'installed_version' => EXACTMETRICS_VERSION,
 			'installed_date'    => time(),
 			'installed_pro'     => exactmetrics_is_pro_version() ? time() : false,
-			'installed_lite'     => exactmetrics_is_pro_version() ? false : time(),
+			'installed_lite'    => exactmetrics_is_pro_version() ? false : time(),
 		);
 
 		update_option( 'exactmetrics_over_time', $data, false );
@@ -404,9 +408,6 @@ class ExactMetrics_Install {
 		// Transfer Demographics
 		$settings['demographics'] = ! empty( $em_legacy_options['ga_dash_remarketing'] ) ? 1 : 0;
 
-		// Enable compat mode
-		$settings['gatracker_compatibility_mode'] = true;
-
 
 		$settings['gadwp_migrated'] = time();
 
@@ -457,7 +458,6 @@ class ExactMetrics_Install {
 			'tag_links_in_rss'                         => true,
 			'allow_anchor'                             => 0,
 			'add_allow_linker'                         => 0,
-			'custom_code'                              => '',
 			'save_settings'                            => array( 'administrator' ),
 			'view_reports'                             => array( 'administrator', 'editor' ),
 			'events_mode'                              => 'js',
@@ -683,4 +683,57 @@ class ExactMetrics_Install {
 			$this->new_settings['gtagtracker_compatibility_mode'] = true;
 		}
 	}
+
+    public function v7131_ga4_check() {
+        if ( false !== wp_next_scheduled( 'exactmetrics_v4_property_swap' ) ) {
+            //  If cron is scheduled, bail
+            return;
+        }
+
+        $auth = ExactMetrics()->auth;
+
+        if ( $auth->get_connected_type() === 'v4' ) {
+            //  If V4 is set as primary, bail
+            return;
+        }
+
+        if ( empty($auth->get_v4_id()) ) {
+            //  If there's no V4 id, bail
+            return;
+        }
+
+        $type = exactmetrics_is_pro_version() ? 'pro' : 'lite';
+
+        $route = str_replace( '{type}', $type, 'auth/{type}/v4-check/' );
+        $route = trailingslashit( $route );
+
+        $request = new ExactMetrics_API_Request( $route, [], 'GET' );
+
+        $result = $request->request([
+            'v4' => $auth->get_v4_id()
+        ]);
+
+        if ( !is_wp_error($result) && !empty( $result ) && $result['success'] === true ) {
+            if ( isset($result['swap_v4']) && $result['swap_v4'] === true ) {
+                // Create cron to run immediately
+                if ( false === wp_next_scheduled( 'exactmetrics_v4_property_swap' ) ) {
+                    wp_schedule_single_event( strtotime('now'), 'exactmetrics_v4_property_swap' );
+                }
+            } else {
+                // Create cron to run in 40 days or at ga cutoff
+
+                $ga_cutoff = strtotime('2023-07-01');
+                $time_in_40_days = strtotime(date('Y-m-d'). ' + 40 days');
+
+                /*
+                 * Choose the closer date between the 40 days limit we have and the GA3 cutoff
+                 */
+                $swap_date = min($time_in_40_days, $ga_cutoff);
+
+                if ( false === wp_next_scheduled( 'exactmetrics_v4_property_swap' ) ) {
+                    wp_schedule_single_event( $swap_date, 'exactmetrics_v4_property_swap' );
+                }
+            }
+        }
+    }
 }

@@ -8,6 +8,11 @@
 
 namespace Smush\Core;
 
+use Exception;
+use WP_Error;
+use WP_REST_Request;
+use WP_Smush;
+
 /**
  * Class Configs
  *
@@ -16,67 +21,50 @@ namespace Smush\Core;
 class Configs {
 
 	/**
-	 * Name of the option holding the configs.
-	 *
-	 * @since 3.8.5
-	 */
-	const OPTION_NAME = 'preset_configs';
-
-	/**
 	 * List of pro features.
 	 *
 	 * @since 3.8.5
 	 *
 	 * @var array
 	 */
-	private $pro_features = array( 'lossy', 'original', 'backup', 'png_to_jpg', 's3', 'nextgen', 'cdn', 'auto_resize', 'webp', 'webp_mod' );
+	private $pro_features = array( 'original', 'backup', 'png_to_jpg', 's3', 'nextgen', 'cdn', 'auto_resize', 'webp', 'webp_mod' );
 
 	/**
-	 * Array of the settings and their labels.
-	 * The setting's name is the key of the array, the label its value.
-	 *
-	 * @since 3.8.5
-	 *
-	 * @var array
-	 */
-	private $settings_labels;
-
-	/**
-	 * Gets the local list of configs via Smush's endpoint.
+	 * Gets the local list of configs via Smush endpoint.
 	 *
 	 * @since 3.8.6
 	 *
 	 * @return bool
 	 */
 	public function get_callback() {
-		$stored_configs = get_site_option( WP_SMUSH_PREFIX . self::OPTION_NAME, false );
+		$stored_configs = get_site_option( 'wp-smush-preset_configs', false );
 
 		if ( false === $stored_configs ) {
 			$stored_configs = array( $this->get_basic_config() );
-			update_site_option( WP_SMUSH_PREFIX . self::OPTION_NAME, $stored_configs );
+			update_site_option( 'wp-smush-preset_configs', $stored_configs );
 		}
 		return $stored_configs;
 	}
 
 	/**
-	 * Updates the local list of configs via Smush's endpoint.
+	 * Updates the local list of configs via Smush endpoint.
 	 *
 	 * @since 3.8.6
 	 *
-	 * @param \WP_REST_Request $request Class containing the request data.
-	 * @return bool
+	 * @param WP_REST_Request $request Class containing the request data.
+	 *
+	 * @return array|WP_Error
 	 */
 	public function post_callback( $request ) {
 		$data = json_decode( $request->get_body(), true );
 		if ( ! is_array( $data ) ) {
-			return new \WP_Error( '400', esc_html__( 'Missing configs data', 'wp-smushit' ), array( 'status' => 400 ) );
+			return new WP_Error( '400', esc_html__( 'Missing configs data', 'wp-smushit' ), array( 'status' => 400 ) );
 		}
 
-		// Do we really need to re-sanitize here?
 		$sanitized_data = $this->sanitize_configs_list( $data );
-		update_site_option( WP_SMUSH_PREFIX . self::OPTION_NAME, $sanitized_data );
+		update_site_option( 'wp-smush-preset_configs', $sanitized_data );
 
-		return $data;
+		return $sanitized_data;
 	}
 
 	/**
@@ -92,14 +80,14 @@ class Configs {
 	}
 
 	/**
-	 * Adds the basic configuration to the local configs.
+	 * Adds the default configuration to the local configs.
 	 *
 	 * @since 3.8.6
 	 */
 	private function get_basic_config() {
 		$basic_config = array(
 			'id'          => 1,
-			'name'        => __( 'Basic config', 'wp-smushit' ),
+			'name'        => __( 'Default config', 'wp-smushit' ),
 			'description' => __( 'Recommended performance config for every site.', 'wp-smushit' ),
 			'default'     => true,
 			'config'      => array(
@@ -149,13 +137,27 @@ class Configs {
 		$sanitized_list = array();
 
 		foreach ( $configs_list as $config_data ) {
+			if ( isset( $config_data['name'] ) ) {
+				$name = sanitize_text_field( $config_data['name'] );
+			}
+
+			if ( isset( $config_data['description'] ) ) {
+				$description = sanitize_text_field( $config_data['description'] );
+			}
+
 			$sanitized_data = array(
 				'id'          => filter_var( $config_data['id'], FILTER_VALIDATE_INT ),
-				'name'        => filter_var( $config_data['name'], FILTER_SANITIZE_STRING ),
-				'description' => filter_var( $config_data['description'], FILTER_SANITIZE_STRING ),
+				'name'        => empty( $name ) ? __( 'Undefined', 'wp-smushit' ) : $name,
+				'description' => empty( $description ) ? '' : $description,
 				'config'      => array(
 					'configs' => $this->sanitize_config( $config_data['config']['configs'] ),
-					'strings' => filter_var( $config_data['config']['strings'], FILTER_SANITIZE_STRING, FILTER_REQUIRE_ARRAY ),
+					'strings' => filter_var(
+						$config_data['config']['strings'],
+						FILTER_CALLBACK,
+						array(
+							'options' => 'sanitize_text_field',
+						)
+					),
 				),
 			);
 
@@ -179,16 +181,14 @@ class Configs {
 	 *
 	 * @param array $file The uploaded file.
 	 *
-	 * @return true|string
+	 * @return array|WP_Error
 	 */
 	public function save_uploaded_config( $file ) {
 		try {
-			$config = $this->decode_and_validate_config_file( $file );
-		} catch ( \Exception $e ) {
-			return new \WP_Error( 'error_saving', $e->getMessage() );
+			return $this->decode_and_validate_config_file( $file );
+		} catch ( Exception $e ) {
+			return new WP_Error( 'error_saving', $e->getMessage() );
 		}
-
-		return $config;
 	}
 
 	/**
@@ -200,48 +200,55 @@ class Configs {
 	 *
 	 * @return array
 	 *
-	 * @throws \Exception When there's an error with the uploaded file.
+	 * @throws Exception When there's an error with the uploaded file.
 	 */
 	private function decode_and_validate_config_file( $file ) {
 		if ( ! $file ) {
-			throw new \Exception( __( 'The configs file is required', 'wp-smushit' ) );
+			throw new Exception( __( 'The configs file is required', 'wp-smushit' ) );
 		} elseif ( ! empty( $file['error'] ) ) {
 			/* translators: error message */
-			throw new \Exception( sprintf( __( 'Error: %s.', 'wp-smushit' ), $file['error'] ) );
+			throw new Exception( sprintf( __( 'Error: %s.', 'wp-smushit' ), $file['error'] ) );
 		} elseif ( 'application/json' !== $file['type'] ) {
-			throw new \Exception( __( 'The file must be a JSON.', 'wp-smushit' ) );
+			throw new Exception( __( 'The file must be a JSON.', 'wp-smushit' ) );
 		}
 
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		$json_file = file_get_contents( $file['tmp_name'] );
+		$json_file = file_get_contents( $file['tmp_name'] ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
 		if ( ! $json_file ) {
-			throw new \Exception( __( 'There was an error getting the contents of the file.', 'wp-smushit' ) );
+			throw new Exception( __( 'There was an error getting the contents of the file.', 'wp-smushit' ) );
 		}
 
 		$configs = json_decode( $json_file, true );
 		if ( empty( $configs ) || ! is_array( $configs ) ) {
-			throw new \Exception( __( 'There was an error decoding the file.', 'wp-smushit' ) );
+			throw new Exception( __( 'There was an error decoding the file.', 'wp-smushit' ) );
 		}
 
 		// Make sure the config has a name and configs.
 		if ( empty( $configs['name'] ) || empty( $configs['config'] ) ) {
-			throw new \Exception( __( 'The uploaded config must have a name and a set of settings. Please make sure the uploaded file is the correct one.', 'wp-smushit' ) );
+			throw new Exception( __( 'The uploaded config must have a name and a set of settings. Please make sure the uploaded file is the correct one.', 'wp-smushit' ) );
 		}
 
 		// Sanitize.
-		$configs['config'] = array(
-			'configs' => $this->sanitize_config( $configs['config']['configs'] ),
-			// Let's re-create this to avoid differences between imported settings coming from other versions.
-			'strings' => $this->format_config_to_display( $configs['config']['configs'] ),
-		);
+		$plugin  = isset( $configs['plugin'] ) ? $configs['plugin'] : 0;
+		$configs = $this->sanitize_configs_list( array( $configs ) );
+		$configs = $configs[0];
+
+		// Restore back plugin ID.
+		$configs['plugin'] = $plugin;
+
+		// Let's re-create this to avoid differences between imported settings coming from other versions.
+		$configs['config']['strings'] = $this->format_config_to_display( $configs['config']['configs'] );
 
 		if ( empty( $configs['config']['configs'] ) ) {
-			throw new \Exception( __( 'The provided configs list isn’t correct. Please make sure the uploaded file is the correct one.', 'wp-smushit' ) );
+			throw new Exception( __( 'The provided configs list isn’t correct. Please make sure the uploaded file is the correct one.', 'wp-smushit' ) );
 		}
 
 		// Don't keep these if they exist.
-		unset( $configs['hub_id'] );
-		unset( $configs['default'] );
+		if ( isset( $configs['hub_id'] ) ) {
+			unset( $configs['hub_id'] );
+		}
+		if ( isset( $configs['default'] ) ) {
+			unset( $configs['default'] );
+		}
 
 		return $configs;
 	}
@@ -252,13 +259,15 @@ class Configs {
 	 * @since 3.8.6
 	 *
 	 * @param string $id The ID of the config to apply.
+	 *
+	 * @return void|WP_Error
 	 */
 	public function apply_config_by_id( $id ) {
-		$stored_configs = get_site_option( WP_SMUSH_PREFIX . self::OPTION_NAME );
+		$stored_configs = get_site_option( 'wp-smush-preset_configs' );
 
 		$config = false;
 		foreach ( $stored_configs as $config_data ) {
-			if ( strval( $config_data['id'] ) === $id ) {
+			if ( (int) $config_data['id'] === (int) $id ) {
 				$config = $config_data;
 				break;
 			}
@@ -266,10 +275,10 @@ class Configs {
 
 		// The config with the given ID doesn't exist.
 		if ( ! $config ) {
-			return new \WP_Error( '404', __( 'The given config ID does not exist', 'wp-smushit' ) );
+			return new WP_Error( '404', __( 'The given config ID does not exist', 'wp-smushit' ) );
 		}
 
-		$this->apply_config( $config['config']['configs'] );
+		$this->apply_config( $config['config']['configs'], $config['name'] );
 	}
 
 	/**
@@ -279,31 +288,30 @@ class Configs {
 	 *
 	 * @param array $config The config to apply.
 	 */
-	public function apply_config( $config ) {
-
+	public function apply_config( $config, $config_name = '' ) {
 		$sanitized_config = $this->sanitize_config( $config );
 
 		// Update 'networkwide' options in multisites.
 		if ( is_multisite() && isset( $sanitized_config['networkwide'] ) ) {
-			update_site_option( WP_SMUSH_PREFIX . 'networkwide', $sanitized_config['networkwide'] );
+			update_site_option( 'wp-smush-networkwide', $sanitized_config['networkwide'] );
 		}
 
 		$settings_handler = Settings::get_instance();
 
 		// Update image sizes.
 		if ( isset( $sanitized_config['resize_sizes'] ) ) {
-			$settings_handler->set_setting( WP_SMUSH_PREFIX . 'resize_sizes', $sanitized_config['resize_sizes'] );
+			$settings_handler->set_setting( 'wp-smush-resize_sizes', $sanitized_config['resize_sizes'] );
 		}
 
 		// Update settings. We could reuse the `save` method from settings to handle this instead.
 		if ( ! empty( $sanitized_config['settings'] ) ) {
-			$stored_settings = $settings_handler->get_setting( WP_SMUSH_PREFIX . 'settings' );
+			$stored_settings = $settings_handler->get_setting( 'wp-smush-settings' );
 
 			// Keep the keys that are in use in this version.
 			$new_settings = array_intersect_key( $sanitized_config['settings'], $stored_settings );
 
 			if ( $new_settings ) {
-				if ( ! \WP_Smush::is_pro() ) {
+				if ( ! WP_Smush::is_pro() ) {
 					// Disable the pro features before applying them.
 					foreach ( $this->pro_features as $name ) {
 						$new_settings[ $name ] = false;
@@ -312,24 +320,32 @@ class Configs {
 
 				// Update the flag file when local webp changes.
 				if ( isset( $new_settings['webp_mod'] ) && $new_settings['webp_mod'] !== $stored_settings['webp_mod'] ) {
-					// TODO: we're updating the option here and below with `set_setting()`. Avoid doing this.
-					\WP_Smush::get_instance()->core()->mod->webp->toggle_webp( $new_settings['webp_mod'] );
+					WP_Smush::get_instance()->core()->mod->webp->toggle_webp( $new_settings['webp_mod'] );
+					// Hide the wizard form if Local Webp is configured.
+					if ( WP_Smush::get_instance()->core()->mod->webp->is_configured() ) {
+						update_site_option( 'wp-smush-webp_hide_wizard', 1 );
+					}
+				}
+
+				// Update the CDN status for CDN changes.
+				if ( isset( $new_settings['cdn'] ) && $new_settings['cdn'] !== $stored_settings['cdn'] ) {
+					WP_Smush::get_instance()->core()->mod->cdn->toggle_cdn( $new_settings['cdn'] );
 				}
 
 				// Keep the stored settings that aren't present in the incoming one.
 				$new_settings = array_merge( $stored_settings, $new_settings );
-				$settings_handler->set_setting( WP_SMUSH_PREFIX . 'settings', $new_settings );
+				$settings_handler->set_setting( 'wp-smush-settings', $new_settings );
 			}
 		}
 
 		// Update lazy load.
 		if ( ! empty( $sanitized_config['lazy_load'] ) ) {
-			$stored_lazy_load = $settings_handler->get_setting( WP_SMUSH_PREFIX . 'lazy_load' );
+			$stored_lazy_load = $settings_handler->get_setting( 'wp-smush-lazy_load' );
 
 			// Save the defaults before applying the config if the current settings aren't set.
 			if ( empty( $stored_lazy_load ) ) {
 				$settings_handler->init_lazy_load_defaults();
-				$stored_lazy_load = $settings_handler->get_setting( WP_SMUSH_PREFIX . 'lazy_load' );
+				$stored_lazy_load = $settings_handler->get_setting( 'wp-smush-lazy_load' );
 			}
 
 			// Keep the settings that are in use in this version.
@@ -341,8 +357,13 @@ class Configs {
 
 			// Keep the stored settings that aren't present in the incoming one.
 			$new_lazy_load = array_replace_recursive( $stored_lazy_load, $sanitized_config['lazy_load'] );
-			$settings_handler->set_setting( WP_SMUSH_PREFIX . 'lazy_load', $new_lazy_load );
+			$settings_handler->set_setting( 'wp-smush-lazy_load', $new_lazy_load );
 		}
+
+		do_action( 'wp_smush_config_applied', $config_name );
+
+		// Skip onboarding if applying a config.
+		update_option( 'skip-smush-setup', true );
 	}
 
 	/**
@@ -355,17 +376,17 @@ class Configs {
 	public function get_config_from_current() {
 		$settings = Settings::get_instance();
 
-		$stored_settings = $settings->get_setting( WP_SMUSH_PREFIX . 'settings' );
+		$stored_settings = $settings->get_setting( 'wp-smush-settings' );
 
 		$configs = array( 'settings' => $stored_settings );
 
 		if ( $stored_settings['resize'] ) {
-			$configs['resize_sizes'] = $settings->get_setting( WP_SMUSH_PREFIX . 'resize_sizes' );
+			$configs['resize_sizes'] = $settings->get_setting( 'wp-smush-resize_sizes' );
 		}
 
 		// Let's store this only for multisites.
 		if ( is_multisite() ) {
-			$configs['networkwide'] = get_site_option( WP_SMUSH_PREFIX . 'networkwide' );
+			$configs['networkwide'] = get_site_option( 'wp-smush-networkwide' );
 		}
 
 		// There's a site_option that handles this.
@@ -379,7 +400,7 @@ class Configs {
 
 		// Include the lazy load settings only when lazy load is enabled.
 		if ( ! empty( $configs['settings']['lazy_load'] ) ) {
-			$lazy_load_settings = $settings->get_setting( WP_SMUSH_PREFIX . 'lazy_load' );
+			$lazy_load_settings = $settings->get_setting( 'wp-smush-lazy_load' );
 
 			if ( ! empty( $lazy_load_settings ) ) {
 				// Exclude unique settings.
@@ -405,14 +426,12 @@ class Configs {
 			}
 		}
 
-		$new_config = array(
+		return array(
 			'config' => array(
 				'configs' => $configs,
 				'strings' => $this->format_config_to_display( $configs ),
 			),
 		);
-
-		return $new_config;
 	}
 
 	/**
@@ -429,9 +448,15 @@ class Configs {
 
 		if ( isset( $config['networkwide'] ) ) {
 			if ( ! is_array( $config['networkwide'] ) ) {
-				$sanitized['networkwide'] = $config['networkwide'];
+				$sanitized['networkwide'] = sanitize_text_field( $config['networkwide'] );
 			} else {
-				$sanitized['networkwide'] = filter_var( $config['networkwide'], FILTER_SANITIZE_STRING, FILTER_REQUIRE_ARRAY );
+				$sanitized['networkwide'] = filter_var(
+					$config['networkwide'],
+					FILTER_CALLBACK,
+					array(
+						'options' => 'sanitize_text_field',
+					)
+				);
 			}
 		}
 
@@ -461,16 +486,22 @@ class Configs {
 					'flags'  => FILTER_REQUIRE_ARRAY,
 				),
 				'animation'       => array(
-					'filter' => FILTER_SANITIZE_STRING,
-					'flags'  => FILTER_REQUIRE_ARRAY,
+					'filter'  => FILTER_CALLBACK,
+					'options' => 'sanitize_text_field',
+					'flags'   => FILTER_REQUIRE_ARRAY,
 				),
 				'include'         => array(
 					'filter' => FILTER_VALIDATE_BOOLEAN,
 					'flags'  => FILTER_REQUIRE_ARRAY,
 				),
-				'exclude-classes' => array(
-					'filter' => FILTER_SANITIZE_STRING,
+				'exclude-pages'   => array(
+					'filter' => FILTER_SANITIZE_URL,
 					'flags'  => FILTER_REQUIRE_ARRAY,
+				),
+				'exclude-classes' => array(
+					'filter'  => FILTER_CALLBACK,
+					'options' => 'sanitize_text_field',
+					'flags'   => FILTER_REQUIRE_ARRAY,
 				),
 				'footer'          => FILTER_VALIDATE_BOOLEAN,
 				'native'          => FILTER_VALIDATE_BOOLEAN,
@@ -504,7 +535,6 @@ class Configs {
 			'cdn'          => Settings::get_instance()->get_cdn_fields(),
 			'webp_mod'     => array(),
 			'integrations' => Settings::get_instance()->get_integrations_fields(),
-			'tools'        => Settings::get_instance()->get_tools_fields(),
 			'settings'     => Settings::get_instance()->get_settings_fields(),
 		);
 
@@ -608,7 +638,7 @@ class Configs {
 	 */
 	private function format_boolean_setting_value( $name, $value ) {
 		// Display the pro features as 'inactive' for free installs.
-		if ( ! \WP_Smush::is_pro() && in_array( $name, $this->pro_features, true ) ) {
+		if ( ! WP_Smush::is_pro() && in_array( $name, $this->pro_features, true ) ) {
 			$value = false;
 		}
 		return $value ? __( 'Active', 'wp-smushit' ) : __( 'Inactive', 'wp-smushit' );
@@ -621,7 +651,7 @@ class Configs {
 	 *
 	 * @param array $config The config to format.
 	 *
-	 * @return string
+	 * @return array
 	 */
 	private function get_lazy_load_settings_to_display( $config ) {
 		$formatted_rows = array();

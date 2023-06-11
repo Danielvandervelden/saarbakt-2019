@@ -36,7 +36,10 @@ class ExactMetrics_WP_Site_Health_Lite {
 
 		add_action( 'wp_ajax_health-check-exactmetrics-test_connection', array( $this, 'test_check_connection' ) );
 
-		add_action( 'wp_ajax_health-check-exactmetrics-test_tracking_code', array( $this, 'test_check_tracking_code' ) );
+		add_action( 'wp_ajax_health-check-exactmetrics-test_tracking_code', array(
+			$this,
+			'test_check_tracking_code'
+		) );
 
 	}
 
@@ -364,7 +367,7 @@ class ExactMetrics_WP_Site_Health_Lite {
 				'color' => 'blue',
 			),
 			// Translators: The eCommerce store currently active.
-			'description' => sprintf( __( 'You are using %s but the ExactMetrics eCommerce addon is not active, please Install & Activate it to start tracking eCommerce data.', 'google-analytics-dashboard-for-wp' ), $this->ecommerce ),
+			'description' => sprintf( __( 'We detected you are using %s but the ExactMetrics eCommerce addon is not active. Please install and activate to start tracking eCommerce data.', 'google-analytics-dashboard-for-wp' ), $this->ecommerce ),
 			'test'        => 'exactmetrics_ecommerce',
 			'actions'     => sprintf(
 				'<p><a href="%s" target="_blank" rel="noopener noreferrer">%s</a></p>',
@@ -390,7 +393,7 @@ class ExactMetrics_WP_Site_Health_Lite {
 				'label' => __( 'ExactMetrics', 'google-analytics-dashboard-for-wp' ),
 				'color' => 'blue',
 			),
-			'description' => __( 'Your website has Google AMP-enabled pages set up but they are not tracked by Google Analytics at the moment. You need to Install & Activate the ExactMetrics AMP Addon.', 'google-analytics-dashboard-for-wp' ),
+			'description' => __( 'Your website has Google AMP-enabled pages enabled but they are not tracked by Google Analytics at the moment. You need to install and activate the ExactMetrics AMP Addon to track AMP pages.', 'google-analytics-dashboard-for-wp' ),
 			'test'        => 'exactmetrics_amp',
 			'actions'     => sprintf(
 				'<p><a href="%s" target="_blank" rel="noopener noreferrer">%s</a></p>',
@@ -417,7 +420,7 @@ class ExactMetrics_WP_Site_Health_Lite {
 				'label' => __( 'ExactMetrics', 'google-analytics-dashboard-for-wp' ),
 				'color' => 'blue',
 			),
-			'description' => __( 'Your website has Facebook Instant Articles pages set up but they are not tracked by Google Analytics at the moment. You need to Install & Activate the ExactMetrics Facebook Instant Articles Addon.', 'google-analytics-dashboard-for-wp' ),
+			'description' => __( 'Your website has Facebook Instant Articles pages set up, but they are not tracked by Google Analytics at the moment. You need to install and activate the ExactMetrics Facebook Instant Articles addon.', 'google-analytics-dashboard-for-wp' ),
 			'test'        => 'exactmetrics_fbia',
 			'actions'     => sprintf(
 				'<p><a href="%s" target="_blank" rel="noopener noreferrer">%s</a></p>',

@@ -33,14 +33,17 @@ abstract class Forminator_GFBlock_Abstract {
 	 * @since 1.0 Gutenberg Addon
 	 */
 	public function init() {
-		// Register block
+		// Register block.
 		add_action( 'init', array( $this, 'register_block' ), 5 );
 
-		// Register preview REST API
+		// Register preview REST API.
 		add_action( 'rest_api_init', array( $this, 'block_preview_api' ) );
 
-		// Load block scripts
+		// Load block scripts.
 		add_action( 'enqueue_block_editor_assets', array( $this, 'load_assets' ) );
+
+		// Load elementor scripts.
+		add_action( 'elementor/preview/enqueue_scripts', array( $this, 'load_assets' ) );
 	}
 
 	/**
@@ -91,13 +94,13 @@ abstract class Forminator_GFBlock_Abstract {
 	 * @param $data
 	 */
 	public function preview_block_markup( $data ) {
-		// Get properties
+		// Get properties.
 		$properties = $data->get_params();
 
-		// Get module ID
+		// Get module ID.
 		$id = isset( $properties['module_id'] ) ? $properties['module_id'] : false;
 
-		// Get block preview markup
+		// Get block preview markup.
 		$markup = $this->preview_block( $properties );
 
 		if ( $markup ) {
@@ -112,7 +115,7 @@ abstract class Forminator_GFBlock_Abstract {
 	 * Should be overriden in block class
 	 *
 	 * @since 1.0 Gutenberg Addon
-	 * @param array $properties Block properties
+	 * @param array $properties Block properties.
 	 *
 	 * @return string
 	 */
@@ -125,7 +128,7 @@ abstract class Forminator_GFBlock_Abstract {
 	 * Should be overriden in block class
 	 *
 	 * @since 1.0 Gutenberg Addon
-	 * @param array $properties Block properties
+	 * @param array $properties Block properties.
 	 *
 	 * @return string
 	 */
